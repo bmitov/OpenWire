@@ -1,0 +1,40 @@
+package OpenWireDsnD5;
+
+{$R *.RES}
+{$ALIGN ON}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  dsnide50,
+  OpenWirePkgD5;
+
+contains
+  OpenWirePinEditors in 'OpenWirePinEditors.pas' {OWSourcePinForm},
+  OWStateEditors in 'OWStateEditors.pas' {OWStatePinForm},
+  OWAboutFormUnit in 'OWAboutFormUnit.pas' {OWAboutForm},
+  OWAfterPinSelectFormUnit in 'OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm},
+  OWClassProperty in 'OWClassProperty.pas',
+  OWDesignSelectionsList in 'OWDesignSelectionsList.pas';
+
+end.
+
