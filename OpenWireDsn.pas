@@ -15,6 +15,7 @@ implementation
 procedure Register; 
 begin
   RegisterUnit('OpenWirePinEditors', @OpenWirePinEditors.Register); 
+  RegisterUnit('OWStateEditors', @OWStateEditors.Register); 
 end; 
 
 initialization

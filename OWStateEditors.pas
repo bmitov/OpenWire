@@ -355,6 +355,9 @@ begin
     Exit;
 
   try
+    if( Form = NIL ) then
+      Form := TOWStatePinForm.Create( Application );
+
     if( Form.ExecuteForState( Designer, StatePin ) = mrOk ) then
       begin
       CurItem := Form.TreeView.Items.GetFirstNode();
@@ -530,8 +533,8 @@ var
 {$ENDIF}
 
 begin
-{$IFNDEF FPC}
   FormNames := TOWModulesColection.Create;
+{$IFNDEF FPC}
 
 {$IFNDEF BDS2005_OR_2006}
   Designer.GetProjectModules( FormNames.GetModules );
@@ -548,8 +551,10 @@ begin
       end;
 
 {$ENDIF}
+{$ENDIF}
 
   FormsComboBox.Items.Clear();
+
   if( FormNames.Count = 0 ) then
     FormNames.Add( Root.Name );
     
@@ -578,7 +583,6 @@ begin
   FormsComboBoxChange( Self );
 
   FormNames.Free;
-{$ENDIF}
 end;
 
 procedure TOWStatePinForm.PopulateAll();
@@ -1405,7 +1409,9 @@ initialization
 {$ENDIF}
   InOppening := False;
 //  InRefresh := False;
+{$IFNDEF FPC}
   Form := TOWStatePinForm.Create( Application );
+{$ENDIF}
 
 //  EditorNotifier := TIOWPinsEditorNotifier.Create();
 //  ToolServices.AddNotifier( EditorNotifier );

@@ -1,13 +1,17 @@
 // OpenWire demo components.
-// The package is not designed for a real usage, but to demonstrate the power of OpenWire.
-// However the components are fully implemented and can be used in a real application.
+// The package is not designed for a real usage, but to demonstrate the power of OpenWire,
+// however the components are fully implemented and can be used in a real application.
 
 unit OWLComps;
+
+{$IFDEF FPC}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, OWStdTypes, OWPins, extctrls, stdctrls;
+  Windows, Messages, SysUtils, Classes, Controls, Forms, Dialogs, OWStdTypes, OWPins, extctrls, stdctrls;
 
 
 
@@ -15,14 +19,14 @@ type PSingle = ^Single;
 
 type
   TOWLAdd = class(TComponent)
+  protected // OpenWire support
+    FOutputPin          : TOWFloatSourcePin;
+    FPositiveInputPins  : TOWPinListOwner;
+    FNegativeInputPins  : TOWPinListOwner;
+
   private
     FPositiveDataArray : array of Single;
     FNegativeDataArray : array of Single;
-
-  protected
-    FOutput             : TOWFloatSourcePin;
-    FPositiveInputs     : TOWPinListOwner;
-    FNegativeInputs     : TOWPinListOwner;
 
   protected
     procedure SendPositiveData( Sender : TOWPin; AValue : Single );
@@ -39,24 +43,30 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy(); override;
 
-  published
-    property Output : TOWFloatSourcePin  read FOutput write FOutput;
-    property PositiveInputs      : TOWPinListOwner read FPositiveInputs write FPositiveInputs;
-    property NegativeInputs      : TOWPinListOwner read FNegativeInputs write FNegativeInputs;
-    
+  published // OpenWire support
+    property OutputPin          : TOWFloatSourcePin read FOutputPin write FOutputPin;
+    property PositiveInputPins  : TOWPinListOwner   read FPositiveInputPins write FPositiveInputPins;
+    property NegativeInputPins  : TOWPinListOwner   read FNegativeInputPins write FNegativeInputPins;
+
   end;
 
   TOWLTestClock = class(TTimer)
+  protected // OpenWire support
+    FOutputPin      : TOWFloatSourcePin;
+    
   protected
-    FOutput  : TOWFloatSourcePin;
-    FCounter : Single;
-    FStep    : Single;
-    FMax     : Single;
-    FMin     : Single;
-    FStartReported : Boolean;
+    FCounter        : Single;
+    FStep           : Single;
+    FMax            : Single;
+    FMin            : Single;
+    FStartReported  : Boolean;
 
   protected
+{$IFDEF FPC}
+    procedure DoOnTimer; override;
+{$ELSE}
     procedure Timer; override;
+{$ENDIF}
     procedure Loaded; override;
     
     procedure STestClockComponentTimer( Sender : TObject );
@@ -69,28 +79,26 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy(); override;
 
+  published // OpenWire support
+    property OutputPin  : TOWFloatSourcePin   read FOutputPin write FOutputPin;
+    
   published
-    property Output : TOWFloatSourcePin   read FOutput write FOutput;
-    property Step   : Single read FStep write FStep;
-    property Max    : Single read FMax write SetMax;
-    property Min    : Single read FMin write SetMin;
+    property Step       : Single read FStep write FStep;
+    property Max        : Single read FMax write SetMax;
+    property Min        : Single read FMin write SetMin;
     
   end;
 
 type
   TOWLMultiply = class(TComponent)
+  protected // OpenWire support
+    FOutputPin  : TOWFloatSourcePin;
+    FInputPins  : TOWPinListOwner;
+
   private
-    { Private declarations }
     FInputDataArray : array of Single;
-//    ValuesList : TValueList;
 
   protected
-    { Protected declarations }
-    FOutput     : TOWFloatSourcePin;
-    FInputs     : TOWPinListOwner;
-
-  protected
-    { Protected declarations }
     procedure SendData( Sender : TOWPin; AValue : Single );
     function  PinNotification( Handler : IOWFloatStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 
@@ -98,14 +106,13 @@ type
     procedure DestroyInputPin( APinListOwner : TOWPinList; APin : TOWBasicPin );
 
   public
-    { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy(); override;
 
-  published
-    { Published declarations }
-    property Output : TOWFloatSourcePin  read FOutput write FOutput;
-    property Inputs      : TOWPinListOwner read FInputs write FInputs;
+  published // OpenWire support
+    property OutputPin  : TOWFloatSourcePin read FOutputPin write FOutputPin;
+    property InputPins  : TOWPinListOwner   read FInputPins write FInputPins;
+    
   end;
 
 type
@@ -115,9 +122,9 @@ type
     FDivider   : Single;
 
   protected
-    FOutput             : TOWFloatSourcePin;
-    FInputDivisible     : TOWFloatSinkPin;
-    FInputDivider       : TOWFloatSinkPin;
+    FOutputPin             : TOWFloatSourcePin;
+    FDivisibleInputPin     : TOWFloatSinkPin;
+    FDividerInputPin       : TOWFloatSinkPin;
 
   protected
     procedure SendDivisibleData( Sender : TOWPin; AValue : Single );
@@ -128,10 +135,11 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy(); override;
 
-  published
-    property Output             : TOWFloatSourcePin  read FOutput write FOutput;
-    property InputDivisible     : TOWFloatSinkPin read FInputDivisible write FInputDivisible;
-    property InputDivider       : TOWFloatSinkPin read FInputDivider write FInputDivider;
+  published // OpenWire support
+    property OutputPin          : TOWFloatSourcePin read FOutputPin write FOutputPin;
+    property DivisibleInputPin  : TOWFloatSinkPin   read FDivisibleInputPin write FDivisibleInputPin;
+    property DividerInputPin    : TOWFloatSinkPin   read FDividerInputPin write FDividerInputPin;
+    
   end;
 
 type
@@ -160,16 +168,16 @@ implementation
 constructor TOWLAdd.Create(AOwner: TComponent);
 begin
   inherited;
-  FOutput := TOWFloatSourcePin.CreateEx( Self, PinNotification );
-  FPositiveInputs := TOWPinListOwner.CreateEx( Self, 1, 100, CreatePositivePin, DestroyPositivePin );
-  FNegativeInputs := TOWPinListOwner.CreateEx( Self, 1, 100, CreateNegativePin, DestroyNegativePin );
+  FOutputPin := TOWFloatSourcePin.CreateEx( Self, PinNotification );
+  FPositiveInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreatePositivePin, DestroyPositivePin );
+  FNegativeInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreateNegativePin, DestroyNegativePin );
 end;
 //---------------------------------------------------------------------------
 destructor  TOWLAdd.Destroy();
 begin
-  FNegativeInputs.Free();
-  FPositiveInputs.Free();
-  FOutput.Free();
+  FNegativeInputPins.Free();
+  FPositiveInputPins.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -182,7 +190,7 @@ begin
   FPositiveDataArray[ APinListOwner.Count ] := 0.0;
   
   Pin := TOWFloatSinkPin.Create( Self, SendPositiveData, Pointer( APinListOwner.Count ));
-  FOutput.FunctionSources.Add( Pin );
+  FOutputPin.FunctionSources.Add( Pin );
   Result := Pin;
 end;
 //---------------------------------------------------------------------------
@@ -195,7 +203,7 @@ begin
   FNegativeDataArray[ APinListOwner.Count ] := 0.0;
   
   Pin := TOWFloatSinkPin.Create( Self, SendNegativeData, Pointer( APinListOwner.Count ));
-  FOutput.FunctionSources.Add( Pin );
+  FOutputPin.FunctionSources.Add( Pin );
   Result := Pin;
 end;
 //---------------------------------------------------------------------------
@@ -217,10 +225,10 @@ var
 begin
   Value := 0;
 
-  for I := 0 to FPositiveInputs.Count - 1 do
+  for I := 0 to FPositiveInputPins.Count - 1 do
     Value := Value + FPositiveDataArray[ I ];
 
-  for I := 0 to FNegativeInputs.Count - 1 do
+  for I := 0 to FNegativeInputPins.Count - 1 do
     Value := Value - FNegativeDataArray[ I ];
 
   Handler.DispatchData( DataTypeID, TOWSuppliedSingleOperation.Create( Value ), State );
@@ -231,13 +239,13 @@ end;
 procedure TOWLAdd.SendPositiveData( Sender : TOWPin; AValue : Single );
 begin
   FPositiveDataArray[ Integer( Sender.CustomData ) ] := AValue;
-  FOutput.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Create() );
 end;
 //---------------------------------------------------------------------------
 procedure TOWLAdd.SendNegativeData ( Sender : TOWPin; AValue : Single );
 begin
   FNegativeDataArray[ Integer( Sender.CustomData ) ] := AValue;
-  FOutput.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Create() );
     
 end;
 //---------------------------------------------------------------------------
@@ -250,17 +258,17 @@ var
   
 begin
   inherited;
-  FOutput := TOWFloatSourcePin.CreateEx( Self, PinNotification );
-  FInputs := TOWPinListOwner.CreateEx( Self, 1, 100, CreateInputPin, DestroyInputPin );
-  for I := 0 to FInputs.Count - 1 do
-    FInputs[ I ].CustomData := Pointer( I );
+  FOutputPin := TOWFloatSourcePin.CreateEx( Self, PinNotification );
+  FInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreateInputPin, DestroyInputPin );
+  for I := 0 to FInputPins.Count - 1 do
+    FInputPins[ I ].CustomData := Pointer( I );
     
 end;
 //---------------------------------------------------------------------------
 destructor  TOWLMultiply.Destroy();
 begin
-  FInputs.Free();
-  FOutput.Free();
+  FInputPins.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -273,10 +281,10 @@ begin
   FInputDataArray[ APinListOwner.Count ] := 1.0;
 
   Pin := TOWFloatSinkPin.Create( Self, SendData, Pointer( APinListOwner.Count ));
-  FOutput.FunctionSources.Add( Pin );
+  FOutputPin.FunctionSources.Add( Pin );
 
-  if( FInputs <> NIL ) then
-    Pin.CustomData := Pointer( FInputs.Count );
+  if( FInputPins <> NIL ) then
+    Pin.CustomData := Pointer( FInputPins.Count );
   
   Result := Pin;
 end;
@@ -288,8 +296,8 @@ var
 begin
   SetLength( FInputDataArray, APinListOwner.Count );
 
-  for I := 0 to FInputs.Count - 1 do
-    FInputs[ I ].CustomData := Pointer( I );
+  for I := 0 to FInputPins.Count - 1 do
+    FInputPins[ I ].CustomData := Pointer( I );
     
 end;
 //---------------------------------------------------------------------------
@@ -301,7 +309,7 @@ var
 begin
   Value := 1;
 
-  for I := 0 to FInputs.Count - 1 do
+  for I := 0 to FInputPins.Count - 1 do
     Value := Value * FInputDataArray[ I ];
 
   Handler.DispatchData( DataTypeID, TOWSuppliedSingleOperation.Create( Value ), State );
@@ -311,7 +319,7 @@ end;
 procedure TOWLMultiply.SendData( Sender : TOWPin; AValue : Single );
 begin
   FInputDataArray[ Integer( Sender.CustomData ) ] := AValue;
-  FOutput.Notify( TOWNotifyOperation.Create() );    
+  FOutputPin.Notify( TOWNotifyOperation.Create() );    
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -323,18 +331,18 @@ begin
   FDivisible := 0;
   FDivider   := 1;
   
-  FOutput := TOWFloatSourcePin.CreateEx( Self, PinNotification );
-  FInputDivisible := TOWFloatSinkPin.Create( Self, SendDivisibleData, NIL );
-  FInputDivider   := TOWFloatSinkPin.Create( Self, SendDividerData, NIL );
-  FOutput.FunctionSources.Add( FInputDivisible );
-  FOutput.FunctionSources.Add( FInputDivider );
+  FOutputPin := TOWFloatSourcePin.CreateEx( Self, PinNotification );
+  FDivisibleInputPin := TOWFloatSinkPin.Create( Self, SendDivisibleData, NIL );
+  FDividerInputPin   := TOWFloatSinkPin.Create( Self, SendDividerData, NIL );
+  FOutputPin.FunctionSources.Add( FDivisibleInputPin );
+  FOutputPin.FunctionSources.Add( FDividerInputPin );
 end;
 //---------------------------------------------------------------------------
 destructor  TOWLDivide.Destroy();
 begin
-  FInputDivider.Free();
-  FInputDivisible.Free();
-  FOutput.Free();
+  FDividerInputPin.Free();
+  FDivisibleInputPin.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -356,13 +364,13 @@ end;
 procedure TOWLDivide.SendDivisibleData( Sender : TOWPin; AValue : Single );
 begin
   FDivisible := AValue;
-  FOutput.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Create() );
 end;
 //---------------------------------------------------------------------------
 procedure TOWLDivide.SendDividerData( Sender : TOWPin; AValue : Single );
 begin
   FDivider := AValue;
-  FOutput.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Create() );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -371,7 +379,7 @@ end;
 constructor TOWLTestClock.Create(AOwner: TComponent);
 begin
   inherited;
-  FOutput := TOWFloatSourcePin.Create( Self );
+  FOutputPin := TOWFloatSourcePin.Create( Self );
   FCounter := 1;
   FStep := 0.5;
   FMin := 1;
@@ -380,22 +388,26 @@ end;
 //---------------------------------------------------------------------------
 destructor TOWLTestClock.Destroy();
 begin
-  FOutput.Free();
+  FOutputPin.Free();
   inherited;
 end;
 
 //---------------------------------------------------------------------------
+{$IFDEF FPC}
+procedure TOWLTestClock.DoOnTimer;
+{$ELSE}
 procedure TOWLTestClock.Timer;
+{$ENDIF}
 begin
-  inherited Timer;
-  
+  inherited;
+
   if( not FStartReported ) then
     begin
-    FOutput.Notify( TOWStartRateOperation.Create( 1000 / Interval ) );
+    FOutputPin.Notify( TOWStartRateOperation.Create( 1000 / Interval ) );
     FStartReported := True;
     end;
 
-  FOutput.Value := FCounter;
+  FOutputPin.Value := FCounter;
 
   if( FCounter > FMax ) then
     FCounter := FMax;
@@ -411,10 +423,11 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLTestClock.Loaded;
 begin
+  inherited;
   if( ( not Assigned( OnTimer ) ) and ( not ( csDesigning in ComponentState ) )) then
     OnTimer := STestClockComponentTimer;
 
-  FOutput.Value := FCounter;
+  FOutputPin.Value := FCounter;
 end;
 //---------------------------------------------------------------------------
 procedure TOWLTestClock.STestClockComponentTimer( Sender : TObject ); 

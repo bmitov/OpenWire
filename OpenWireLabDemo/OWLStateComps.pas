@@ -1,4 +1,12 @@
+// OpenWire demo components.
+// The package is not designed for a real usage, but to demonstrate the power of OpenWire,
+// however the components are fully implemented and can be used in a real application.
+
 unit OWLStateComps;
+
+{$IFDEF FPC}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
 
 interface
 
@@ -6,7 +14,7 @@ uses Classes, ComCtrls, OWStdTypes, OWPins;
 
 type
   TOWLTrackBar = class( TTrackBar )
-  protected
+  protected // OpenWire support
     FPositionPin : TOWIntegerStatePin;
 
   public
@@ -14,19 +22,23 @@ type
     destructor  Destroy; override;
 
   protected
+{$IFDEF FPC}
+    procedure EditingDone; override;
+{$ELSE}
     procedure Changed; override;
+{$ENDIF}
 
   protected
     procedure OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer );
 
-  published
+  published // OpenWire support
     property PositionPin : TOWIntegerStatePin read FPositionPin write FPositionPin;
 
   end;
 
 type
   TOWLProgressBar = class( TProgressBar )
-  protected
+  protected // OpenWire support
     FPositionPin : TOWFloatIntStatePin;
 
   public
@@ -36,7 +48,7 @@ type
   protected
     procedure FloatChangeEvent( Sender : TOWPin; AValue : Single );
     
-  published
+  published // OpenWire support
     property PositionPin : TOWFloatIntStatePin read FPositionPin write FPositionPin;
 
   end;
@@ -63,7 +75,11 @@ begin
   Position := AValue;
 end;
 
+{$IFDEF FPC}
+procedure TOWLTrackBar.EditingDone;
+{$ELSE}
 procedure TOWLTrackBar.Changed;
+{$ENDIF}
 begin
   inherited;
   FPositionPin.Value := Position;

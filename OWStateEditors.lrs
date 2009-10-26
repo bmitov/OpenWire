@@ -1,16 +1,16 @@
 { This is an automatically generated lazarus resource file }
 
 LazarusResources.Add('TOWStatePinForm','FORMDATA',[
-  'TPF0'#15'TOWStatePinForm'#14'OWStatePinForm'#4'Left'#2']'#6'Height'#3#20#1#3
-  +'Top'#3#201#0#5'Width'#3'2'#2#7'Caption'#6#14'OWStatePinForm'#12'ClientHeigh'
-  +'t'#3#20#1#11'ClientWidth'#3'2'#2#21'Constraints.MinHeight'#3#14#1#20'Constr'
+  'TPF0'#15'TOWStatePinForm'#14'OWStatePinForm'#4'Left'#2']'#6'Height'#3#25#1#3
+  +'Top'#3#196#0#5'Width'#3'2'#2#7'Caption'#6#14'OWStatePinForm'#12'ClientHeigh'
+  +'t'#3#25#1#11'ClientWidth'#3'2'#2#21'Constraints.MinHeight'#3#14#1#20'Constr'
   +'aints.MinWidth'#3'@'#1#11'Font.Height'#2#245#9'Font.Name'#6#13'MS Sans Seri'
   +'f'#8'OnCreate'#7#10'FormCreate'#9'OnDestroy'#7#11'FormDestroy'#6'OnShow'#7#8
   +'FormShow'#8'Position'#7#14'poScreenCenter'#10'LCLVersion'#6#6'0.9.29'#0#6'T'
-  +'Panel'#6'Panel1'#4'Left'#3#221#1#6'Height'#3#20#1#3'Top'#2#0#5'Width'#2'U'#5
-  +'Align'#7#7'alRight'#10'BevelOuter'#7#6'bvNone'#12'ClientHeight'#3#20#1#11'C'
+  +'Panel'#6'Panel1'#4'Left'#3#221#1#6'Height'#3#25#1#3'Top'#2#0#5'Width'#2'U'#5
+  +'Align'#7#7'alRight'#10'BevelOuter'#7#6'bvNone'#12'ClientHeight'#3#25#1#11'C'
   +'lientWidth'#2'U'#8'TabOrder'#2#0#0#6'TPanel'#6'Panel2'#4'Left'#2#0#6'Height'
-  +#2'O'#3'Top'#3#197#0#5'Width'#2'U'#5'Align'#7#8'alBottom'#10'BevelOuter'#7#6
+  +#2'O'#3'Top'#3#202#0#5'Width'#2'U'#5'Align'#7#8'alBottom'#10'BevelOuter'#7#6
   +'bvNone'#12'ClientHeight'#2'O'#11'ClientWidth'#2'U'#8'TabOrder'#2#0#0#7'TBit'
   +'Btn'#8'OkButton'#4'Left'#2#6#6'Height'#2#25#3'Top'#2#4#5'Width'#2'K'#7'Capt'
   +'ion'#6#3'&OK'#7'Default'#9#4'Kind'#7#4'bkOK'#6'Margin'#2#9#11'ModalResult'#2
@@ -286,8 +286,8 @@ LazarusResources.Add('TOWStatePinForm','FORMDATA',[
   +#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255
   +#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#255#0#6'Margin'#2#3#9'Num'
   +'Glyphs'#2#0#8'TabOrder'#2#3#0#0#0#6'TPanel'#6'Panel3'#4'Left'#2#0#6'Height'
-  +#3#20#1#3'Top'#2#0#5'Width'#3#221#1#5'Align'#7#8'alClient'#10'BevelOuter'#7#6
-  +'bvNone'#12'ClientHeight'#3#20#1#11'ClientWidth'#3#221#1#8'TabOrder'#2#1#0#6
+  +#3#25#1#3'Top'#2#0#5'Width'#3#221#1#5'Align'#7#8'alClient'#10'BevelOuter'#7#6
+  +'bvNone'#12'ClientHeight'#3#25#1#11'ClientWidth'#3#221#1#8'TabOrder'#2#1#0#6
   +'TPanel'#6'Panel4'#4'Left'#2#0#6'Height'#2#29#3'Top'#2#0#5'Width'#3#221#1#5
   +'Align'#7#5'alTop'#10'BevelOuter'#7#6'bvNone'#7'Caption'#6#6'Panel4'#12'Clie'
   +'ntHeight'#2#29#11'ClientWidth'#3#221#1#8'TabOrder'#2#0#0#6'TLabel'#6'Label1'
@@ -296,16 +296,16 @@ LazarusResources.Add('TOWStatePinForm','FORMDATA',[
   +#2#21#3'Top'#2#4#5'Width'#3#184#1#7'Anchors'#11#5'akTop'#6'akLeft'#7'akRight'
   +#0#10'ItemHeight'#2#13#8'OnChange'#7#19'FormsComboBoxChange'#5'Style'#7#14'c'
   +'sDropDownList'#8'TabOrder'#2#0#0#0#0#6'TPanel'#6'Panel5'#4'Left'#2#0#6'Heig'
-  +'ht'#2#19#3'Top'#3#1#1#5'Width'#3#221#1#5'Align'#7#8'alBottom'#10'BevelOuter'
+  +'ht'#2#19#3'Top'#3#6#1#5'Width'#3#221#1#5'Align'#7#8'alBottom'#10'BevelOuter'
   +#7#6'bvNone'#12'ClientHeight'#2#19#11'ClientWidth'#3#221#1#8'TabOrder'#2#1#0
   +#6'TLabel'#15'LinksCountLabel'#4'Left'#2'*'#6'Height'#2#14#3'Top'#2#3#5'Widt'
   +'h'#2'P'#7'Caption'#6#15'LinksCountLabel'#11'ParentColor'#8#0#0#6'TLabel'#11
   +'StaticLabel'#4'Left'#2#8#6'Height'#2#14#3'Top'#2#3#5'Width'#2' '#7'Caption'
   +#6#7'Links :'#11'ParentColor'#8#0#0#0#6'TPanel'#6'Panel6'#4'Left'#2#0#6'Heig'
-  +'ht'#3#228#0#3'Top'#2#29#5'Width'#3#221#1#5'Align'#7#8'alClient'#10'BevelOut'
+  +'ht'#3#233#0#3'Top'#2#29#5'Width'#3#221#1#5'Align'#7#8'alClient'#10'BevelOut'
   +'er'#7#6'bvNone'#11'BorderStyle'#7#8'bsSingle'#7'Caption'#6#6'Panel6'#12'Cli'
-  +'entHeight'#3#224#0#11'ClientWidth'#3#217#1#8'TabOrder'#2#2#0#9'TTreeView'#8
-  +'TreeView'#4'Left'#2#0#6'Height'#3#224#0#3'Top'#2#0#5'Width'#3#217#1#5'Align'
+  +'entHeight'#3#229#0#11'ClientWidth'#3#217#1#8'TabOrder'#2#2#0#9'TTreeView'#8
+  +'TreeView'#4'Left'#2#0#6'Height'#3#229#0#3'Top'#2#0#5'Width'#3#217#1#5'Align'
   +#7#8'alClient'#11'BorderStyle'#7#6'bsNone'#17'DefaultItemHeight'#2#16#13'Hid'
   +'eSelection'#8#6'Images'#7#13'PinsImageList'#6'Indent'#2'('#8'ShowRoot'#8#11
   +'StateImages'#7#15'StatesImageList'#8'TabOrder'#2#0#24'OnAdvancedCustomDrawI'
