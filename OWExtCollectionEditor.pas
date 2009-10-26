@@ -55,7 +55,7 @@ type
 {$IFDEF D6}
   TOWExtCollectionItemProperty = class( TOWClassPropertyEditor )
 {$ELSE}
-  TOWExtCollectionItemProperty = class(TPropertyEditor)
+  TOWExtCollectionItemProperty = class( TPropertyEditor )
 {$ENDIF}
   protected
     FExtraInfo      : Boolean;

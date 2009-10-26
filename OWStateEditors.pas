@@ -69,7 +69,6 @@ type TAGetPropProc = TGetPropEditProc;
 
 
   TOWStatePinPropertyEditor = class(TPropertyEditor)
-  
   public
     function  GetPin() : TOWStatePin;
 
@@ -80,6 +79,10 @@ type TAGetPropProc = TGetPropEditProc;
     procedure Edit; override;
     function  GetValue: string; override;
     procedure SetValue(const Value: string); override;
+
+  protected
+    function GetIntDesigner() : TOWPropertyDesigner;
+
   end;
   
   TOWStatePinForm = class(TForm)
@@ -137,7 +140,7 @@ type TAGetPropProc = TGetPropEditProc;
     procedure TreeViewExpanded(Sender: TObject; Node: TTreeNode);
     
   private
-    Designer      : IADesigner;
+    Designer      : TOWPropertyDesigner;
     StatePin      : TOWStatePin;
     Root          : TComponent;
     PinsList      : TObjectList;
@@ -166,7 +169,7 @@ type TAGetPropProc = TGetPropEditProc;
     function  EntryFromDispatcher( Dispatcher : TOWStateDispatcher ) : TOWEPinEntry;
 
   public
-    function ExecuteForState( ADesigner : IADesigner; AStatePin : TOWStatePin ): Integer; virtual;
+    function ExecuteForState( ADesigner : TOWPropertyDesigner; AStatePin : TOWStatePin ): Integer; virtual;
     
   public
     property Items : TTreeNodes read GetTreeItems;
@@ -297,7 +300,7 @@ begin
     
 end;
 //------------------------------------------------------------------------------
-function GetStatePinValue( StatePin : TOWStatePin; Designer : IADesigner ) : string;
+function GetStatePinValue( StatePin : TOWStatePin; Designer : TOWPropertyDesigner ) : string;
 begin
   try
     if( StatePin = NIL ) then
@@ -337,7 +340,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function StatePinEdit( Designer : IADesigner; StatePin : TOWStatePin ) : Boolean;
+function StatePinEdit( Designer : TOWPropertyDesigner; StatePin : TOWStatePin ) : Boolean;
 var
   StateRoot     : TComponent;
   CurItem       : TTreeNode;
@@ -440,9 +443,9 @@ var
   StatePin : TOWStatePin;
 
 begin
-  OWRequestRefreshEx(Designer);
+  OWRequestRefreshEx( GetIntDesigner() );
   StatePin := GetPin();
-  if( StatePinEdit( Designer, StatePin )) then
+  if( StatePinEdit( GetIntDesigner(), StatePin )) then
     Modified();
 
 end;
@@ -459,17 +462,27 @@ begin
     Modified();
 
 end;
-
+//---------------------------------------------------------------------------
 function TOWStatePinPropertyEditor.GetValue: string;
 var
   StatePin : TOWStatePin;
 
 begin
-  OWRequestRefreshEx(Designer);
+  OWRequestRefreshEx( GetIntDesigner() );
   StatePin := GetPin();
-  Result := GetStatePinValue( StatePin, Designer );
+  Result := GetStatePinValue( StatePin, GetIntDesigner() );
 
 end;
+//---------------------------------------------------------------------------
+function  TOWStatePinPropertyEditor.GetIntDesigner() : TOWPropertyDesigner;
+begin
+{$IFDEF FPC}
+  Result := PropertyHook;
+{$ELSE}
+  Result := Designer;
+{$ENDIF}
+end;
+//---------------------------------------------------------------------------
 
 {$IFNDEF FPC}
 {$IFNDEF D6}
@@ -517,6 +530,7 @@ var
 {$ENDIF}
 
 begin
+{$IFNDEF FPC}
   FormNames := TOWModulesColection.Create;
 
 {$IFNDEF BDS2005_OR_2006}
@@ -564,7 +578,7 @@ begin
   FormsComboBoxChange( Self );
 
   FormNames.Free;
-
+{$ENDIF}
 end;
 
 procedure TOWStatePinForm.PopulateAll();
@@ -649,11 +663,15 @@ begin
   LinksCountLabel.Caption := IntToStr( Counter );
 end;
 
-function  TOWStatePinForm.ExecuteForState( ADesigner : IADesigner; AStatePin : TOWStatePin ): Integer;
+function  TOWStatePinForm.ExecuteForState( ADesigner : TOWPropertyDesigner; AStatePin : TOWStatePin ): Integer;
 begin
   Designer := ADesigner;
   StatePin := AStatePin;
+{$IFDEF FPC}
+  Root := OWGetMainDesignOwner( AStatePin.Owner );
+{$ELSE}
   Root := ADesigner.GetRoot();
+{$ENDIF}
 
 //  LinkAllButton.Visible := True;
 //  UnlinkAllButton.Visible := True;

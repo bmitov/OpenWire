@@ -1,4 +1,4 @@
-{*> Ver: V4.3.1 *********      History      ***************************\
+{*> Ver: V4.3.2 *********      History      ***************************\
 
 Beta V1.0b0  04/20/2001  Released
 Beta V1.0b1  04/30/2001  Upstream notification added.
@@ -86,7 +86,9 @@ V4.0         03/14/2009  Added Format Converters.
                          New threading lock mechanism.
                          Added debug subscription support.
 V4.3         09/23/2009  Added Delphi 2010 and C++ Builder support.
-V4.31.       10/10/2009  Improved pin list editor.
+V4.3.1       10/10/2009  Improved pin list editor.
+V4.3.2       10/25/2009  Improved pin editors.
+                         Fully Lazarus compatible under Windows.
 
 
 Legal issues: Copyright (C) 2001-2009 by Boian Mitov

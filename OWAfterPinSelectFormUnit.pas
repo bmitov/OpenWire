@@ -1,9 +1,18 @@
 unit OWAfterPinSelectFormUnit;
 
+{$IFDEF FPC}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+{$IFDEF FPC}
+  LCLIntf, LMessages, LResources,
+{$ELSE}
+  Windows, Messages,
+{$ENDIF}
+  SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, Buttons, OWPins;
 
 type
@@ -26,7 +35,9 @@ type
 
 implementation
 
-{$R *.dfm}
+{$IFNDEF FPC}
+{$R *.DFM}
+{$ENDIF}
 
 //type TOWExposedSourcePin = class(TOWSourcePin);
 
@@ -102,5 +113,10 @@ begin
     ModalResult := mrOk;
     
 end;
+
+{$IFDEF FPC}
+initialization
+  {$i OWAfterPinSelectFormUnit.lrs}
+{$ENDIF}
 
 end.

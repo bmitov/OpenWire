@@ -1,5 +1,9 @@
 unit OWClassProperty;
 
+{$IFDEF FPC}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 {$IFDEF VER150} // Delphi 7.0
 {$DEFINE D7}
 {$ENDIF}
@@ -26,33 +30,42 @@ unit OWClassProperty;
 
 interface
 uses
-{$IFDEF __VSDESIGN__}
-  VSDesign,
+{$IFDEF FPC}
+  ComponentEditors, PropEdits,
 {$ELSE}
-  {$IFDEF VER130}
-    dsgnintf,
+  {$IFDEF __VSDESIGN__}
+    VSDesign,
   {$ELSE}
+    {$IFDEF VER130}
+    dsgnintf,
+    {$ELSE}
     DesignEditors, DesignIntf,
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
 Classes, TypInfo;
 
+{$IFDEF FPC}
+  type IProperty = TPropertyEditor;
+{$ENDIF}
+
 {$IFDEF VER130}
   type IProperty = TPropertyEditor;
 {$ENDIF}
 
+{$IFNDEF FPC}
 {$IFNDEF VER130}
-{$IFDEF D9}
+  {$IFDEF D9}
     type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IPropertyKind, IProperty70)
-{$ELSE}
-  {$IFDEF D7}
+  {$ELSE}
+    {$IFDEF D7}
     type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IProperty70)
 
-  {$ELSE}
+    {$ELSE}
     type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty)
+    {$ENDIF}
   {$ENDIF}
-{$ENDIF}
   protected
     function GetEditValue(out Value: string): Boolean; virtual;
     function HasInstance(Instance: TPersistent): Boolean; virtual;
@@ -89,7 +102,11 @@ Classes, TypInfo;
   public
     constructor CreateEx( const ADesigner: IDesigner );
 
+  public
+    property Designer : IDesigner read FDesigner;
+    
 end;
+{$ENDIF}
 {$ENDIF}
 
 type TOWComponentEditor = class( TComponentEditor )
@@ -98,18 +115,23 @@ protected
     TargetProperty : String;
 
 protected
-{$IFDEF VER130}
-    procedure AGetPropProc( Prop: IProperty);
+{$IFDEF FPC}
+    procedure AGetPropProc( Prop: TPropertyEditor);
 {$ELSE}
+  {$IFDEF VER130}
+    procedure AGetPropProc( Prop: IProperty);
+  {$ELSE}
     procedure AGetPropProc(const Prop: IProperty);
+  {$ENDIF}
 {$ENDIF}
     function  GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
-    procedure EditProperty( PropertyName : String ); 
-    
+    procedure EditProperty( PropertyName : String );
+
 end;
 
 implementation
 
+{$IFNDEF FPC}
 uses OWDesignSelectionsList;
 
 {$IFDEF VER130}
@@ -228,7 +250,9 @@ procedure TOWClassPropertyEditor.Modified();
 begin
   if( FDesigner <> NIL ) then
     FDesigner.Modified();
+    
 end;
+{$ENDIF}
 {$ENDIF}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -236,8 +260,13 @@ end;
 //---------------------------------------------------------------------------
 function  TOWComponentEditor.GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
 var
+{$IFDEF FPC}
+  SelectionList : TPersistentSelectionList;
+  APropertyHook : TPropertyEditorHook;
+{$ELSE}
   SelectionListI : IDesignerSelections;
   SelectionList : TADesignerSelectionList;
+{$ENDIF}
 
 begin
   LastIProp := NIL;
@@ -249,14 +278,27 @@ begin
   if( PropertyName = '' ) then
     Exit;
 
+{$IFDEF FPC}
+  APropertyHook := TPropertyEditorHook.Create();
+  APropertyHook.LookupRoot := Comp;
+  SelectionList := TPersistentSelectionList.Create();
+{$ELSE}
   SelectionList := TADesignerSelectionList.Create();
   SelectionListI := SelectionList as IDesignerSelections;
+{$ENDIF}
   SelectionList.Add( Comp );
   TargetProperty := PropertyName;
-{$IFDEF VER130}
-  GetComponentProperties( SelectionList, AFilter, Designer, AGetPropProc );
+
+{$IFDEF FPC}
+  GetPersistentProperties( SelectionList, AFilter, APropertyHook, AGetPropProc, NIL );
+  SelectionList.Free();
+  APropertyHook.Free();
 {$ELSE}
+  {$IFDEF VER130}
+  GetComponentProperties( SelectionList, AFilter, Designer, AGetPropProc );
+  {$ELSE}
   GetComponentProperties( SelectionListI, AFilter, Designer, AGetPropProc );
+  {$ENDIF}
 {$ENDIF}
   Result := LastIProp;
 end;
@@ -270,12 +312,16 @@ begin
   if( PropIProp <> NIL ) then
     PropIProp.Edit();
 
-end; 
+end;
 //---------------------------------------------------------------------------
-{$IFDEF VER130}
-procedure TOWComponentEditor.AGetPropProc(Prop: IProperty);
+{$IFDEF FPC}
+procedure TOWComponentEditor.AGetPropProc(Prop: TPropertyEditor);
 {$ELSE}
+  {$IFDEF VER130}
+procedure TOWComponentEditor.AGetPropProc(Prop: IProperty);
+  {$ELSE}
 procedure TOWComponentEditor.AGetPropProc(const Prop: IProperty);
+  {$ENDIF}
 {$ENDIF}
 begin
   if( Prop.GetName() = TargetProperty ) then
@@ -283,3 +329,4 @@ begin
 end;
 //---------------------------------------------------------------------------
 end.
+

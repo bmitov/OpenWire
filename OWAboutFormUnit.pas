@@ -1,5 +1,9 @@
 unit OWAboutFormUnit;
 
+{$IFDEF FPC}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 {$IFDEF VER140} // Delphi 6.0
 {$DEFINE D6}
 {$ENDIF}
@@ -9,17 +13,34 @@ unit OWAboutFormUnit;
 {$ENDIF}
 
 {$IFDEF VER170} // Delphi 9.0
-{$DEFINE D9}
+{$DEFINE D6}
 {$ENDIF}
 
 {$IFDEF VER180} // Delphi 10.0
-{$DEFINE D9}
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER190} // Delphi 11.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER200} // Delphi 12.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER210} // Delphi 13.0
+{$DEFINE D6}
 {$ENDIF}
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+{$IFDEF FPC}
+  LCLIntf, LMessages, LResources,
+{$ELSE}
+  Windows, Messages,
+{$ENDIF}
+  SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Buttons, ExtCtrls;
 
 type
@@ -43,9 +64,13 @@ type
 
 implementation
 
+{$IFNDEF FPC}
 uses ShellAPI;
+{$ENDIF}
 
+{$IFNDEF FPC}
 {$R *.DFM}
+{$ENDIF}
 
 procedure TOWAboutForm.FormKeyPress(Sender: TObject; var Key: Char);
 begin
@@ -59,7 +84,11 @@ end;
 
 procedure TOWAboutForm.OWLabelClick(Sender: TObject);
 begin
+{$IFDEF FPC}
+  OpenURL( 'http://www.openwire.org' );
+{$ELSE}
   ShellExecute( 0, 'open', 'http://www.openwire.org', '', '', SW_SHOWNORMAL );
+{$ENDIF}
 end;
 
 procedure TOWAboutForm.OWLabelMouseEnter(Sender: TObject);
@@ -79,5 +108,10 @@ begin
   OWLabel.OnMouseLeave := OWLabelMouseLeave;
 {$ENDIF}
 end;
+
+{$IFDEF FPC}
+initialization
+  {$i OWAboutFormUnit.lrs}
+{$ENDIF}
 
 end.
