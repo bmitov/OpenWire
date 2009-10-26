@@ -1,0 +1,62 @@
+object OWAfterPinSelectForm: TOWAfterPinSelectForm
+  Left = 100
+  Height = 305
+  Top = 100
+  Width = 236
+  Caption = 'Pin Selection Dialog'
+  ClientHeight = 305
+  ClientWidth = 236
+  Constraints.MinHeight = 200
+  Constraints.MinWidth = 200
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Position = poOwnerFormCenter
+  LCLVersion = '0.9.29'
+  object ListBox: TListBox
+    Left = 0
+    Height = 264
+    Top = 0
+    Width = 236
+    Align = alClient
+    ItemHeight = 0
+    OnDblClick = ListBoxDblClick
+    TabOrder = 0
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 41
+    Top = 264
+    Width = 236
+    Align = alBottom
+    ClientHeight = 41
+    ClientWidth = 236
+    TabOrder = 1
+    object Panel2: TPanel
+      Left = 50
+      Height = 39
+      Top = 1
+      Width = 185
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 39
+      ClientWidth = 185
+      TabOrder = 0
+      object CancelButton: TBitBtn
+        Left = 96
+        Height = 25
+        Top = 8
+        Width = 75
+        Kind = bkCancel
+        TabOrder = 0
+      end
+      object OkButton: TBitBtn
+        Left = 8
+        Height = 25
+        Top = 8
+        Width = 75
+        Kind = bkOK
+        TabOrder = 1
+      end
+    end
+  end
+end
