@@ -48,6 +48,14 @@ interface
 {$ENDIF}
 {$ENDIF}
 
+{$IFNDEF FPC}
+{$IFNDEF D6}
+
+{$DEFINE D5}
+
+{$ENDIF}
+{$ENDIF}
+
 uses
 {$IFDEF FPC}
   LCLIntf, LMessages, LResources, PropEdits,
@@ -2784,7 +2792,12 @@ end;
 //---------------------------------------------------------------------------
 function  TOWPinListPropertyEditor.GetAttributes(): TPropertyAttributes;
 begin
-  Result := [ paSubProperties, paReadOnly ];
+  Result := [ paSubProperties, paReadOnly,
+{$IFNDEF D5}
+  paVolatileSubProperties,
+{$ENDIF}
+  paAutoUpdate ];
+  
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
@@ -2873,7 +2886,12 @@ end;
 //---------------------------------------------------------------------------
 function  TOWPinListOwnerPropertyEditor.GetAttributes(): TPropertyAttributes;
 begin
-  Result := [ paSubProperties ];
+  Result := [ paSubProperties,
+{$IFNDEF D5}
+  paVolatileSubProperties,
+{$ENDIF}
+  paAutoUpdate ];
+  
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
