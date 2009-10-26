@@ -2,7 +2,7 @@ object OWAboutForm: TOWAboutForm
   Left = 100
   Top = 100
   BorderStyle = bsToolWindow
-  Caption = 'www'
+  Caption = 'About OpenWire'
   ClientHeight = 339
   ClientWidth = 324
   Color = 15780517
