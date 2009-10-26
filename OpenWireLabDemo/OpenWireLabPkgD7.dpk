@@ -2,6 +2,7 @@ package OpenWireLabPkgD7;
 
 {$R *.res}
 {$R 'OWLComps.dcr'}
+{$R 'OWLStateComps.dcr'}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}

@@ -949,11 +949,7 @@ begin
         end;
 
       end;
-
-
-
     
-  // TODO
   finally
     Values.Free;
     Items.EndUpdate();
