@@ -44,7 +44,7 @@ uses
   {$ENDIF}
 {$ENDIF}
 
-Classes, TypInfo;
+Classes, TypInfo, Contnrs;
 
 {$IFDEF FPC}
   type IProperty = TPropertyEditor;
@@ -52,6 +52,13 @@ Classes, TypInfo;
 
 {$IFDEF VER130}
   type IProperty = TPropertyEditor;
+  type IOWDesigner = IFormDesigner;
+{$ELSE}
+  {$IFDEF FPC}
+    type IOWDesigner = TComponentEditorDesigner;
+  {$ELSE}
+    type IOWDesigner = IDesigner;
+  {$ENDIF}
 {$ENDIF}
 
 {$IFNDEF FPC}
@@ -109,14 +116,53 @@ end;
 {$ENDIF}
 {$ENDIF}
 
-type TOWComponentEditor = class( TComponentEditor )
-protected
+type TOWComponentEditorEvent = procedure of object;
+
+type TOWComponentEditorItem = class
+private
+  FMenuText     : String;
+  FPropertyName : String;
+  FFilter       : TTypeKinds;
+  FCallback     : TOWComponentEditorEvent;
+  
+public
+  constructor Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter : TTypeKinds; APropertyName : String );
+  
+end;
+
+type
+  TOWComponentEditorItems = class
+  private
+    FList : TObjectList;
+
+  private
+    function GetCount() : Integer;
+    function GetItem( AIndex : Integer ) : TOWComponentEditorItem;
+    procedure SetItem( AIndex : Integer; AValue : TOWComponentEditorItem );
+
+  public
+    procedure Add( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter: TTypeKinds; APropertyName : String );
+
+  public
+    constructor Create();
+    destructor  Destroy(); override;
+
+  public
+    property Count : Integer read GetCount;
+    property Items[ Index : Integer ] : TOWComponentEditorItem read GetItem write SetItem; default;
+
+  end;
+
+type
+  TOWComponentEditor = class( TComponentEditor )
+  protected
     LastIProp      : IProperty;
     TargetProperty : String;
+    FMenuItems     : TOWComponentEditorItems;
 
-protected
+  protected
 {$IFDEF FPC}
-    procedure AGetPropProc( Prop: TPropertyEditor);
+    procedure AGetPropProc( Prop: TPropertyEditor );
 {$ELSE}
   {$IFDEF VER130}
     procedure AGetPropProc( Prop: IProperty);
@@ -125,9 +171,26 @@ protected
   {$ENDIF}
 {$ENDIF}
     function  GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
-    procedure EditProperty( PropertyName : String );
+    procedure EditProperty( PropertyName : String ); overload;
+    procedure EditProperty( AFilter: TTypeKinds; PropertyName : String ); overload;
+    procedure AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent ); overload;
+    procedure AddMenuItem( AMenuText : String; APropertyName : String ); overload;
+    procedure AddMenuItem( AMenuText : String; AFilter: TTypeKinds; APropertyName : String ); overload;
+    procedure InitMenu(); virtual;
 
-end;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function  GetVerb(Index: Integer) : string; override;
+    function  GetVerbCount() : Integer; override;
+
+  public
+    procedure AfterConstruction(); override;
+    
+  public
+    constructor Create(AComponent: TComponent; ADesigner: IOWDesigner); override;
+    destructor Destroy(); override;
+    
+  end;
 
 implementation
 
@@ -303,12 +366,39 @@ begin
   Result := LastIProp;
 end;
 //---------------------------------------------------------------------------
+constructor TOWComponentEditor.Create(AComponent: TComponent; ADesigner: IOWDesigner);
+begin
+  inherited;
+  FMenuItems := TOWComponentEditorItems.Create();
+end;
+//---------------------------------------------------------------------------
+destructor TOWComponentEditor.Destroy();
+begin
+  FMenuItems.Free();
+  inherited;
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.AfterConstruction();
+begin
+  inherited;
+  InitMenu();
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.InitMenu();
+begin
+end;
+//---------------------------------------------------------------------------
 procedure TOWComponentEditor.EditProperty( PropertyName : String );
+begin
+  EditProperty( tkProperties, PropertyName );
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.EditProperty( AFilter: TTypeKinds; PropertyName : String );
 var
   PropIProp : IProperty;
 
 begin
-  PropIProp := GetIProperty( Component, tkProperties, PropertyName );
+  PropIProp := GetIProperty( Component, AFilter, PropertyName );
   if( PropIProp <> NIL ) then
     PropIProp.Edit();
 
@@ -326,6 +416,88 @@ procedure TOWComponentEditor.AGetPropProc(const Prop: IProperty);
 begin
   if( Prop.GetName() = TargetProperty ) then
     LastIProp := Prop;
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent );
+begin
+  FMenuItems.Add( AMenuText, ACallback, [], '' ); 
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.AddMenuItem( AMenuText : String; APropertyName : String );
+begin
+  AddMenuItem( AMenuText, tkProperties, APropertyName ); 
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.AddMenuItem( AMenuText : String; AFilter: TTypeKinds; APropertyName : String );
+begin
+  FMenuItems.Add( AMenuText, NIL, AFilter, APropertyName );
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if( Assigned( FMenuItems[ Index ].FCallback )) then
+    FMenuItems[ Index ].FCallback()
+
+  else
+    EditProperty( FMenuItems[ Index ].FFilter, FMenuItems[ Index ].FPropertyName ); 
+    
+end;
+//---------------------------------------------------------------------------
+function TOWComponentEditor.GetVerb(Index: Integer): string;
+begin
+  Result := FMenuItems[ Index ].FMenuText;
+end;
+//---------------------------------------------------------------------------
+function TOWComponentEditor.GetVerbCount() : Integer;
+begin
+  Result := FMenuItems.Count;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWComponentEditorItems.Create();
+begin
+  inherited;
+  FList := TObjectList.Create( True );
+end;
+//---------------------------------------------------------------------------
+destructor TOWComponentEditorItems.Destroy();
+begin
+  FList.Free();
+  inherited;
+end;
+//---------------------------------------------------------------------------
+function TOWComponentEditorItems.GetCount() : Integer;
+begin
+  Result := FList.Count; 
+end;
+//---------------------------------------------------------------------------
+function TOWComponentEditorItems.GetItem( AIndex : Integer ) : TOWComponentEditorItem;
+begin
+  Result := TOWComponentEditorItem( FList[ AIndex ] );
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditorItems.SetItem( AIndex : Integer; AValue : TOWComponentEditorItem );
+begin
+  FList[ AIndex ] := AValue;
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditorItems.Add( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter: TTypeKinds; APropertyName : String );
+begin
+  FList.Add( TOWComponentEditorItem.Create( AMenuText, ACallback, AFilter, APropertyName ));
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWComponentEditorItem.Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter : TTypeKinds; APropertyName : String );
+begin
+  inherited Create;
+  FMenuText := AMenuText;
+  FCallback := ACallback;
+  FFilter := AFilter;
+  FPropertyName := APropertyName;
 end;
 //---------------------------------------------------------------------------
 end.

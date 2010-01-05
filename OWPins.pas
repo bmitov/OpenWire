@@ -73,6 +73,9 @@ V2.0b1       11/13/2002  TOWStatePins added. Improved Notify mechanism by using 
 V2.0b2       12/09/2002  TOWStateDispatcher is a TPersistent. Some changes in the TypeDependency.
 V2.0b3       01/21/2003  State pin notification improvements.
 V2.0b4       02/12/2003  Some minor overall fixes.
+V2.0         04/13/2003  Official release.
+V2.1         05/15/2003  Maintenance release.
+V2.2         08/27/2003  Maintenance release.
 V2.3         01/03/2004  Complex data type added. Some minor overall fixes.
 V2.4         12/02/2004  Multithreading. Delphi 2005 support. Reduced compile warnings. Multy pump support.
 V2.5         06/22/2005  Improved Multithreading. Added OperationID. Added partial support for Delphi 10
@@ -3633,7 +3636,7 @@ begin
     ReadName := Reader.ReadString();
     LinkToStateByName( ReadName );
 
-    while not Reader.EndOfList do
+    while( not Reader.EndOfList ) do
       begin
       AfterReadIdent := '';
       AfterReadName := '';
@@ -8184,8 +8187,6 @@ var
   PropertyObject        : TObject;
   PinIndex              : Integer;
   DoBreak               : Boolean;
-//  PersistentClass       : TPersistentClass;
-//  Ret   : Boolean;
 
 begin
   Result := '';
@@ -8194,9 +8195,8 @@ begin
     if( csDestroying in TComponent( AClass ).ComponentState )then
       Exit;
 
-{ This method retrieves the property names and types for the given object
-  and adds that information to the AStrings parameter. }
-
+// This method retrieves the property names and types for the given object
+//  and adds that information to the AStrings parameter.
 
   ClassTypeInfo := PTypeInfo(AClass.ClassInfo());
   ClassTypeData := GetTypeData(ClassTypeInfo);
@@ -8206,7 +8206,6 @@ begin
     // allocate the memory needed to hold the references to the TPropInfo
     // structures on the number of properties.
     GetMem( PropList, sizeof( PPropInfo ) * ClassTypeData.PropCount );
-//    PropList := new PPropInfo [ ClassTypeData->PropCount ];
     try
       // fill PropList with the pointer references to the TPropInfo structures
       GetPropInfos( PTypeInfo( AClass.ClassInfo() ), PropList);
@@ -8217,33 +8216,16 @@ begin
 {$ELSE}
         TypeInfo := PropList[i].PropType^^;
 {$ENDIF}
-{
-        PersistentClass := GetClass( TypeInfo.Name );
-        Ret := PersistentClass.InheritsFrom( GetClass( TypeName ));
-        if( Ret ) then
-          AStrings.AddObject( TypeInfo.Name, NIL );
-}
         if( TypeInfo.Kind = tkClass ) then
           begin
-//function GetObjectProp(Instance: TObject; PropInfo: PPropInfo;
-//  MinClass: TClass = nil): TObject; overload;
           PropertyObject := GetObjectProp( AClass, PropList[i]);
-{
-          if( PropertyObject = PinObject ) then
-            if( IsDescendOf( PropertyObject, TypeName )) then
-              begin
-              Result := String(PropList[i].Name);
-              Break;
-              end
-
-}
+          
           if( PropertyObject <> NIL ) then
             begin
             if( PropertyObject = PinObject ) then
               begin
               Result := APrefix + String(PropList[i].Name);
               Break;
-//              AStrings.AddObject ( String(PropList[i].Name), PropertyObject );
               end
 
             else if( PropertyObject is TOWPinList )then
@@ -8259,13 +8241,6 @@ begin
                     DoBreak := True;
                     Break;
                     end; 
-{
-                  if( SaveValue ) then
-                    AStrings.AddObject( String(PropList[i].Name) + '._Pin' + IntToStr( PinIndex ), TOWPinList( PropertyObject ).Pins[ PinIndex ] )
-
-                  else
-                    AStrings.AddObject( String(PropList[i].Name) + '.' + TOWPinList( PropertyObject ).Names[ PinIndex ], TOWPinList( PropertyObject ).Pins[ PinIndex ] );
-}
                   end;
                 end;
 
@@ -8277,6 +8252,7 @@ begin
             else if( PropertyObject is TPersistent )then
               begin
               if( not ( PropertyObject is TComponent )) then
+                begin
                 if( APropertyStack.IndexOf( PropertyObject ) = -1 ) then
                   begin
                   APropertyStack.Add( PropertyObject );
@@ -8285,7 +8261,7 @@ begin
                     Break;
                     
                   end;
-
+                end;
               end;
             end;
           end;
@@ -8335,9 +8311,8 @@ begin
     if( csDestroying in TComponent( AClass ).ComponentState )then
       Exit;
 
-{ This method retrieves the property names and types for the given object
-  and adds that information to the AStrings parameter. }
-
+// This method retrieves the property names and types for the given object
+//  and adds that information to the AStrings parameter.
 
   ClassTypeInfo := PTypeInfo(AClass.ClassInfo());
   ClassTypeData := GetTypeData(ClassTypeInfo);
@@ -8350,7 +8325,7 @@ begin
 //    PropList := new PPropInfo [ ClassTypeData->PropCount ];
     try
       // fill PropList with the pointer references to the TPropInfo structures
-      GetPropInfos( PTypeInfo( AClass.ClassInfo() ), PropList);
+      GetPropInfos( PTypeInfo( AClass.ClassInfo() ), PropList );
       for i := 0 to ClassTypeData.PropCount - 1 do
         begin
 {$IFDEF fpc}
@@ -8360,13 +8335,11 @@ begin
 {$ENDIF}
         if ( TypeInfo.Kind = tkClass ) then
           begin
-          PropertyObject := GetObjectProp( AClass, PropList[i]);
+          PropertyObject := GetObjectProp( AClass, PropList[i] );
           if( PropertyObject <> NIL ) then
             begin
             if( IsDescendOf( PropertyObject, TypeName )) then
-              begin
-              AStrings.AddObject ( APrefix + String(PropList[i].Name), PropertyObject );
-              end
+              AStrings.AddObject( APrefix + String(PropList[i].Name), PropertyObject )
 
             else if( PropertyObject is TOWPinList )then
               begin
@@ -8402,6 +8375,7 @@ begin
     except
       Result := False;
     end;
+    
     FreeMem( PropList );
 
     end;
@@ -8471,7 +8445,7 @@ begin
   Result := OWGetPinsValueListSingleRoot( List, OwnerComponent, APin, Link, RootName, ValueFilters );
 end;
 //---------------------------------------------------------------------------
-function  OWGetPinsValueListSingleRoot( List : TStrings; OwnerComponent : TComponent;  APin : TOWPin; Link : String; RootName : String; ValueFilters : TOWPinValueFilters ) : Boolean;
+function OWGetPinsValueListSingleRoot( List : TStrings; OwnerComponent : TComponent;  APin : TOWPin; Link : String; RootName : String; ValueFilters : TOWPinValueFilters ) : Boolean;
 var
   IntList       : TStringList;
   i, j          : Integer;

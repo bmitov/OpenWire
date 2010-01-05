@@ -26,7 +26,6 @@
 			<DCC_DcuOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcuOutput>
 			<DCC_DcpOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcpOutput>
 			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\OpenWireLabPkgD13.bpl</DCC_DependencyCheckOutputName>
 			<DCC_Description>OpenWire DemoLab demonstration package</DCC_Description>

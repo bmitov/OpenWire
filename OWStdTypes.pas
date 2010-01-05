@@ -954,7 +954,7 @@ type
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
 
   public
-    procedure SubmitReal( Value : Real );
+    procedure SubmitReal( AValue : Real );
 
   protected
     function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -1086,7 +1086,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWRealRangedStatePin = class( TOWStatePin, IOWRealRangedStream, IOWRealStream )
+  TOWRealAndRangedStatePin = class( TOWStatePin, IOWRealRangedStream, IOWRealStream )
   public
     FPinNotificationEvent : TOWPinNotificationEvent;
     FOnDataChange  : TOWRealValueRangeChangeEvent;
@@ -2319,9 +2319,10 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealSourcePin.SubmitReal( Value : Real );
+procedure TOWRealSourcePin.SubmitReal( AValue : Real );
 begin
-  Notify( TOWSuppliedRealOperation.Create( Value ));
+  FValue := AValue;
+  Notify( TOWSuppliedRealOperation.Create( AValue ));
 end;
 //---------------------------------------------------------------------------
 function TOWRealSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
@@ -4193,7 +4194,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWRealRangedStatePin.Create( AOwner: TComponent; AValue : Real; AMin : Real; AMax : Real; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWRealAndRangedStatePin.Create( AOwner: TComponent; AValue : Real; AMin : Real; AMax : Real; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited Create( AOwner );
   FOnRangeChange := AOnRangeChange;
@@ -4206,7 +4207,7 @@ begin
   FValue := AValue;
 end;
 //---------------------------------------------------------------------------
-constructor TOWRealRangedStatePin.CreateLock( AOwner: TComponent; AValue : Real; AMin : Real; AMax : Real; AOwnerLock : IOWLock; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWRealAndRangedStatePin.CreateLock( AOwner: TComponent; AValue : Real; AMin : Real; AMax : Real; AOwnerLock : IOWLock; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock );
   FOnRangeChange := AOnRangeChange;
@@ -4219,7 +4220,7 @@ begin
   FValue := AValue;
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedStatePin.SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
+procedure TOWRealAndRangedStatePin.SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
 begin
   FMin := AMin;
   FMax := AMax;
@@ -4227,14 +4228,14 @@ begin
   Notify( TOWSuppliedRealValueRangeOperation.Create( AValue, AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedStatePin.SubmitRange( AMin : Real; AMax : Real );
+procedure TOWRealAndRangedStatePin.SubmitRange( AMin : Real; AMax : Real );
 begin
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedRealRangeOperation.Create( AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
-function TOWRealRangedStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+function TOWRealAndRangedStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   InterfReal    : IOWRealStream;
   InterfFloat   : IOWFloatStream;
@@ -4298,7 +4299,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWRealRangedStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+function TOWRealAndRangedStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   if( Operation.Instance() is TOWSuppliedRealValueRangeOperation ) then
     begin
@@ -4376,7 +4377,7 @@ begin
   
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedStatePin.SetValue( AValue : Real );
+procedure TOWRealAndRangedStatePin.SetValue( AValue : Real );
 begin
   if( FValue <> AValue ) then
     begin
@@ -4386,7 +4387,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedStatePin.SetMin( AValue : Real );
+procedure TOWRealAndRangedStatePin.SetMin( AValue : Real );
 begin
   if( FMin <> AValue ) then
     begin
@@ -4396,7 +4397,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedStatePin.SetMax( AValue : Real );
+procedure TOWRealAndRangedStatePin.SetMax( AValue : Real );
 begin
   if( FMax <> AValue ) then
     begin
