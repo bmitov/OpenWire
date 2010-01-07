@@ -25,7 +25,11 @@ interface
 {$DEFINE D6}
 {$ENDIF}
 
-{$IFDEF VER210} // Delphi 13.0
+{$IFDEF VER210} // Delphi 14.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15.0
 {$DEFINE D6}
 {$ENDIF}
 
@@ -143,9 +147,14 @@ procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
   ACollection: TCollection; const PropertyName: string); external 'designide120.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
-{$IFDEF VER210} // Delphi 13.0
+{$IFDEF VER210} // Delphi 14.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
   ACollection: TCollection; const PropertyName: string); external 'designide140.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15.0
+procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: string); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
 //------------------------------------------------------------------------------
