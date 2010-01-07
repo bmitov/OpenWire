@@ -37,7 +37,12 @@ interface
 {$DEFINE D9}
 {$ENDIF}
 
-{$IFDEF VER210} // Delphi 13.0
+{$IFDEF VER210} // Delphi 14.0
+{$DEFINE D6}
+{$DEFINE D9}
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15.0
 {$DEFINE D6}
 {$DEFINE D9}
 {$ENDIF}
@@ -463,12 +468,17 @@ const
     {$ENDIF}
 
   {$ELSE} // Delphi 11 up
-    {$IFDEF VER210} // Delphi 13
+    {$IFDEF VER220} // Delphi 15
       {$R OpenWireResources2006.res}
 
-    {$ELSE} // Delphi 11
-      {$R OpenWireResources2007.res}
+    {$ELSE} // Delphi 15
+      {$IFDEF VER210} // Delphi 14
+        {$R OpenWireResources2006.res}
 
+      {$ELSE} // Delphi 14
+        {$R OpenWireResources2007.res}
+
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}

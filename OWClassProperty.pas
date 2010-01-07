@@ -24,7 +24,11 @@ unit OWClassProperty;
 {$DEFINE D9}
 {$ENDIF}
 
-{$IFDEF VER210} // Delphi 13.0
+{$IFDEF VER210} // Delphi 14.0
+{$DEFINE D9}
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15.0
 {$DEFINE D9}
 {$ENDIF}
 
