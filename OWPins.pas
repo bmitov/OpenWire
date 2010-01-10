@@ -180,6 +180,7 @@ protected
 {$ENDIF}
 
 public
+  constructor CreateNamed( AName : String; AManualReset : Boolean; AInitialState : Boolean );
   constructor Create( AManualReset : Boolean; AInitialState : Boolean );
   destructor  Destroy(); override;
 
@@ -273,6 +274,7 @@ type
   end;
 
 type TOWDBOperation = (
+  owdbNone,
   owdbError,
   owdbCreate, owdbDestroy,
   owdbBeginWriteCreate, owdbWriteCreate, owdbBeginWriteDestroy, owdbWriteDestroy,
@@ -306,6 +308,7 @@ const GOWDBG_HISTORY_SIZE = 6999;
 type TGOWDBGLockHistoryArray = array [ 0..GOWDBG_HISTORY_SIZE ] of TOWDBLockRecord;
 
 type TGOWDBGLockHistory = record
+  Active  : Boolean;
   Index   : Integer;
   History : TGOWDBGLockHistoryArray;
 
@@ -1711,6 +1714,11 @@ var // State pins support
   GlobalStorageSection : TOWCriticalSection;
 {$IFDEF __LOCKS_DBG__}
   LogStorageSection : TOWDebugCriticalSection;
+{$IFDEF __LOCKS_DBG_MAPPED__}
+  LogStartStopEvent : TOWEvent;
+  LogEvent          : TOWEvent;
+{$ENDIF}
+
 {$ENDIF}
 
 //---------------------------------------------------------------------------
@@ -11257,6 +11265,16 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+constructor TOWEvent.CreateNamed( AName : String; AManualReset : Boolean; AInitialState : Boolean );
+begin
+  inherited Create();
+{$IFDEF fpc}
+  FHandle := BasicEventCreate( NIL, AManualReset, AInitialState, AName );
+{$ELSE}
+  FHandle := CreateEvent( NIL, AManualReset, AInitialState, PChar( AName ));
+{$ENDIF}
+end;
+//---------------------------------------------------------------------------
 constructor TOWEvent.Create( AManualReset : Boolean; AInitialState : Boolean );
 begin
   inherited Create();
@@ -11621,12 +11639,16 @@ begin
 
   LogStorageSection.Leave();
   ALock.IntUnlock();
+{$IFDEF __LOCKS_DBG_MAPPED__}
+  LogEvent.Signal();
+{$ENDIF}
 {$ENDIF}
 end;
 {$IFDEF __LOCKS_DBG__}
 //---------------------------------------------------------------------------
-const GOWDbgStrings : array [0..14] of String =
+const GOWDbgStrings : array [owdbNone..owdbUnlockDestroy] of String =
 (
+  'None             ',
   'Error            ',
   'Create           ',
   'Destroy          ',
@@ -11666,7 +11688,7 @@ begin
       begin
       ALine := IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Lock ), 8 ) + '  ';
       ALine := ALine + IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Section ), 8 ) + '  ';
-      ALine := ALine + GOWDbgStrings[ Integer( GOWDBGLockHistory.History[ I ].Operation ) ];
+      ALine := ALine + GOWDbgStrings[ GOWDBGLockHistory.History[ I ].Operation ];
       ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].ThreadID ] ) + '  ';
       ALine := ALine + Format( '%8d', [ GOWDBGLockHistory.History[ I ].OwningThreadID ] ) + ' ';
       ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountLocks ] ) + '  ';
@@ -11729,9 +11751,10 @@ begin
 
   GDBGMemMap := CreateFileMapping( $FFFFFFFF, nil, PAGE_READWRITE, 0, SizeOf( TGOWDBGLockHistory ), PChar( 'OpenWireDbg' + IntToStr( AIndex )) );
   if( GDBGMemMap <> 0 ) then
-    GOWDBGLockHistory := MapViewOfFile( GDBGMemMap, FILE_MAP_WRITE, 0, 0, SizeOf( TGOWDBGLockHistory ) );
+    GOWDBGLockHistory := MapViewOfFile( GDBGMemMap, FILE_MAP_ALL_ACCESS, 0, 0, SizeOf( TGOWDBGLockHistory ) );
 
   LogStorageSection := TOWDebugCriticalSection.CreateNamed( 'OpenWireDbgMutex' + IntToStr( AIndex ), False );
+  LogEvent := TOWEvent.CreateNamed( 'OpenWireDbgEvent' + IntToStr( AIndex ), False, False );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
@@ -11740,16 +11763,17 @@ initialization
 {$IFDEF __LOCKS_DBG__}
 {$IFNDEF __LOCKS_DBG_MAPPED__}
   LogStorageSection := TOWCriticalSection.Create();
-{$ENDIF}
-{$ENDIF}
-  GOWDBGNotifySection := TOWCriticalSection.Create();
-  GOWDBGNotifyList := TInterfaceList.Create();
-{$IFDEF __LOCKS_DBG_MAPPED__}
+{$ELSE}
+  LogStartStopEvent := TOWEvent.CreateNamed( 'OpenWireDbgStartStopEvent', False, False );
   OpenDebugMemoryMap();
 {$ENDIF}
   GOWDBGLockHistory.Index := 0;
+  GOWDBGLockHistory.Active := True;
+{$ENDIF}
+  GOWDBGNotifySection := TOWCriticalSection.Create();
+  GOWDBGNotifyList := TInterfaceList.Create();
   Loaded := True;
-//  GFileLog := TFileStream.Create( 'C:\OWLog.txt', fmCreate ); 
+//  GFileLog := TFileStream.Create( 'C:\OWLog.txt', fmCreate );
   NotifyList := TInterfaceList.Create();
 
   // State pins support
@@ -11757,6 +11781,9 @@ initialization
   RunDispatchers := TObjectList.Create( False );
   GOWPins := TOWInternalPinList.Create( False );
   GOWUnloadedPins := TOWBasicPinList.Create( True );
+{$IFDEF __LOCKS_DBG_MAPPED__}
+  LogStartStopEvent.Signal();
+{$ENDIF}
 
 finalization
   if( Loaded ) then
@@ -11773,13 +11800,17 @@ finalization
     NotifyList := NIL;
     Loaded := False;
 {$IFDEF __LOCKS_DBG_MAPPED__}
+    LogStartStopEvent.Signal();
+    GOWDBGLockHistory.Active := False;
     if( GOWDBGLockHistory <> NIL ) then
       UnMapViewOfFile( GOWDBGLockHistory );
 
     GOWDBGLockHistory := NIL;
     if( GDBGMemMap <> 0 ) then
       CloseHandle( GDBGMemMap );
-    
+
+    LogStartStopEvent.Free();
+    LogEvent.Free();
 {$ENDIF}
 
 {$IFDEF __LOCKS_DBG__}
