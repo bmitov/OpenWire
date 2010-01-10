@@ -205,6 +205,7 @@ private
 {$ENDIF}
 
 public
+  constructor CreateNamed( AName : String; AInitialOwner : Boolean );
   constructor Create( AInitialOwner : Boolean );
   destructor Destroy(); override;
   
@@ -300,10 +301,36 @@ type TOWDBLockRecord = record
 
 end;
 
-const GOWDBG_HISTORY_SIZE = 6999; 
+const GOWDBG_HISTORY_SIZE = 6999;
 
-var GOWDBGLockIndex : Integer = 0;
-var GOWDBGLockHistory : array [ 0..GOWDBG_HISTORY_SIZE ] of TOWDBLockRecord;
+type TGOWDBGLockHistoryArray = array [ 0..GOWDBG_HISTORY_SIZE ] of TOWDBLockRecord;
+
+type TGOWDBGLockHistory = record
+  Index   : Integer;
+  History : TGOWDBGLockHistoryArray;
+
+end;
+
+type PGOWDBGLockHistory = ^TGOWDBGLockHistory;
+
+{$IFDEF __LOCKS_DBG_MAPPED__}
+type TOWDebugCriticalSection = class( TOWMutex )
+public
+  procedure Enter();
+  procedure Leave();
+
+end; 
+
+var GDBGMemMap        : THandle;            // Mapping handle
+var GOWDBGLockHistory : PGOWDBGLockHistory; // Memory Pointer
+
+{$ELSE}
+type TOWDebugCriticalSection = TOWCriticalSection;
+ 
+var GOWDBGLockHistoryData : TGOWDBGLockHistory;
+var GOWDBGLockHistory  : PGOWDBGLockHistory = @GOWDBGLockHistoryData;
+{$ENDIF}
+
 {$ENDIF}
 
 type
@@ -1683,7 +1710,7 @@ var // State pins support
   GIgnoreDesignMode : Boolean;
   GlobalStorageSection : TOWCriticalSection;
 {$IFDEF __LOCKS_DBG__}
-  LogStorageSection : TOWCriticalSection;
+  LogStorageSection : TOWDebugCriticalSection;
 {$ENDIF}
 
 //---------------------------------------------------------------------------
@@ -11287,6 +11314,31 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+constructor TOWMutex.CreateNamed( AName : String; AInitialOwner : Boolean );
+{$IFDEF SYMLOCKS}
+var
+  AThread : DWord;
+{$ENDIF}
+begin
+  inherited Create();
+{$IFDEF SYMLOCKS}
+  if( AInitialOwner ) then
+    begin
+    AThread := GetCurrentThreadId();
+    FEvent := TOWEvent.Create( False, False );
+    Inc( FCount );
+    FThreadID := AThread;
+    end
+
+  else
+    FEvent := TOWEvent.Create( False, True );
+
+  FSection := TOWCriticalSection.Create();
+{$ELSE}
+  FHandle := CreateMutex( NIL, False, PChar( AName ));
+{$ENDIF}
+end;
+//---------------------------------------------------------------------------
 constructor TOWMutex.Create( AInitialOwner : Boolean );
 {$IFDEF SYMLOCKS}
 var
@@ -11545,27 +11597,27 @@ begin
 //begin
   ALock.IntLock();
   LogStorageSection.Enter();
-  GOWDBGLockHistory[ GOWDBGLockIndex ].ThreadID := AThreadID;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].Operation := AOperation;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].Lock := ALock;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].Section := ASection;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountLocks := ALock.FCountLocks;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].InStopCount := ALock.FInStopCount;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountStopLocks := ALock.FCountStopLocks;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountStopLocksOwner := ALock.FCountStopLocksOwner;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].OwningThreadID := ALock.FOwningThread;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].ThreadID := AThreadID;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].Operation := AOperation;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].Lock := ALock;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].Section := ASection;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountLocks := ALock.FCountLocks;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].InStopCount := ALock.FInStopCount;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountStopLocks := ALock.FCountStopLocks;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountStopLocksOwner := ALock.FCountStopLocksOwner;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].OwningThreadID := ALock.FOwningThread;
 
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountWrites := ALock.FCountWrites;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountReads := ALock.FCountReads;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountUnlocks := ALock.FCountUnlocks;
-  GOWDBGLockHistory[ GOWDBGLockIndex ].CountStops := ALock.FCountStops;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountWrites := ALock.FCountWrites;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountReads := ALock.FCountReads;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountUnlocks := ALock.FCountUnlocks;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].CountStops := ALock.FCountStops;
 
-  GOWDBGLockHistory[ GOWDBGLockIndex ].IsNext := False;
-  Inc( GOWDBGLockIndex );
-  if( GOWDBGLockIndex > GOWDBG_HISTORY_SIZE ) then
-    GOWDBGLockIndex := 0;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].IsNext := False;
+  Inc( GOWDBGLockHistory.Index );
+  if( GOWDBGLockHistory.Index > GOWDBG_HISTORY_SIZE ) then
+    GOWDBGLockHistory.Index := 0;
 
-  GOWDBGLockHistory[ GOWDBGLockIndex ].IsNext := True;
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].IsNext := True;
 
   LogStorageSection.Leave();
   ALock.IntUnlock();
@@ -11606,26 +11658,26 @@ begin
   DeleteFile( 'C:\BugLocks.txt' );
   AssignFile(F, 'C:\BugLocks.txt');
   Rewrite(F);
-  I := GOWDBGLockIndex;
+  I := GOWDBGLockHistory.Index;
   WriteLn( F, '  Lock     Section   Operation        ThreadID OwnerThread CntLocks StopLks StopLksOwn InStop Read  Write Unlock  Stop' );
   while( True ) do
     begin
-    if( ALock = GOWDBGLockHistory[ I ].Lock ) then
+    if( ALock = GOWDBGLockHistory.History[ I ].Lock ) then
       begin
-      ALine := IntToHex( Cardinal( GOWDBGLockHistory[ I ].Lock ), 8 ) + '  ';
-      ALine := ALine + IntToHex( Cardinal( GOWDBGLockHistory[ I ].Section ), 8 ) + '  ';
-      ALine := ALine + GOWDbgStrings[ Integer( GOWDBGLockHistory[ I ].Operation ) ];
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].ThreadID ] ) + '  ';
-      ALine := ALine + Format( '%8d', [ GOWDBGLockHistory[ I ].OwningThreadID ] ) + ' ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountLocks ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountStopLocks ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountStopLocksOwner ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].InStopCount ] );
+      ALine := IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Lock ), 8 ) + '  ';
+      ALine := ALine + IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Section ), 8 ) + '  ';
+      ALine := ALine + GOWDbgStrings[ Integer( GOWDBGLockHistory.History[ I ].Operation ) ];
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].ThreadID ] ) + '  ';
+      ALine := ALine + Format( '%8d', [ GOWDBGLockHistory.History[ I ].OwningThreadID ] ) + ' ';
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountLocks ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStopLocks ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStopLocksOwner ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].InStopCount ] );
 
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountReads ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountWrites ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountUnlocks ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory[ I ].CountStops ] );
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountReads ] );
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountWrites ] );
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountUnlocks ] );
+      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStops ] );
       WriteLn( F, ALine );
       end;
       
@@ -11633,7 +11685,7 @@ begin
     if( I > GOWDBG_HISTORY_SIZE ) then
       I := 0;
 
-    if( I = GOWDBGLockIndex ) then
+    if( I = GOWDBGLockHistory.Index ) then
       Break;
        
     end;
@@ -11643,13 +11695,59 @@ begin
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
+{$IFDEF __LOCKS_DBG_MAPPED__}
+procedure TOWDebugCriticalSection.Enter();
+begin
+  Acquire( INFINITE );
+end;
+//---------------------------------------------------------------------------
+procedure TOWDebugCriticalSection.Leave();
+begin
+  Release();
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+procedure OpenDebugMemoryMap();
+var
+  AIndex : Integer;
+  
+begin
+  AIndex := 0;
+  while( True ) do
+    begin
+    Inc( AIndex );
+    GDBGMemMap := OpenFileMapping(FILE_MAP_WRITE,BOOL(True), PChar( 'OpenWireDbg' + IntToStr( AIndex )));
+    if( GDBGMemMap <> 0 ) then
+      CloseHandle( GDBGMemMap )
+      
+    else
+      Break;
+      
+    end;
+
+  GDBGMemMap := CreateFileMapping( $FFFFFFFF, nil, PAGE_READWRITE, 0, SizeOf( TGOWDBGLockHistory ), PChar( 'OpenWireDbg' + IntToStr( AIndex )) );
+  if( GDBGMemMap <> 0 ) then
+    GOWDBGLockHistory := MapViewOfFile( GDBGMemMap, FILE_MAP_WRITE, 0, 0, SizeOf( TGOWDBGLockHistory ) );
+
+  LogStorageSection := TOWDebugCriticalSection.CreateNamed( 'OpenWireDbgMutex' + IntToStr( AIndex ), False );
+end;
+{$ENDIF}
+//---------------------------------------------------------------------------
 initialization
   GlobalStorageSection := TOWCriticalSection.Create();
 {$IFDEF __LOCKS_DBG__}
+{$IFNDEF __LOCKS_DBG_MAPPED__}
   LogStorageSection := TOWCriticalSection.Create();
+{$ENDIF}
 {$ENDIF}
   GOWDBGNotifySection := TOWCriticalSection.Create();
   GOWDBGNotifyList := TInterfaceList.Create();
+{$IFDEF __LOCKS_DBG_MAPPED__}
+  OpenDebugMemoryMap();
+{$ENDIF}
+  GOWDBGLockHistory.Index := 0;
   Loaded := True;
 //  GFileLog := TFileStream.Create( 'C:\OWLog.txt', fmCreate ); 
   NotifyList := TInterfaceList.Create();
@@ -11674,6 +11772,16 @@ finalization
     NotifyList.Free();
     NotifyList := NIL;
     Loaded := False;
+{$IFDEF __LOCKS_DBG_MAPPED__}
+    if( GOWDBGLockHistory <> NIL ) then
+      UnMapViewOfFile( GOWDBGLockHistory );
+
+    GOWDBGLockHistory := NIL;
+    if( GDBGMemMap <> 0 ) then
+      CloseHandle( GDBGMemMap );
+    
+{$ENDIF}
+
 {$IFDEF __LOCKS_DBG__}
     LogStorageSection.Free();
 {$ENDIF}
