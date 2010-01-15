@@ -281,8 +281,8 @@ type TOWDBOperation = (
   owdbBeginReadCreate, owdbReadCreate, owdbBeginReadDestroy, owdbReadDestroy,
   owdbStopCreate, owdbStopDestroy, owdbUnlockCreate, owdbUnlockDestroy );
 
-{$IFDEF __LOCKS_DBG__}
 type TOWDBLockRecord = record
+  ID                  : Int64;
   IsNext              : Boolean;
   Lock                : Pointer;
   Section             : Pointer;
@@ -315,6 +315,8 @@ type TGOWDBGLockHistory = record
 end;
 
 type PGOWDBGLockHistory = ^TGOWDBGLockHistory;
+
+{$IFDEF __LOCKS_DBG__}
 
 {$IFDEF __LOCKS_DBG_MAPPED__}
 type TOWDebugCriticalSection = class( TOWMutex )
@@ -1584,17 +1586,6 @@ uses Dialogs, Forms
 
 type PGUID = ^TGUID;
 //---------------------------------------------------------------------------
-{
-var
-  GFileLog : TFileStream;
-
-procedure Log( AText : String );
-begin
-  AText := AText + #13#10;
-  GFileLog.Write( AText[ 1 ], Length( AText ) );
-end;
-}
-//---------------------------------------------------------------------------
 function GOWIsStringValueType( AValue : TValueType ) : Boolean;
 begin
 {$IFDEF D5Down}
@@ -1714,6 +1705,7 @@ var // State pins support
   GlobalStorageSection : TOWCriticalSection;
 {$IFDEF __LOCKS_DBG__}
   LogStorageSection : TOWDebugCriticalSection;
+  GOWDBGCurrentID   : Int64 = 0;
 {$IFDEF __LOCKS_DBG_MAPPED__}
   LogStartStopEvent : TOWEvent;
   LogEvent          : TOWEvent;
@@ -1725,26 +1717,11 @@ var // State pins support
 type
   TOWSimpleReadLockSection = class( TOWLockSection )
   protected
-    FOwnerIntf  : IOWLock;
-    FOwner      : TOWLock;
-    FUnlockSection : IOWLockSection;
+    FOwnerIntf      : IOWLock;
+    FOwner          : TOWLock;
+    FUnlockSection  : IOWLockSection;
 
-    FLocked     : Boolean;
-
-  public
-    constructor Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
-    destructor  Destroy(); override;
-
-  end;
-//---------------------------------------------------------------------------
-type
-  TOWSimpleWriteLockSection = class( TOWLockSection )
-  protected
-    FOwnerIntf  : IOWLock;
-    FOwner      : TOWLock;
-    FUnlockSection : IOWLockSection;
-
-    FLocked     : Boolean;
+    FLocked         : Boolean;
 
   public
     constructor Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
@@ -1753,11 +1730,30 @@ type
   end;
 //---------------------------------------------------------------------------
 type
-  TOWSimpleStopLockSection = class( TOWLockSection )
+  TOWSimpleLockSection = class( TOWLockSection )
   protected
-    FOwnerIntf  : IOWLock;
-    FOwner      : TOWLock;
+    FOwnerIntf      : IOWLock;
+    FOwner          : TOWLock;
+    
+  public
+    constructor Create( AOwner : IOWLock );
+    
+  end;
 
+  TOWSimpleWriteLockSection = class( TOWSimpleLockSection )
+  protected
+    FUnlockSection  : IOWLockSection;
+
+    FLocked         : Boolean;
+
+  public
+    constructor Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
+    destructor  Destroy(); override;
+
+  end;
+//---------------------------------------------------------------------------
+type
+  TOWSimpleStopLockSection = class( TOWSimpleLockSection )
   public
     constructor Create( AOwner : IOWLock );
     destructor  Destroy(); override;
@@ -1765,10 +1761,8 @@ type
   end;
 //---------------------------------------------------------------------------
 type
-  TOWSimpleUnlockSection = class( TOWLockSection )
+  TOWSimpleUnlockSection = class( TOWSimpleLockSection )
   protected
-    FOwnerIntf  : IOWLock;
-    FOwner      : TOWLock;
 //    FCountReads   : Integer;
 //    FCountWrites  : Integer;
     FCountLocks       : Integer;
@@ -2298,7 +2292,7 @@ end;
 constructor TOWSimpleReadLockSection.Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
 var
   TimeOut : Cardinal;
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
   inherited Create();
@@ -2346,7 +2340,7 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWSimpleReadLockSection.Destroy();
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
 {$IFDEF __LOCKS_DBG__}
@@ -2368,15 +2362,24 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSimpleWriteLockSection.Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
-var
-  TimeOut : Cardinal;
-  AThread : THandle;
-
+constructor TOWSimpleLockSection.Create( AOwner : IOWLock );
 begin
   inherited Create();
   FOwnerIntf := AOwner;
   FOwner := FOwnerIntf.Instance();
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWSimpleWriteLockSection.Create( AOwner : IOWLock; ASlaveLock : IOWLock = NIL );
+var
+  TimeOut : Cardinal;
+  AThread : Cardinal;
+
+begin
+  inherited Create( AOwner );
+  
   TimeOut := 1;
   AThread := GetCurrentThreadId();
 {$IFDEF __LOCKS_DBG__}
@@ -2420,7 +2423,7 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWSimpleWriteLockSection.Destroy();
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
 {$IFDEF __LOCKS_DBG__}
@@ -2445,12 +2448,11 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWSimpleStopLockSection.Create( AOwner : IOWLock );
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
-  inherited Create();
-  FOwnerIntf := AOwner;
-  FOwner := FOwnerIntf.Instance();
+  inherited Create( AOwner );
+  
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountStops );
@@ -2468,7 +2470,7 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWSimpleStopLockSection.Destroy();
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
 {$IFDEF __LOCKS_DBG__}
@@ -2490,13 +2492,12 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWSimpleUnlockSection.Create( AOwner : IOWLock );
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
-  inherited Create();
   AOwner.Instance().IntLock();
-  FOwnerIntf := AOwner;
-  FOwner := FOwnerIntf.Instance();
+  inherited Create( AOwner );
+
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountUnlocks );
@@ -2552,7 +2553,7 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWSimpleUnlockSection.Destroy();
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
 {$IFDEF __LOCKS_DBG__}
@@ -2619,7 +2620,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWLock.Create();
 var
-  AThread : THandle;
+  AThread : Cardinal;
   
 begin
   inherited;
@@ -2631,7 +2632,7 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWLock.Destroy();
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
   AThread := GetCurrentThreadId();
@@ -2644,7 +2645,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLock.IntBeginWrite( Count : Integer; CountOther : Integer );
 var
-  AThread : THandle;
+  AThread : Cardinal;
   
 begin
   if(( Count = 0 ) and ( CountOther = 0 )) then
@@ -2707,7 +2708,7 @@ end;
 function  TOWLock.BeginWrite( TimeOut : Cardinal ) : Boolean; stdcall;
 var
   Res     : Boolean;
-  AThread : THandle;
+  AThread : Cardinal;
   
 begin
   FIntLockSection.Enter();
@@ -2754,7 +2755,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLock.EndWrite(); stdcall;
 var
-  AThread : THandle;
+  AThread : Cardinal;
 
 begin
   FIntLockSection.Enter();
@@ -2831,7 +2832,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLock.BeginStop(); stdcall;
 var
-  AThread : THandle;
+  AThread : Cardinal;
   Res     : Boolean;
 
 begin
@@ -2873,7 +2874,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLock.EndStop(); stdcall;
 var
-  AThread : THandle;
+  AThread : Cardinal;
   
 begin
   FIntLockSection.Enter();
@@ -3062,7 +3063,7 @@ begin
 {$ELSE}
   while( InterlockedExchangeAdd( @FLockCounter, 0 ) <> 0 ) do
 {$ENDIF}
-    Sleep( 0 );
+  Sleep( 0 );
 
   Result := TOWDestroyLockLockSection.Create( Self );   
 end;
@@ -11335,7 +11336,7 @@ end;
 constructor TOWMutex.CreateNamed( AName : String; AInitialOwner : Boolean );
 {$IFDEF SYMLOCKS}
 var
-  AThread : DWord;
+  AThread : Cardinal;
 {$ENDIF}
 begin
   inherited Create();
@@ -11360,7 +11361,7 @@ end;
 constructor TOWMutex.Create( AInitialOwner : Boolean );
 {$IFDEF SYMLOCKS}
 var
-  AThread : DWord;
+  AThread : Cardinal;
 {$ENDIF}
 begin
   inherited Create();
@@ -11397,7 +11398,7 @@ function TOWMutex.Acquire( Milliseconds : Cardinal ) : Boolean;
 var
   Res     : DWord;
 {$IFDEF SYMLOCKS}
-  AThread : DWord;
+  AThread : Cardinal;
 {$ENDIF}
 begin
 {$IFDEF SYMLOCKS}
@@ -11432,7 +11433,7 @@ end;
 function TOWMutex.Release() : Boolean;
 {$IFDEF SYMLOCKS}
 var
-  AThread : DWord;
+  AThread : Cardinal;
 {$ENDIF}
 begin
 {$IFDEF SYMLOCKS}
@@ -11615,6 +11616,7 @@ begin
 //begin
   ALock.IntLock();
   LogStorageSection.Enter();
+  GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].ID := GOWDBGCurrentID;
   GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].ThreadID := AThreadID;
   GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].Operation := AOperation;
   GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].Lock := ALock;
@@ -11632,6 +11634,7 @@ begin
 
   GOWDBGLockHistory.History[ GOWDBGLockHistory.Index ].IsNext := False;
   Inc( GOWDBGLockHistory.Index );
+  Inc( GOWDBGCurrentID );
   if( GOWDBGLockHistory.Index > GOWDBG_HISTORY_SIZE ) then
     GOWDBGLockHistory.Index := 0;
 
@@ -11640,6 +11643,7 @@ begin
   LogStorageSection.Leave();
   ALock.IntUnlock();
 {$IFDEF __LOCKS_DBG_MAPPED__}
+//  FlushViewOfFile( @GDBGMemMap, 0 );  
   LogEvent.Signal();
 {$ENDIF}
 {$ENDIF}
@@ -11773,7 +11777,6 @@ initialization
   GOWDBGNotifySection := TOWCriticalSection.Create();
   GOWDBGNotifyList := TInterfaceList.Create();
   Loaded := True;
-//  GFileLog := TFileStream.Create( 'C:\OWLog.txt', fmCreate );
   NotifyList := TInterfaceList.Create();
 
   // State pins support
@@ -11788,7 +11791,6 @@ initialization
 finalization
   if( Loaded ) then
     begin
-//    GFileLog.Free();
     DesignDispatchers.Free(); // State pins support
     RunDispatchers.Free(); // State pins support
     GOWUnloadedPins.Free();
@@ -11800,8 +11802,8 @@ finalization
     NotifyList := NIL;
     Loaded := False;
 {$IFDEF __LOCKS_DBG_MAPPED__}
-    LogStartStopEvent.Signal();
     GOWDBGLockHistory.Active := False;
+    LogStartStopEvent.Signal();
     if( GOWDBGLockHistory <> NIL ) then
       UnMapViewOfFile( GOWDBGLockHistory );
 
