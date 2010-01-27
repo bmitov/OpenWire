@@ -73,8 +73,8 @@ type
   public
     function  GetAttributes() : TPropertyAttributes; override;
     procedure GetProperties(Proc: TAGetPropProc); override;
-    function  GetValue() : string; override;
-    function  GetName() : string; override;
+    function  GetValue() : String; override;
+    function  GetName() : String; override;
 
   public
     constructor CreateEx(const ADesigner: IADesigner; ACollectionItem : TOWExtCollectionItem; AName : String; OwnerEditor : TOWExtCollectionProperty );
@@ -85,9 +85,9 @@ type
   TOWExtCollectionProperty = class(TPropertyEditor)
   public
     function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
+    function  GetValue: String; override;
     procedure Edit; override;
-    procedure SetValue(const Value: string); override;
+    procedure SetValue(const Value: String); override;
     procedure GetProperties(Proc: TAGetPropProc); override;
 
   public
@@ -99,15 +99,15 @@ procedure Register;
 //------------------------------------------------------------------------------
 implementation
 
-uses OWDesignSelectionsList, OpenWirePinEditors;
+uses OWDesignSelectionsList, OWDesignTypes;
 
 {$IFDEF VER130} // Delphi 5.0
   {$IFDEF OWCBUILDER}
     procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: string); external 'bcbide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+      ACollection: TCollection; const PropertyName: String); external 'bcbide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
   {$ELSE}
     procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: string); external 'designide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+      ACollection: TCollection; const PropertyName: String); external 'designide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
   {$ENDIF}
 
 {$ENDIF}
@@ -115,46 +115,46 @@ uses OWDesignSelectionsList, OpenWirePinEditors;
 {$IFDEF VER140} // Delphi 6.0
   {$IFDEF OWCBUILDER}
     procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: string); external 'bcbide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+      ACollection: TCollection; const PropertyName: String); external 'bcbide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
   {$ELSE}
     procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: string); external 'designide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+      ACollection: TCollection; const PropertyName: String); external 'designide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
   {$ENDIF}
 {$ENDIF}
 
 {$IFDEF VER150} // Delphi 7.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide70.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+  ACollection: TCollection; const PropertyName: String); external 'designide70.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
 {$ENDIF}
 
 {$IFDEF VER170} // Delphi 9.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide90.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+  ACollection: TCollection; const PropertyName: String); external 'designide90.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
 {$ENDIF}
 
 {$IFDEF VER180} // Delphi 10.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide100.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+  ACollection: TCollection; const PropertyName: String); external 'designide100.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
 {$ENDIF}
 
 {$IFDEF VER190} // Delphi 11.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide110.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
+  ACollection: TCollection; const PropertyName: String); external 'designide110.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
 {$ENDIF}
 
 {$IFDEF VER200} // Delphi 12.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide120.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
+  ACollection: TCollection; const PropertyName: String); external 'designide120.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
 {$IFDEF VER210} // Delphi 14.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide140.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
+  ACollection: TCollection; const PropertyName: String); external 'designide140.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
 {$IFDEF VER220} // Delphi 15.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: string); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
+  ACollection: TCollection; const PropertyName: String); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
 //------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-function  TOWExtCollectionItemProperty.GetValue(): string;
+function  TOWExtCollectionItemProperty.GetValue(): String;
 //var
 //  CollectionItem : TOWExtCollectionItem;
 
@@ -233,7 +233,7 @@ begin
 ////  FOwnerEditor.CheckRefresh();
 end;
 //------------------------------------------------------------------------------
-function TOWExtCollectionItemProperty.GetName() : string;
+function TOWExtCollectionItemProperty.GetName() : String;
 begin
   if( FExtraInfo ) then
     Result := FNameOverload
@@ -299,7 +299,7 @@ begin
   Result := [ paSubProperties, paDialog ];
 end;
 //------------------------------------------------------------------------------
-procedure TOWExtCollectionProperty.SetValue(const Value: string); 
+procedure TOWExtCollectionProperty.SetValue(const Value: String); 
 var
   Collection   : TOWExtCollection;
   DesiredCount : Integer;
@@ -335,7 +335,7 @@ begin
   ShowCollectionEditor( Designer, TComponent( GetComponent( 0 )), TOWExtCollection( GetOrdValue() ), GetName() );
 end;
 //------------------------------------------------------------------------------
-function  TOWExtCollectionProperty.GetValue(): string;
+function  TOWExtCollectionProperty.GetValue(): String;
 var
   Collection : TOWExtCollection;
 

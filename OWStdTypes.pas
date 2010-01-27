@@ -127,7 +127,7 @@ type TOWInt64DateTimeRangeChangeEvent = procedure( Sender : TOWPin; AMin, AMax :
 
 type TOWPinNotificationEvent = function(Handler : IOWDataStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
 
-type TOWClockPinNotificationEvent = function( Sender : TOWPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
+type TOWClockPinNotificationEvent = function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
 
 type
   TOWClockOperation = class( TOWNotifyOperation )
@@ -407,6 +407,24 @@ end;
 //---------------------------------------------------------------------------
 type
   TOWClockSinkPin = class( TOWSinkPin, IOWClockStream )
+  protected
+    FOnPinNotificationEvent : TOWClockPinNotificationEvent;
+    FOnClock                : TOWClockEvent;
+
+  protected
+    function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+
+  protected
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+
+  public
+    constructor Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+
+  end;
+//---------------------------------------------------------------------------
+type
+  TOWClockEventSinkPin = class( TOWEventSinkPin, IOWClockStream )
   protected
     FOnPinNotificationEvent : TOWClockPinNotificationEvent;
     FOnClock                : TOWClockEvent;
@@ -1592,6 +1610,54 @@ begin
   if( Assigned( FPinNotificationEvent )) then
     Result := FPinNotificationEvent( Self, DataTypeID, Operation, State );
 
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWClockSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner );
+  FOnClock := AOnClock;
+  FOnPinNotificationEvent := AOnPinNotificationEvent;
+  AddType( IOWClockStream, ClockNotification );
+  CustomData := ACustomData;
+end;
+//---------------------------------------------------------------------------
+constructor TOWClockSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock );
+  FOnClock := AOnClock;
+  FOnPinNotificationEvent := AOnPinNotificationEvent;
+  AddType( IOWClockStream, ClockNotification );
+  CustomData := ACustomData;
+end;
+//---------------------------------------------------------------------------
+function TOWClockSinkPin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+var
+  Interf : IOWClockStream;
+
+begin
+  Result := [];
+
+  if( Handler.QueryInterface( IOWClockStream, Interf ) = 0 ) then
+    Interf.DispatchData( DataTypeID, Operation, State );
+
+end;
+//---------------------------------------------------------------------------
+function TOWClockSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+begin
+  if( Assigned( FOnPinNotificationEvent )) then
+    FOnPinNotificationEvent( Self, DataTypeID, Operation, State );
+
+  if( Assigned( FOnClock )) then
+//    if( not ( nsNewLink in State )) then
+    begin
+    if( Operation.Instance() is TOWClockOperation ) then
+      FOnClock( Self );
+
+    end;
+    
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -5563,7 +5629,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWClockEventSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited Create( AOwner );
   FOnClock := AOnClock;
@@ -5572,7 +5638,7 @@ begin
   CustomData := ACustomData;
 end;
 //---------------------------------------------------------------------------
-constructor TOWClockSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWClockEventSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock );
   FOnClock := AOnClock;
@@ -5581,7 +5647,7 @@ begin
   CustomData := ACustomData;
 end;
 //---------------------------------------------------------------------------
-function TOWClockSinkPin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+function TOWClockEventSinkPin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   Interf : IOWClockStream;
 
@@ -5593,7 +5659,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWClockSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+function TOWClockEventSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   if( Assigned( FOnPinNotificationEvent )) then
     FOnPinNotificationEvent( Self, DataTypeID, Operation, State );
@@ -5607,15 +5673,6 @@ begin
     end;
     
 end;
-//---------------------------------------------------------------------------
-{
-procedure TOWClockSinkPin.Clock();
-begin
-  if( Assigned( FOnClock )) then
-    FOnClock( Self );
-
-end;
-}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

@@ -23,7 +23,7 @@ object OWAboutForm: TOWAboutForm
     Top = 272
     Width = 157
     Height = 13
-    Caption = 'Copyright 1999-2009 Boian Mitov'
+    Caption = 'Copyright 1999-2010 Boian Mitov'
   end
   object OWLabel: TLabel
     Left = 120

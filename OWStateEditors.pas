@@ -14,12 +14,12 @@ unit OWStateEditors;
 
 {$IFDEF VER170} // Delphi 9.0
 {$DEFINE D6}
-{$DEFINE BDS2005_OR_2006}
+{$DEFINE BDS2005_OR_2006_BUG}
 {$ENDIF}
 
 {$IFDEF VER180} // Delphi 10.0
 {$DEFINE D6}
-{$DEFINE BDS2005_OR_2006}
+{$DEFINE BDS2005_OR_2006_BUG}
 {$ENDIF}
 
 {$IFDEF VER190} // Delphi 11.0
@@ -45,50 +45,12 @@ uses
   LCLIntf, LResources, PropEdits,
 {$ELSE}
   Windows, 
-  {$IFDEF D6}
-    DesignEditors,
-    DesignIntf,
-    TypInfo,
-    OWClassProperty,
-  {$ELSE}
-    dsgnintf,
-  {$ENDIF}
 {$ENDIF}
   Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, ImgList, StdCtrls, ExtCtrls, Buttons, Contnrs,
-//  OWPins, OWStatePins, OpenWirePinEditors, ActnList;
-  OWPins, OpenWirePinEditors, ActnList;
+  OWPins, OWDesignTypes, ActnList;
 
-{$IFDEF D6}
-type IADesigner = IDesigner;
-type TAGetPropProc = TGetPropProc;
-{$ELSE}
-  {$IFDEF FPC}
-    type IADesigner = TIDesigner;
-  {$ELSE}
-    type IADesigner = IFormDesigner;
-  {$ENDIF}
-type TAGetPropProc = TGetPropEditProc;
-{$ENDIF}
-
-
-  TOWStatePinPropertyEditor = class(TPropertyEditor)
-  public
-    function  GetPin() : TOWStatePin;
-
-  protected
-    
-  public
-    function  GetAttributes: TPropertyAttributes; override;
-    procedure Edit; override;
-    function  GetValue: string; override;
-    procedure SetValue(const Value: string); override;
-
-  protected
-    function GetIntDesigner() : TOWPropertyDesigner;
-
-  end;
-  
+type
   TOWStatePinForm = class(TForm)
     Panel1: TPanel;
     Panel2: TPanel;
@@ -180,7 +142,7 @@ type TAGetPropProc = TGetPropEditProc;
 
   end;
 
-procedure Register;
+function OWStatePinEdit( Designer : TOWPropertyDesigner; StatePin : TOWStatePin ) : Boolean;
 
 implementation
 
@@ -189,11 +151,11 @@ implementation
 {$ENDIF}
 
 uses
- 
+
 {$IFDEF FPC}
   LMessages,
 {$ENDIF}
-{$IFDEF BDS2005_OR_2006}
+{$IFDEF BDS2005_OR_2006_BUG}
   ToolsAPI,
 {$ENDIF}
   OWAboutFormUnit;
@@ -201,8 +163,6 @@ uses
 type TOWExposedStatePin = class(TOWStatePin);
 //type TOWExposedPin = class(TOWPin);
 
-const OWM_UPDATE   = CM_BASE + 500;
-const DISCONNECTED = '(Disconnected)';
 {$IFDEF BCB}
 const
   SEPARATOR = '->';
@@ -232,306 +192,19 @@ const siDotLine         : TImageIndex = 5;
 const siCrosForm        : TImageIndex = 6;
 const siCrosFormMissing : TImageIndex = 7;
 
-var Form : TOWStatePinForm;
-//var InRefresh   : Boolean;
-var InOppening  : Boolean;
+var GOWStatePinEditorForm : TOWStatePinForm;
 
-
-procedure RequestRefresh();
-begin
-  if( InOppening ) then
-    Exit;
-
-  if( OWGetAllLinked() ) then
-    Exit;
-
-  if( PinsNeedRefresh ) then
-    Exit;
-
-  PinsNeedRefresh := True;
-
-  PostMessage( Form.Handle, OWM_UPDATE, 0, 0 );
-end;
-//------------------------------------------------------------------------------
-function SetStatePinValue( Root : TComponent; StatePin : TOWStatePin; const Value: string) : Boolean;
-var
-  ADispatcher : TOWStateDispatcher;
-  
-begin
-  Result := False;
-  if( StatePin = NIL ) then
-    Exit;
-    
-  if( ( Value = '' ) or ( Value = DISCONNECTED ) ) then
-    begin
-    StatePin.Disconnect();
-    Result := True;
-    Exit;
-    end;
-
-  ADispatcher := TOWStateDispatcher.GetByName( Value, True );
-    
-  if( ADispatcher <> NIL ) then
-    if( StatePin.ConnectToState( ADispatcher )) then  
-      begin
-      Result := True;
-      Exit;
-      end;
-
-  if( StatePin.TryLinkTo( Root, Value )) then
-    begin
-    Result := True;
-    Exit;
-    end;
-
-{ TODO :
-  if( StatePin.TryLinkTo( Root, Value, Value, False, False )) then // TODO : Fix the name ???????????????????????????
-    begin
-    Result := True;
-    Exit;
-    end;
-}
-
-end;
-//------------------------------------------------------------------------------
-function GetFullNameForSecondPin( FirstPin : TOWPin; SecondPin : TOWPin ) : String;
-begin
-  if( OWGetMainOwnerComponent( FirstPin.Owner ) <> OWGetMainOwnerComponent( SecondPin.Owner ) ) then
-    Result := OWValueToString( SecondPin, '.', True, False )
-
-  else
-    Result := OWValueToString( SecondPin, '.', False, False );
-    
-end;
-//------------------------------------------------------------------------------
-function GetStatePinValue( StatePin : TOWStatePin; Designer : TOWPropertyDesigner ) : string;
-begin
-  try
-    if( StatePin = NIL ) then
-      begin
-      Result := 'Refreshing ...';
-      OWResetObjectInspector( Designer );
-      Exit;
-      end;
-
-//    if( TOWExposedStatePin( StatePin ).FLinkStorage <> NIL ) then
-//      LinkAwaitsLinkingAllForms();
-
-    if( TOWExposedStatePin( StatePin ).FDispatcher = NIL ) then
-      begin
-      Result := DISCONNECTED;
-      Exit;
-      end;
-
-    if( TOWExposedStatePin( StatePin ).FDispatcher.PinCount = 2 ) then
-      begin
-
-      if( TOWExposedStatePin( StatePin ).FDispatcher.Pins[ 0 ].GetFullIdentName( True ) = StatePin.GetFullIdentName( True ) ) then
-        Result := TOWExposedStatePin( StatePin ).FDispatcher.Pins[ 1 ].GetFullName( True )
-
-      else
-        Result := TOWExposedStatePin( StatePin ).FDispatcher.Pins[ 0 ].GetFullName( True );
-
-      end
-
-    else
-      Result := TOWExposedStatePin( StatePin ).FDispatcher.Name;
-
-  except
-    Result := '(Error)';
-
-  end;
-
-end;
-//------------------------------------------------------------------------------
-function StatePinEdit( Designer : TOWPropertyDesigner; StatePin : TOWStatePin ) : Boolean;
-var
-  StateRoot     : TComponent;
-  CurItem       : TTreeNode;
-  Entry         : TOWEPinEntry;
-  StateChanged  : Boolean;
-
-begin
-  Result := False;
-
-  StateChanged := False;
-  if( StatePin = NIL ) then
-    Exit;
-
-  try
-    if( Form = NIL ) then
-      Form := TOWStatePinForm.Create( Application );
-
-    if( Form.ExecuteForState( Designer, StatePin ) = mrOk ) then
-      begin
-      CurItem := Form.TreeView.Items.GetFirstNode();
-      while CurItem <> nil do
-        begin
-        if( CurItem.StateIndex = siRadioCheck ) then
-          begin
-          Entry := TOWEPinEntry( CurItem.Data );
-          if( Entry.Dispatcher <> NIL ) then
-            begin
-            if( not StatePin.IsConnectedToState( Entry.Dispatcher ) ) then
-              StateChanged := True;
-
-            end
-
-          else
-            StateChanged := True;
-
-          Break;
-          end;
-          
-        CurItem := CurItem.GetNextSibling();
-        end;
-
-      if( CurItem = NIL ) then
-        StateChanged := True;
-
-      if( StateChanged ) then
-        begin
-        if( StatePin <> NIL ) then
-          begin
-          StateRoot := OWGetMainDesignOwner( StatePin.Owner );
-          if( StateRoot is TCustomForm ) then
-            if( Assigned( TCustomForm( StateRoot ).Designer )) then
-              TCustomForm( StateRoot ).Designer.Modified();
-
-          end;
-        end;
-
-      if( not StateChanged ) then
-        Exit;
-        
-      StatePin.Disconnect();
-      CurItem := Form.TreeView.Items.GetFirstNode();
-      while CurItem <> nil do
-        begin
-        if( CurItem.StateIndex = siRadioCheck ) then
-          begin
-          Entry := TOWEPinEntry( CurItem.Data );
-          if( Entry.Dispatcher <> NIL ) then
-            StatePin.ConnectToState( Entry.Dispatcher )
-
-          else if( Entry.Pin <> NIL ) then
-            StatePin.Connect( Entry.Pin );
-
-
-          Break;
-          end;
-
-        CurItem := CurItem.GetNextSibling();
-        end;
-
-      Result := True;
-      end;
-
-  finally
-  end;
-end;
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-function  TOWStatePinPropertyEditor.GetPin() : TOWStatePin;
-begin
-  Result := TOWStatePin( GetOrdValue());
-end;
-//------------------------------------------------------------------------------
-function TOWStatePinPropertyEditor.GetAttributes: TPropertyAttributes;
-begin
-  Result := [ paDialog ];
-  RequestRefresh();
-end;
-
-procedure TOWStatePinPropertyEditor.Edit;
-var
-  StatePin : TOWStatePin;
-
-begin
-  OWRequestRefreshEx( GetIntDesigner() );
-  StatePin := GetPin();
-  if( StatePinEdit( GetIntDesigner(), StatePin )) then
-    Modified();
-
-end;
-
-procedure TOWStatePinPropertyEditor.SetValue(const Value: string);
-var
-  StatePin : TOWStatePin;
-
-begin
-  inherited SetValue( Value );
-
-  StatePin := GetPin();
-  if( SetStatePinValue( NIL, StatePin, Value )) then
-    Modified();
-
-end;
 //---------------------------------------------------------------------------
-function TOWStatePinPropertyEditor.GetValue: string;
-var
-  StatePin : TOWStatePin;
-
-begin
-  OWRequestRefreshEx( GetIntDesigner() );
-  StatePin := GetPin();
-  Result := GetStatePinValue( StatePin, GetIntDesigner() );
-
-end;
 //---------------------------------------------------------------------------
-function  TOWStatePinPropertyEditor.GetIntDesigner() : TOWPropertyDesigner;
-begin
-{$IFDEF FPC}
-  Result := PropertyHook;
-{$ELSE}
-  Result := Designer;
-{$ENDIF}
-end;
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 
-{$IFNDEF FPC}
-{$IFNDEF D6}
-type TOWStatePinsCategory = class( TPropertyCategory )
-  class function Name: String; override;
-  class function Description: String; override;
-end;
-//------------------------------------------------------------------------------
-class function TOWStatePinsCategory.Name: String;
-begin
-  Result := 'State Pins';
-end;
-//------------------------------------------------------------------------------
-class function TOWStatePinsCategory.Description: String;
-begin
-  Result := 'OpenWire State Pins';
-end;
-{$ENDIF}
-{$ENDIF}
-//------------------------------------------------------------------------------
-procedure Register;
-begin
-{$IFDEF VER170} // Delphi 9.0
-  ForceDemandLoadState(dlDisable);
-{$ENDIF}
-
-{$IFNDEF FPC}
-  {$IFDEF D6}
-    RegisterPropertyInCategory( 'State Pins', typeinfo(TOWStatePin) );
-  {$ELSE}
-    RegisterPropertyInCategory( TOWStatePinsCategory, typeinfo(TOWStatePin) );
-  {$ENDIF}
-{$ENDIF}
-  RegisterPropertyEditor( typeinfo(TOWStatePin), NIL, '', TOWStatePinPropertyEditor);
-end;
-//------------------------------------------------------------------------------
 procedure TOWStatePinForm.FillFormsInfo();
 var
   FormNames     : TOWModulesColection;
   I             : Integer;
 
-{$IFDEF BDS2005_OR_2006}
+{$IFDEF BDS2005_OR_2006_BUG}
   CurProject    : IOTAProject;
   ModuleInfo    : IOTAModuleInfo;
 {$ENDIF}
@@ -540,7 +213,7 @@ begin
   FormNames := TOWModulesColection.Create;
 {$IFNDEF FPC}
 
-{$IFNDEF BDS2005_OR_2006}
+{$IFNDEF BDS2005_OR_2006_BUG}
   Designer.GetProjectModules( FormNames.GetModules );
 
 {$ELSE}
@@ -801,7 +474,7 @@ procedure TOWStatePinForm.PopulateSingleStateForm( CurrentRoot : TComponent; ARo
 var
   Values        : TStringList;
   OwnRoot       : Boolean;
-  OwnDataModule : Boolean;
+//  OwnDataModule : Boolean;
   OtherPin      : TOWPin;
   I, J          : Integer;
   Entry         : TOWEPinEntry;
@@ -818,12 +491,13 @@ begin
     if( ARootComponent = NIL ) then
       ARootComponent := OWGetMainOwnerComponent( StatePin.Owner );
 
+{
     OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( StatePin.Owner ));
     OwnDataModule := False;
 
     if( not OwnRoot ) then
       OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( StatePin.Owner ).Name );
-
+}
     OWGetPinValueList( ARootComponent, StatePin, Values, False );
     if( TreeView.Items.Count = 0 ) then
       begin // First form
@@ -965,7 +639,7 @@ procedure TOWStatePinForm.PopulateSingleStateFormEntries( CurrentRoot : TCompone
 var
   Values        : TStringList;
   OwnRoot       : Boolean;
-  OwnDataModule : Boolean;
+//  OwnDataModule : Boolean;
   I, J          : Integer;
   Entry         : TOWEPinEntry;
   OtherPin      : TOWPin;
@@ -977,12 +651,13 @@ begin
     if( ARootComponent = NIL ) then
       ARootComponent := OWGetMainOwnerComponent( StatePin.Owner );
 
+{
     OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( StatePin.Owner ));
     OwnDataModule := False;
 
     if( not OwnRoot ) then
       OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( StatePin.Owner ).Name );
-
+}
     for I := 0 to OWGetDispatcherCount() - 1 do
       begin
       Dispatcher := OWGetDispatcher( I );
@@ -1087,7 +762,7 @@ end;
 procedure TOWStatePinForm.FormDestroy(Sender: TObject);
 begin
   PinsList.Free();
-  Form := NIL;
+  GOWStatePinEditorForm := NIL;
 end;
 
 procedure TOWStatePinForm.ChangeState( Node : TTreeNode );
@@ -1142,7 +817,7 @@ var
   Entry         : TOWEPinEntry;
   
 begin
-  CurItem := Form.TreeView.Items.GetFirstNode();
+  CurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
   while CurItem <> nil do
     begin
     Entry := TOWEPinEntry( CurItem.Data );
@@ -1402,24 +1077,105 @@ begin
     end;
 
 end;
+//---------------------------------------------------------------------------
+function OWStatePinEdit( Designer : TOWPropertyDesigner; StatePin : TOWStatePin ) : Boolean;
+var
+  StateRoot     : TComponent;
+  CurItem       : TTreeNode;
+  Entry         : TOWEPinEntry;
+  StateChanged  : Boolean;
 
+begin
+  Result := False;
+
+  StateChanged := False;
+  if( StatePin = NIL ) then
+    Exit;
+
+  try
+    if( GOWStatePinEditorForm.ExecuteForState( Designer, StatePin ) = mrOk ) then
+      begin
+      CurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
+      while CurItem <> nil do
+        begin
+        if( CurItem.StateIndex = siRadioCheck ) then
+          begin
+          Entry := TOWEPinEntry( CurItem.Data );
+          if( Entry.Dispatcher <> NIL ) then
+            begin
+            if( not StatePin.IsConnectedToState( Entry.Dispatcher ) ) then
+              StateChanged := True;
+
+            end
+
+          else
+            StateChanged := True;
+
+          Break;
+          end;
+
+        CurItem := CurItem.GetNextSibling();
+        end;
+
+      if( CurItem = NIL ) then
+        StateChanged := True;
+
+      if( StateChanged ) then
+        begin
+        if( StatePin <> NIL ) then
+          begin
+          StateRoot := OWGetMainDesignOwner( StatePin.Owner );
+          if( StateRoot is TCustomForm ) then
+            if( Assigned( TCustomForm( StateRoot ).Designer )) then
+              TCustomForm( StateRoot ).Designer.Modified();
+
+          end;
+        end;
+
+      if( not StateChanged ) then
+        Exit;
+
+      StatePin.Disconnect();
+      CurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
+      while CurItem <> nil do
+        begin
+        if( CurItem.StateIndex = siRadioCheck ) then
+          begin
+          Entry := TOWEPinEntry( CurItem.Data );
+          if( Entry.Dispatcher <> NIL ) then
+            StatePin.ConnectToState( Entry.Dispatcher )
+
+          else if( Entry.Pin <> NIL ) then
+            StatePin.Connect( Entry.Pin );
+
+
+          Break;
+          end;
+
+        CurItem := CurItem.GetNextSibling();
+        end;
+
+      Result := True;
+      end;
+
+  finally
+  end;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 initialization
 {$IFDEF FPC}
   {$i OWStateEditors.lrs}
 {$ENDIF}
-  InOppening := False;
-//  InRefresh := False;
 {$IFNDEF FPC}
-  Form := TOWStatePinForm.Create( Application );
+  GOWStatePinEditorForm := TOWStatePinForm.Create( Application );
 {$ENDIF}
 
-//  EditorNotifier := TIOWPinsEditorNotifier.Create();
-//  ToolServices.AddNotifier( EditorNotifier );
-
 finalization
-//  ToolServices.RemoveNotifier( EditorNotifier );
-//  EditorNotifier.Free();
-  if( Form <> NIL ) then
-    Form.Free();
+  if( GOWStatePinEditorForm <> NIL ) then
+    GOWStatePinEditorForm.Free();
 
+  GOWStatePinEditorForm := NIL;
 end.

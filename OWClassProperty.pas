@@ -48,21 +48,10 @@ uses
   {$ENDIF}
 {$ENDIF}
 
-Classes, TypInfo, Contnrs;
+Classes, TypInfo, Contnrs, OWDesignTypes;
 
 {$IFDEF FPC}
   type IProperty = TPropertyEditor;
-{$ENDIF}
-
-{$IFDEF VER130}
-  type IProperty = TPropertyEditor;
-  type IOWDesigner = IFormDesigner;
-{$ELSE}
-  {$IFDEF FPC}
-    type IOWDesigner = TComponentEditorDesigner;
-  {$ELSE}
-    type IOWDesigner = IDesigner;
-  {$ENDIF}
 {$ENDIF}
 
 {$IFNDEF FPC}
@@ -78,7 +67,7 @@ Classes, TypInfo, Contnrs;
     {$ENDIF}
   {$ENDIF}
   protected
-    function GetEditValue(out Value: string): Boolean; virtual;
+    function GetEditValue(out Value: String): Boolean; virtual;
     function HasInstance(Instance: TPersistent): Boolean; virtual;
 
   public
@@ -98,13 +87,13 @@ Classes, TypInfo, Contnrs;
 
     procedure SetPropEntry(Index: Integer; AInstance: TPersistent;
       APropInfo: PPropInfo); override;
-    function  GetName(): string; virtual;
+    function  GetName(): String; virtual;
 
   public
     function  GetAttributes(): TPropertyAttributes; virtual;
     procedure GetValues(Proc: TGetStrProc); virtual;
-    procedure SetValue(const Value: string); virtual;
-    function  GetValue(): string; virtual;
+    procedure SetValue(const Value: String); virtual;
+    function  GetValue(): String; virtual;
     procedure Edit(); virtual;
 
   protected
@@ -184,7 +173,7 @@ type
 
   public
     procedure ExecuteVerb(Index: Integer); override;
-    function  GetVerb(Index: Integer) : string; override;
+    function  GetVerb(Index: Integer) : String; override;
     function  GetVerbCount() : Integer; override;
 
   public
@@ -214,7 +203,7 @@ begin
   FDesigner := ADesigner;
 end;
 //------------------------------------------------------------------------------
-function  TOWClassPropertyEditor.GetName(): string;
+function  TOWClassPropertyEditor.GetName(): String;
 begin
   Result := 'Unknown';
 end;
@@ -228,16 +217,16 @@ procedure TOWClassPropertyEditor.GetValues(Proc: TGetStrProc);
 begin
 end;
 //---------------------------------------------------------------------------
-procedure TOWClassPropertyEditor.SetValue(const Value: string);
+procedure TOWClassPropertyEditor.SetValue(const Value: String);
 begin
 end;
 //---------------------------------------------------------------------------
-function  TOWClassPropertyEditor.GetValue() : string;
+function  TOWClassPropertyEditor.GetValue() : String;
 begin
   Result := '';
 end;
 
-function TOWClassPropertyEditor.GetEditValue(out Value: string): Boolean;
+function TOWClassPropertyEditor.GetEditValue(out Value: String): Boolean;
 begin
   Value := GetValue();
   Result := True;
@@ -447,7 +436,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function TOWComponentEditor.GetVerb(Index: Integer): string;
+function TOWComponentEditor.GetVerb(Index: Integer): String;
 begin
   Result := FMenuItems[ Index ].FMenuText;
 end;

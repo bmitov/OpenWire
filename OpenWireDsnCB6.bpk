@@ -14,8 +14,44 @@
     <RESDEPEN value="$(RESFILES) OpenWirePinEditors.dfm OWStateEditors.dfm OWAboutFormUnit.dfm 
       OWAfterPinSelectFormUnit.dfm"/>
     <LIBFILES value=""/>
-    <LIBRARIES value=""/>
-    <SPARELIBS value=""/>
+    <LIBRARIES value="ControlLabPkgCB6.lib IntelligenceLabPkgCB6.lib InstrumentLabPkgCB6.lib 
+      UserLabBasicPkgCB6.lib PlotLabPkgCB6.lib IntelligenceLabBasicPkgCB6.lib 
+      VisionLabPkgCB6.lib VideoLabPkgCB6.lib AudioLabPkgCB6.lib 
+      AudioLabEssentialPkgCB6.lib SignalLabPkgCB6.lib 
+      VideoLabAdditionalDsnCB6.lib VideoLabAdditionalPkgCB6.lib 
+      VideoLabBasicPkgCB6.lib AudioLabBasicPkgCB6.lib MediaLabBasicPkgCB6.lib 
+      TimingLabBasicPkgCB6.lib SignalLabScopePkgCB6.lib 
+      SignalLabAdditionalPkgCB6.lib SignalLabBasicPkgCB6.lib 
+      OpenWireLabPkgCB6.lib MiscComps6.lib IIComps6.lib IIUserInterface6.lib 
+      IISupport6.lib BMThreadDsnCB6.lib BMThreadPkgCB6.lib BMSpinEditPkgCB6.lib 
+      BMViewUpdateDsnCB6.lib BMViewUpdatePkgCB6.lib BMSplitterPkgCB6.lib 
+      BMShapedFormPkgCB6.lib BMMessageHookPkgCB6.lib BMPageDsnCB6.lib 
+      BMPagePkgCB6.lib BMShapedButtonPkgCB6.lib BMWavePkgCB6.lib 
+      BMMediaDialogsPkgCB6.lib OpenWireDrawExpertCB6.lib bcb2kaxserver.lib 
+      indy.lib dbxcds.lib dclocx.lib soaprtl.lib bcbie.lib nmfast.lib 
+      dbexpress.lib inetdbxpress.lib inetdbbde.lib bcbsmp.lib dsnapcon.lib 
+      dsnapcrba.lib visualdbclx.lib teeqr.lib dss.lib tee.lib teedb.lib 
+      teeui.lib qrpt.lib bdecds.lib cds.lib ibxpress.lib vcldbx.lib bdertl.lib 
+      adortl.lib vcldb.lib"/>
+    <SPARELIBS value="vcldb.lib adortl.lib bdertl.lib vcldbx.lib ibxpress.lib cds.lib bdecds.lib 
+      qrpt.lib teeui.lib teedb.lib tee.lib dss.lib teeqr.lib visualdbclx.lib 
+      dsnapcrba.lib dsnapcon.lib bcbsmp.lib inetdbbde.lib inetdbxpress.lib 
+      dbexpress.lib nmfast.lib bcbie.lib soaprtl.lib dclocx.lib dbxcds.lib 
+      indy.lib bcb2kaxserver.lib OpenWireDrawExpertCB6.lib OpenWirePkgCB6.lib 
+      BMMediaDialogsPkgCB6.lib BMWavePkgCB6.lib BMShapedButtonPkgCB6.lib 
+      BMPagePkgCB6.lib BMPageDsnCB6.lib BMMessageHookPkgCB6.lib 
+      BMShapedFormPkgCB6.lib BMSplitterPkgCB6.lib BMViewUpdatePkgCB6.lib 
+      BMViewUpdateDsnCB6.lib BMSpinEditPkgCB6.lib BMThreadPkgCB6.lib 
+      BMThreadDsnCB6.lib IISupport6.lib IIUserInterface6.lib IIComps6.lib 
+      MiscComps6.lib OpenWireLabPkgCB6.lib SignalLabBasicPkgCB6.lib 
+      SignalLabAdditionalPkgCB6.lib SignalLabScopePkgCB6.lib 
+      TimingLabBasicPkgCB6.lib MediaLabBasicPkgCB6.lib AudioLabBasicPkgCB6.lib 
+      VideoLabBasicPkgCB6.lib VideoLabAdditionalPkgCB6.lib 
+      VideoLabAdditionalDsnCB6.lib SignalLabPkgCB6.lib 
+      AudioLabEssentialPkgCB6.lib AudioLabPkgCB6.lib VideoLabPkgCB6.lib 
+      VisionLabPkgCB6.lib IntelligenceLabBasicPkgCB6.lib PlotLabPkgCB6.lib 
+      UserLabBasicPkgCB6.lib InstrumentLabPkgCB6.lib IntelligenceLabPkgCB6.lib 
+      ControlLabPkgCB6.lib rtl.lib"/>
     <PACKAGES value="rtl.bpi vcl.bpi designide.bpi OpenWirePkgCB6.bpi"/>
     <PATHCPP value=".;"/>
     <PATHPAS value=".;"/>
@@ -62,7 +98,7 @@
       <FILE FILENAME="OWAboutFormUnit.pas" FORMNAME="OWAboutForm" UNITNAME="OWAboutFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWExtCollectionEditor.pas" FORMNAME="" UNITNAME="OWExtCollectionEditor" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWAfterPinSelectFormUnit.pas" FORMNAME="OWAfterPinSelectForm" UNITNAME="OWAfterPinSelectFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\OpenWireLabDemo\Projects\Lib\OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireLabDemo\Projects\Lib\OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

@@ -94,7 +94,7 @@ V4.3.2       10/25/2009  Improved pin editors.
                          Fully Lazarus compatible under Windows.
 
 
-Legal issues: Copyright (C) 2001-2009 by Boian Mitov
+Legal issues: Copyright (C) 2001-2010 by Boian Mitov
               mitov@mitov.com
               www.mitov.com
               www.openwire.org
@@ -235,7 +235,7 @@ public
   function Increment( ACount : Longint = 1 ) : Boolean; stdcall;
   function Decrement( AMilliseconds : Cardinal ) : Boolean; stdcall;
 {$IFNDEF fpc}
-  function  GetHandle() : THandle; 
+  function  GetHandle() : THandle;
 {$ENDIF}
 
 end;
@@ -342,7 +342,9 @@ type
 TOWPin = class;
 TOWBasicPin = class;
 TOWStreamPin = class;
+TOWBasicSinkPin = class;
 TOWSinkPin = class;
+TOWEventSinkPin = class;
 TOWSourcePin = class;
 TOWStatePin = class;
 TOWStateDispatcher = class;
@@ -588,9 +590,12 @@ protected
 
 end;
 //---------------------------------------------------------------------------
-TOWPinType = ( ptSource, ptSink, ptState, ptEvent, ptDispatcher );
+TOWPinType = ( ptSource, ptSink, ptState, ptEventSink, ptDispatcher );
 //---------------------------------------------------------------------------
 TOWBasicPin = class(TOWPinObject, IOWStream)
+protected
+  CurrentEditorPtr      : ^TOWBasicPin;
+
 protected
   FOwnerPinList         : TOWPinList;   // If owned by pin list.
   FCustomData           : TObject;
@@ -608,7 +613,6 @@ protected
   procedure CheckRemove(); virtual;
   procedure ApplyFormName( var Ident : String );
   function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual; abstract;
-
 
 protected
   function  GetPinType() : TOWPinType; virtual; abstract;
@@ -642,6 +646,7 @@ public
   function  ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
   function  CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; virtual;
   procedure Disconnect(); virtual;
+  procedure DisconnectFrom( OtherPin : TOWBasicPin ); virtual;
   function  Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult; virtual;
 
 protected
@@ -655,6 +660,8 @@ protected
   procedure WriteFormName( Writer : TWriter );
   procedure ReadStateConnectionsData( Reader : TReader ); virtual;
   procedure WriteStateConnectionsData( Writer : TWriter ); virtual;
+  procedure WriteListEntry( Writer : TWriter ); virtual;
+  function  WriteNoStateListEntry( Writer : TWriter ) : Boolean; virtual;
   function  GetConnectedPinCount() : Integer; virtual;
   function  GetConnectedPin( Index : Integer ) : TOWBasicPin; virtual;
   function  GetConnectedAfterPin( Index : Integer ) : TOWBasicPin; virtual;
@@ -663,6 +670,8 @@ protected
   procedure SetInEditor( Value : Boolean ); virtual;
   function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual;
   procedure IntStateDisconnect(); virtual;
+  function  GetEditorString() : String; virtual;
+  function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; virtual;
 
 public // State support
   function  ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean; virtual;
@@ -726,9 +735,6 @@ protected
   function  RootInDestroying() : Boolean; override;
   function  OwnerInLoading() : Boolean;
   function  OwnerInDesigning() : Boolean; override;
-
-protected
-  procedure ReadConnectionsData( Reader : TReader ); override;
 
 protected
   procedure DefineProperties(Filer: TFiler); override;
@@ -854,7 +860,7 @@ protected
   FOutputPin : TOWSourcePin;
 
 protected
-  function SourceOperationEvent( Sender : TOWPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+  function SourceOperationEvent( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
   
 public
   property InputPin  : TOWSinkPin   read FInputPin;
@@ -883,21 +889,14 @@ end;
 
 POWPinEntry = ^TOWPinEntry;
 //---------------------------------------------------------------------------
-{
-TOWFormatConverterEntry = record
-  Converter : TOWFormatConverter;
-
-end;
-}
-//---------------------------------------------------------------------------
-TOWSinkPinEntryList = class( TList )
+TOWPinEntryList = class( TList )
 public
   function  Add() : POWPinEntry;
   function  Remove( Item: POWPinEntry ) : Integer;
   procedure Delete( Index: Integer );
   procedure Clear(); override;
 
-  procedure CopyFromList( AList : TOWSinkPinEntryList );
+  procedure CopyFromList( AList : TOWPinEntryList );
 
 protected
   function  GetItem( Index : Integer ) : POWPinEntry;
@@ -926,11 +925,11 @@ protected
 
 protected
   function GetCount() : Integer;
-  function GetItem( Index : Integer ) : TOWSinkPin;
+  function GetItem( Index : Integer ) : TOWBasicSinkPin;
 
 public
-  procedure Add( APin : TOWSinkPin ); //; ShareLock : Boolean = True );
-  procedure Remove( APin : TOWSinkPin ); virtual;
+  procedure Add( APin : TOWBasicSinkPin ); //; ShareLock : Boolean = True );
+  procedure Remove( APin : TOWBasicSinkPin ); virtual;
 
 public
   constructor Create( AOwner : TOWSourcePin );
@@ -938,46 +937,44 @@ public
   
 public
   property Count : Integer read GetCount;
-  property Items[ Index : Integer ] : TOWSinkPin read GetItem; default;
+  property Items[ Index : Integer ] : TOWBasicSinkPin read GetItem; default;
 
 end;
 //---------------------------------------------------------------------------
 TOWFunctionSinkPinList = class( TOWSinkPinList )
 public
-  procedure Add( APin : TOWSinkPin );
-  procedure Remove( APin : TOWSinkPin ); override;
+  procedure Add( APin : TOWBasicSinkPin );
+  procedure Remove( APin : TOWBasicSinkPin ); override;
   
 end;
 //---------------------------------------------------------------------------
 TOWDataTypeSinkPinList = class( TOWSinkPinList )
 public
-  procedure Add( APin : TOWSinkPin; ShareLock : Boolean = True );
-  procedure Remove( APin : TOWSinkPin ); override;
+  procedure Add( APin : TOWBasicSinkPin; ShareLock : Boolean = True );
+  procedure Remove( APin : TOWBasicSinkPin ); override;
 
 end;
 //---------------------------------------------------------------------------
 TOWSourcePin = class(TOWStreamPin)
 protected
-  FSinkPins             : TOWSinkPinEntryList;
+  FSinkPins             : TOWPinEntryList;
   FFormatConverters     : TOWFormatConverterList;
   FFunctionSources      : TOWFunctionSinkPinList;
   FDataTypeSources      : TOWDataTypeSinkPinList;
   FInDependOn           : Boolean;
   FInDisconnect         : Boolean;
 
-public
-  CurrentEditorPtr      : ^TOWSourcePin;
-
 protected
   procedure IntConnect( SinkPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
   procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
-//  procedure PopulateStreamLocks();
   procedure PinDeletedNotify( ADeletedPin : TOWBasicPin ); override;
   procedure PinReplacedNotify( AOldPin : TOWBasicPin; ANewPin : TOWBasicPin ); override;
   function  GetPinType() : TOWPinType; override;
   function  GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin; override;
   function  GetConnectedPinCount() : Integer; override;
   function  GetConnectedPin( Index : Integer ) : TOWBasicPin; override;
+  function  GetEditorString() : String; override;
+  function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
 public
   function  IsLinkedTo( SinkName : String ) : Boolean;
@@ -991,18 +988,15 @@ protected
   
 //  procedure SinkChangedData( Index : Integer );
   procedure ReorderChangedData();
-  function  GetSubmit( Index : Integer ) : TOWSubmit;
-  function  GetSubmitID( Index : Integer ) : TGUID;
 
 protected
   function  RequestInterface(const IID: TGUID; out Obj): HResult; override; stdcall;
 
-public
+protected
   function  GetLinkStr( Item : Integer ) : String;
-//  function  GetLinkAfterStr( Item : Integer ) : String;
 
 protected
-  function  CheckDownStreamInterfaces( const OtherPin : TOWSinkPin; UseConverters : Boolean ) : Boolean; virtual;
+  function  CheckDownStreamInterfaces( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean; virtual;
   procedure DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
   procedure UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
   procedure DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
@@ -1023,7 +1017,6 @@ protected
 //  procedure ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
   procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
   procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
-//  procedure CheckLinks();
 
 protected
   procedure BackPopulateStreamChains( AChain : TOWObjectListList; AList : TOWObjectList ); override;
@@ -1035,6 +1028,7 @@ protected
 protected
   procedure ReadConnectionsData( Reader : TReader ); override;
   procedure WriteConnectionsData( Writer : TWriter ); virtual;
+  function  WriteNoStateListEntry( Writer : TWriter ) : Boolean; override;
 
   function  DoFormWrite() : Boolean; override;
   function  DoWrite() : Boolean; virtual;
@@ -1053,6 +1047,7 @@ protected
   procedure DisconnectFromPinName( OtherPinName : String );
   function  IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
   function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  procedure IntDisconnectFrom( OtherPin : TOWBasicPin );
 
 protected
   procedure UpdateStateValue(); override;
@@ -1069,6 +1064,7 @@ public
   function  ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; override;
   function  CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
   procedure Disconnect(); override;
+  procedure DisconnectFrom( OtherPin : TOWBasicPin ); override;
 
   function  IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
   function  DependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
@@ -1102,29 +1098,139 @@ public
   // Describes the data type sources for the output within the component( The output should be of the same type as them ).
   property DataTypeSources : TOWDataTypeSinkPinList read FDataTypeSources;
 
-  // Describes the pump sources for the output within the component.
-//  property PumpSources : TOWSinkPinList read FPumpSources;
-
 end;
 
 //---------------------------------------------------------------------------
-TOWSinkPin = class(TOWStreamPin)
-public
-  CurrentEditorPtr      : ^TOWSinkPin;
+TOWBasicSinkPin = class(TOWStreamPin)
+protected
+  FFunctionDependants   : TObjectList;
+  FDataTypeDependants   : TObjectList;
+  FIgnoreUpstream       : Boolean;
 
+protected
+  procedure DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+  procedure DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); virtual; abstract;
+  procedure UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+  procedure UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); virtual; abstract;
+  function  DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+  function  UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+  function  UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; virtual; abstract;
+  function  DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; virtual; abstract;
+  procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); virtual; abstract;
+  procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); virtual; abstract;
+  function  UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
+  procedure ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CheckUpStreamInterfaces( const OtherPin : TOWSourcePin; UseConverters : Boolean ) : Boolean; virtual;
+
+  function  HasToIgnoreUpstream() : Boolean;
+
+protected
+  procedure IntAddFunctionDependance( FunctionDependancePin : TOWSourcePin );
+  procedure IntRemoveFunctionDependance( FunctionDependancePin : TOWSourcePin );
+  procedure IntAddDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
+  procedure IntRemoveDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
+
+public
+  function  IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
+
+protected
+  procedure IntCreate();
+
+public
+  constructor Create(AOwner: TComponent);
+  constructor CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+  destructor  Destroy(); override;
+
+public
+  property IgnoreUpstream       : Boolean read FIgnoreUpstream write FIgnoreUpstream;
+
+end;
+//---------------------------------------------------------------------------
+TOWEventSinkPin = class(TOWBasicSinkPin)
+protected
+  FSourcePins         : TOWPinEntryList;
+  FFormatConverters   : TOWFormatConverterList;
+  FInDisconnect       : Boolean;
+
+protected
+  function  GetSourceCount() : Integer; virtual;
+  function  GetSource( Index : Integer ) : TOWBasicPin; virtual;
+
+  function  GetConverterCount() : Integer;
+  function  GetConverter( Index : Integer ) : TOWFormatConverter;
+
+  function  GetPinType() : TOWPinType; override;
+
+protected
+  function  TryLinkTo( Root : TComponent; SourceIdent : String; SourceName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
+  function  GetEditorString() : String; override;
+  function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
+
+protected
+  procedure IntConnect( SourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
+  function  IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
+  procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
+  procedure IntDisconnectFrom( OtherPin : TOWBasicPin );
+  procedure ReorderChangedData();
+  procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
+  procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
+
+public
+  function  ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; override;
+  function  CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
+  procedure Disconnect(); override;
+  procedure DisconnectFrom( OtherPin : TOWBasicPin ); override;
+  function  DependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
+  function  DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
+  function  IsConnected() : Boolean; override;
+  function  IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; override; //const;
+  function  IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean; override; //const;
+
+  procedure Assign(Source: TPersistent); override;
+  
+protected
+  function  DoFormWrite() : Boolean; override;
+  function  DoWrite() : Boolean; virtual;
+  
+  procedure DefineProperties(Filer: TFiler); override;
+
+  // TODO: Write state converters data.
+  procedure ReadConnectionsData( Reader : TReader ); override;
+  procedure WriteConnectionsData( Writer : TWriter ); virtual;
+  function  WriteNoStateListEntry( Writer : TWriter ) : Boolean; override;
+
+protected
+  function  NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
+
+public
+  function  Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult; override;
+
+protected
+  function  GetLinkStr( Item : Integer ) : String;
+  
+public
+  constructor Create(AOwner: TComponent);
+  constructor CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+  destructor  Destroy(); override;
+
+public
+  property SourceCount : Integer read GetSourceCount;
+  property Sources[ Index : Integer  ] : TOWBasicPin read GetSource; default;
+
+  property ConverterCount : Integer read GetConverterCount;
+  property Converters[ Index : Integer  ] : TOWFormatConverter read GetConverter;
+
+end;
+//---------------------------------------------------------------------------
+TOWSinkPin = class(TOWBasicSinkPin)
 protected
   FConnectionSourcePin  : TOWBasicPin;
   FRealSourcePin        : TOWBasicPin;
   FIntRealSourcePin     : TOWBasicPin;
   FSubmitFunction       : TOWSubmit;
-  FConnectedID          : TGUID; 
+  FConnectedID          : TGUID;
 
-  FIgnoreUpstream       : Boolean;
-
-  FFunctionDependants   : TObjectList;
-  FDataTypeDependants   : TObjectList;
-
-  FSourceChains         : IOWObjectList;
   FInConnect            : Boolean;
 
 protected
@@ -1139,37 +1245,21 @@ public
   function  TryLinkTo( Root : TComponent; Soutce : String; SoutceName : String; SaveForm : Boolean ) : Boolean;
 
 protected
-  procedure IntAddFunctionDependance( FunctionDependancePin : TOWSourcePin );
-  procedure IntRemoveFunctionDependance( FunctionDependancePin : TOWSourcePin );
-  procedure IntAddDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
-  procedure IntRemoveDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
-
-protected
   function  RequestInterface(const IID: TGUID; out Obj): HResult; override; stdcall;
 
 protected
-  function  CheckUpStreamInterfaces( const OtherPin : TOWSourcePin; UseConverters : Boolean ) : Boolean; virtual;
-  procedure DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
-  procedure UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
-  procedure DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
-  procedure UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+  procedure DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
+  procedure UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
   procedure DownStreamFillPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
   procedure UpStreamFillPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
 
   function  DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult; override;
   function  UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult; override;
-  function  DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-  function  UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-  function  DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-  function  UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-  function  UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
+  function  DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; override;
+  function  UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; override;
 
-  function  HasToIgnoreUpstream() : Boolean;
-
-//  procedure ChangeConnectionType( const IID : TGUID );
-  procedure ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
-  procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
-  procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+  procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
+  procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
 
 protected
   procedure BackPopulateStreamChains( AChain : TOWObjectListList; AList : TOWObjectList ); override;
@@ -1187,6 +1277,7 @@ protected
   function  GetUpStreamID() : TGUID;
   function  GetDownStreamID() : TGUID;
 
+  function  WriteNoStateListEntry( Writer : TWriter ) : Boolean; override;
   procedure ReadConnectionsData( Reader : TReader ); override;
   procedure WriteConnectionsData( Writer : TWriter ); virtual;
   procedure ReadStateConverterConnectionsData( Reader : TReader ); virtual;
@@ -1200,11 +1291,12 @@ protected
 
   procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
   function  IsConnectedToPinName( OtherPinName : String ) : Boolean;
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   procedure IntStateDisconnect(); override;
+  function  GetEditorString() : String; override;
+  function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
-public
+protected
   function  GetLinkStr() : String;
 
 protected
@@ -1222,8 +1314,7 @@ public
   function  ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; override;
   function  CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
   procedure Disconnect(); override;
-
-  function  IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
+  procedure DisconnectFrom( OtherPin : TOWBasicPin ); override;
 
   function  ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean; override;
   function  DependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
@@ -1236,8 +1327,6 @@ public
   procedure Assign(Source: TPersistent); override;
 
 public
-  constructor Create(AOwner: TComponent);
-  constructor CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
   destructor  Destroy(); override;
 
 public
@@ -1248,8 +1337,6 @@ public
 
   property DownStreamID         : TGUID read GetDownStreamID;
   property UpStreamID           : TGUID read GetUpStreamID;
-
-  property IgnoreUpstream       : Boolean read FIgnoreUpstream write FIgnoreUpstream;
 
 end;
 //---------------------------------------------------------------------------
@@ -1274,6 +1361,8 @@ protected
 
 protected
   function  GetLinkStr( StatePin : TOWPin ) : String;
+  function  GetEditorString() : String; override;
+  function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
 public
   function  GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID; override;
@@ -1574,6 +1663,9 @@ procedure GOWDBGLog( ALock : TOWLock; ASection : Pointer; AOperation : TOWDBOper
 procedure GOWDBGSaveLocks( ALock : TOWLock );
 {$ENDIF}
 
+const
+  GOWDISCONNECTED = '(Disconnected)';
+
 implementation
 
 {$T-}
@@ -1627,7 +1719,7 @@ type
     FRoot           : TComponent;
     FType           : TOWPinType;
     FDesignTime     : Boolean;
-    FConnectedPins  : TOWSinkPinEntryList;
+    FConnectedPins  : TOWPinEntryList;
     FCreatedFrom    : String;
     FOwnedByList    : Boolean;
     FInRemove       : Boolean;
@@ -3188,6 +3280,9 @@ var
 begin
 //  FAfterLinkList.Free();
   ADestroyLock := FDestroyLock.DestroyLock();
+  if( CurrentEditorPtr <> NIL )then
+    CurrentEditorPtr^ := NIL;
+
   GlobalStorageSection.Enter();
   GOWPins.Remove( Self );
   GlobalStorageSection.Leave();
@@ -3419,7 +3514,32 @@ procedure TOWBasicPin.IntStateDisconnect();
 begin
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWBasicPin.GetEditorString() : String;
+begin
+  if( FDispatcher = NIL ) then
+    Result := GOWDISCONNECTED
+
+  else if( FDispatcher.PinCount = 2 ) then
+    begin
+    if( FDispatcher.Pins[ 0 ].GetFullIdentName( True ) = GetSaveName() ) then
+      Result := FDispatcher.Pins[ 1 ].GetFullName( True )
+
+    else
+      Result := FDispatcher.Pins[ 0 ].GetFullName( True );
+
+    end
+
+  else
+    Result := FDispatcher.Name;
+
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+begin
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -3474,11 +3594,9 @@ end;
 //---------------------------------------------------------------------------
 function  TOWBasicPin.IsConnectedToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
 
   Result := ( ADispatcher = FDispatcher );
@@ -3486,12 +3604,10 @@ end;
 //---------------------------------------------------------------------------
 function  TOWBasicPin.IsConnectedByStateTo( OtherPin : TOWBasicPin ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock       : IOWLockSection;
   I               : Integer;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
 
   Result := False;
@@ -3591,6 +3707,27 @@ begin
 
   if( FDispatcher <> NIL ) then
     FDispatcher.RemovePin( Self );
+
+  FDispatcher := NIL;
+
+  AWriteLock := NIL;
+
+  OWNotifyChangePin( Self );
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicPin.DisconnectFrom( OtherPin : TOWBasicPin );
+var
+  AWriteLock  : IOWLockSection;
+  ADestroyLock : IOWDestroyLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  ADestroyLock := FDestroyLock.DestroyLock();
+
+  OWNotifyDisconnected( Self, FDispatcher );
+
+  if( FDispatcher <> NIL ) then
+    FDispatcher.RemovePin( OtherPin );
 
   FDispatcher := NIL;
 
@@ -3790,7 +3927,58 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.ConnectByStateAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
+begin
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicPin.WriteListEntry( Writer : TWriter );
+begin
+  if( DoStateWrite() ) then
+    begin
+    // Write all the pin connections under the State indicator !
+    Writer.WriteIdent( 'State' );
+    Writer.WriteListBegin();
+    WriteStateConnectionsData( Writer );
+    WriteNoStateListEntry( Writer ); 
+{
+    if( Pins[ I ] is TOWSinkPin ) then
+      begin
+      if( TOWSinkPin( Pins[ I ] ).DoWrite() ) then
+        TOWSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+
+      end
+
+    else if( Pins[ I ] is TOWEventSinkPin ) then
+      begin
+      if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+        begin
+        Writer.WriteIdent( 'Sources' );
+        TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+        end;
+
+      end
+
+    else if( Pins[ I ] is TOWSourcePin ) then
+      begin
+      if( TOWSourcePin( Pins[ I ] ).DoWrite() ) then
+        begin
+        Writer.WriteIdent( 'Sinks' );
+        TOWSourcePin( Pins[ I ] ).WriteConnectionsData( Writer );
+        end;
+
+      end;
+}
+    Writer.WriteListEnd();
+//    Continue;
+    end
+    
+  else if( not WriteNoStateListEntry( Writer ) ) then
+    Writer.WriteIdent( 'nil' );
+
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.ConnectByStateAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -3819,7 +4007,7 @@ begin
       AConverter.FInputPin.FDispatcher := FDispatcher;
       FDispatcher.AddPin( AConverter.FInputPin, OtherPin );
 //      PEntry.ConnectionPin := AConverter.FInputPin;
-      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := Self; // AConverter.FOutputPin;
+      AConverter.FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
       TOWSinkPin( OtherPin ).FRealSourcePin := Self;
       TOWSinkPin( OtherPin ).FIntRealSourcePin := Self;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
@@ -3857,7 +4045,7 @@ begin
       AConverter.FInputPin.FDispatcher := FDispatcher;
       FDispatcher.AddPin( AConverter.FInputPin, OtherPin );
 //      PEntry.ConnectionPin := AConverter.FInputPin;
-      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := Self; // AConverter.FOutputPin;
+      AConverter.FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
       TOWSinkPin( OtherPin ).FRealSourcePin := Self;
       TOWSinkPin( OtherPin ).FIntRealSourcePin := Self;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
@@ -4068,7 +4256,6 @@ end;
 //---------------------------------------------------------------------------
 function  TOWPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
 var
-//  AGlobalReadLock : IOWLockSection;
   I      : Integer;
   Status : TOWNotifyResult;
   DataTypeID : TGUID;
@@ -4077,13 +4264,8 @@ var
   APin        : TOWBasicPin;
   AReadLock : IOWLockSection;
   ADestroyLock : IOWDestroyLockSection;
-//  AUnlock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
-//  if( FOwnerLock <> NIL ) then
-//    AUnlock := FOwnerLock.UnlockAll();
-
   AReadLock := ReadLock();
 
   Result := [];
@@ -4130,12 +4312,6 @@ begin
       AReadLock := NIL;      
       end;
 
-////    Status := TOWSubmit( GetSubmit( I ))( GetSink ( I ), @DataTypeID, Operation, Data, State );
-//    Status := TOWSubmitFunction( GetSubmit( I ))( 0, GetSink ( I ), Operation, Data, State );
-
-//    if( nrDataChanged in Status ) then { TODO: Reorder changed data }
-//      SinkChangedData( I ); { TODO: Reorder changed data }
-
     end;
 
   AReadLock := NIL;
@@ -4176,10 +4352,6 @@ begin
   except
   end;
   
-end;
-//---------------------------------------------------------------------------
-procedure TOWPin.ReadConnectionsData( Reader : TReader );
-begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWPin.DefineProperties(Filer: TFiler);
@@ -4454,15 +4626,13 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
+function TOWPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
 var
   Unknown       : IUnknown;
   I             : Integer;
   J             : Integer;
   AReadLock     : IOWLockSection;
   AId           : TGUID;
-//  AConverter    : TOWFormatConverter;
-//  AConverterClass : TOWFormatConverterClass;
 
 begin
   AReadLock := ReadLock();
@@ -4477,15 +4647,13 @@ begin
 
   if( UseConverters ) then
     begin
-    if( OtherPin.GetPinType() = ptSink ) then
+    if( OtherPin.GetPinType() in [ ptSink, ptEventSink ] ) then
       begin 
       if( FDispatcher <> NIL ) then
         begin
         for I := FDispatcher.FFormatConverters.Count - 1 downto 0 do
           begin
-    //        AId := DownStreamFindConnectionID( FFormatConverters[ I ].FInputPin, False, False, AConverter, AConverterClass );
           AId := FDispatcher.FFormatConverters[ I ].FOutputPin.DownStreamFindConnectionID( OtherPin, False, False, AConverter, AConverterClass );
-    //      Result := FFormatConverters[ I ].FInputPin.DownStreamFindConnectionID( OtherPin, False, AConverter, AConverterClass ); //  FOutputPin.DownStreamFindConnectionID( OtherPin, False, AConverter, AConverterClass );
           if( not IsEqualGUID( AId, OWNULLID )) then
             begin
             if( OtherPin.RequestInterface( AId, Unknown ) = S_OK ) then
@@ -4508,7 +4676,6 @@ begin
               begin
               Result := ConverterTypes[ I ].InputID;
               AConverterClass := ConverterTypes[ I ].ConverterClass;
-  //            PossibleStreamTypes.Free();
               Exit;
               end;
             end;
@@ -4532,11 +4699,10 @@ begin
   AWriteLock := WriteLock();
 
   FInDependOn := False;
-  FSinkPins  := TOWSinkPinEntryList.Create();
+  FSinkPins  := TOWPinEntryList.Create();
   FFormatConverters := TOWFormatConverterList.Create();
   FFunctionSources := TOWFunctionSinkPinList.Create( Self );
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
-//  FPumpSources := TOWSinkPinList.Create( Self );
 end;
 //---------------------------------------------------------------------------
 constructor TOWSourcePin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
@@ -4547,7 +4713,7 @@ begin
   inherited;
   AWriteLock := WriteLock();
   FInDependOn := False;
-  FSinkPins  := TOWSinkPinEntryList.Create();
+  FSinkPins  := TOWPinEntryList.Create();
   FFormatConverters := TOWFormatConverterList.Create();
   FFunctionSources := TOWFunctionSinkPinList.Create( Self );
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
@@ -4567,10 +4733,6 @@ begin
   FSinkPins.Free();
   FDataTypeSources.Free();
   FFunctionSources.Free();
-//  FPumpSources.Free();
-
-  if( CurrentEditorPtr <> NIL )then
-    CurrentEditorPtr^ := NIL;
 
   ADestroyLock := NIL;
   AWriteLock := NIL;
@@ -4629,7 +4791,6 @@ begin
     end;
 
   Reader.ReadListEnd();
-//  CheckLinks();
 
   AWriteLock := NIL;
 end;
@@ -4644,10 +4805,10 @@ begin
   
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.TryLinkTo( Root : TComponent; SinkIdent : String; SinkName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
+function TOWSourcePin.TryLinkTo( Root : TComponent; SinkIdent : String; SinkName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
 var
   Values          : TStringList;
-  SinkPin         : TOWSinkPin;
+  APin            : TOWBasicPin;
   I               : Integer;
   RootName        : String;
   MyRoot          : TComponent;
@@ -4668,7 +4829,6 @@ begin
     if( not SaveForm ) then
       Disconnect();
 
-//    CheckLinks();
     Exit;
     end;
 
@@ -4695,15 +4855,14 @@ begin
       begin
       if( Values.Strings[ I ] = SinkIdent ) then
         begin
-        SinkPin := TOWSinkPin( Values.Objects[ i ] );
-        Connect( SinkPin );
+        APin := TOWBasicPin( Values.Objects[ i ] );
+        Connect( APin );
         Result := True;
         Break;
         end;
 
       end;
 
-//    CheckLinks();
   finally
     Values.Free();
 
@@ -4798,7 +4957,7 @@ begin
   Writer.WriteListEnd();
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DoWrite() : Boolean;
+function TOWSourcePin.DoWrite() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -4807,9 +4966,20 @@ begin
   Result := ( GetSinkCount() > 0 );
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DoFormWrite() : Boolean;
+function TOWSourcePin.DoFormWrite() : Boolean;
 begin
   Result := (( inherited DoFormWrite() ) or DoWrite() );
+end;
+//---------------------------------------------------------------------------
+function TOWSourcePin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
+begin
+  Result := DoWrite(); 
+  if( Result ) then
+    begin
+    Writer.WriteIdent( 'Sinks' );
+    WriteConnectionsData( Writer );
+    end;
+    
 end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.DefineProperties(Filer: TFiler);
@@ -4818,7 +4988,7 @@ begin
   Filer.DefineProperty( 'SinkPins', ReadConnectionsData, WriteConnectionsData, DoWrite());
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.GetLinkStr( Item : Integer ) : String;
+function TOWSourcePin.GetLinkStr( Item : Integer ) : String;
 var
   AddRoot : Boolean;
   AReadLock : IOWLockSection;
@@ -4842,7 +5012,7 @@ begin
 end;
 //---------------------------------------------------------------------------
 {
-function  TOWSourcePin.GetLinkAfterStr( Item : Integer ) : String;
+function TOWSourcePin.GetLinkAfterStr( Item : Integer ) : String;
 var
   AddRoot : Boolean;
   AReadLock : IOWLockSection;
@@ -4895,31 +5065,7 @@ begin
 
   PEntry.SubmitFunction := GetSubmitFunctionID( PEntry.ConnectedID );
   PEntry.ModificationLevel := 0;
-
-{
-  if( Owner <> NIL ) then
-    RootName := OWGetMainOwnerComponent( Owner ).Name
-
-  else
-    RootName := '';
-}
-////  SinkPin.FDownStreamLinkName := GetLinkNameID( PEntry.ConnectedID );
-
-//  SinkPins.Add( PEntry );
 end;
-//---------------------------------------------------------------------------
-{
-procedure TOWSourcePin.PopulateStreamLocks();
-var
-  I : Integer;
-
-begin
-  for I := 0 to SinkCount - 1 do
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).PopulateStreamLocks();
-
-end;
-}
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean );
 var
@@ -4981,11 +5127,8 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWSourcePin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
-//  AGlobalReadLock  : IOWLockSection;
-//  AStreamReadLock : IOWLockSection;
-
   I      : Integer;
   J      : Integer;
   State  : TOWNotifyState;
@@ -4997,18 +5140,15 @@ var
   ARealSinkPin   : TOWBasicPin;
 //  ASinkReadLock : IOWLockSection;
 
-  ASinksList    : TOWSinkPinEntryList;
+  ASinksList    : TOWPinEntryList;
   Entry : POWPinEntry;
   AUnlock : IOWLockSection;
   ADestroyLock : IOWDestroyLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
-
   ALock := ReadLock();
-//  AStreamReadLock := FStreamLock.ReadLock();
 
-  ASinksList := TOWSinkPinEntryList.Create();
+  ASinksList := TOWPinEntryList.Create();
 
   ASinksList.CopyFromList( FSinkPins );
 
@@ -5113,7 +5253,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWSourcePin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 begin
   Result := NotifyPin( NIL, Operation );
 end;
@@ -5123,8 +5263,7 @@ var
   AReadLock : IOWLockSection;
 
 begin
-  AReadLock := ReadLock();
-  
+  AReadLock := ReadLock(); 
   Result := FSinkPins.Count;
 end;
 //---------------------------------------------------------------------------
@@ -5143,7 +5282,6 @@ var
 
 begin
   AReadLock := ReadLock();
-  
   Result := FFormatConverters.Count;
 end;
 //---------------------------------------------------------------------------
@@ -5154,24 +5292,6 @@ var
 begin
   AReadLock := ReadLock();
   Result := FFormatConverters.Items[ Index ];
-end;
-//---------------------------------------------------------------------------
-function TOWSourcePin.GetSubmit( Index : Integer ) : TOWSubmit;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock(); 
-  Result := FSinkPins.Items[ Index ].SubmitFunction;
-end;
-//---------------------------------------------------------------------------
-function  TOWSourcePin.GetSubmitID( Index : Integer ) : TGUID;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := FSinkPins.Items[ Index ].ConnectedID;
 end;
 //---------------------------------------------------------------------------
 function PinSortMethod(Item1, Item2: Pointer): Integer;
@@ -5230,63 +5350,6 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-{
-procedure TOWSourcePin.SinkChangedData( Index : Integer );
-var
-  PEntry : POWPinEntry;
-  AWriteLock : IOWLockSection;
-
-begin
-  AWriteLock := WriteLock();
-
-  CheckLoaded();
-  OWLinkAwaitsLinking( Owner );
-
-  PEntry := FSinkPins.Items[ Index ];
-  if( PEntry.ModificationLevel < 10000 ) then
-    Inc( PEntry.ModificationLevel, 4 );
-
-end;
-}
-//---------------------------------------------------------------------------
-{
-function TOWSourcePin.GetFunctionSourceCount() : Integer; // const;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := FFunctionSources.Count;
-end;
-//---------------------------------------------------------------------------
-function TOWSourcePin.GetFunctionSources( Index : Integer ) : TOWSinkPin;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := TOWSinkPin( FFunctionSources.Items[ Index ] );
-end;
-//---------------------------------------------------------------------------
-function TOWSourcePin.GetDataTypeSourceCount() : Integer; // const;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := FDataTypeSources.Count;
-end;
-//---------------------------------------------------------------------------
-function TOWSourcePin.GetDataTypeSources( Index : Integer ) : TOWSinkPin;
-var
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := TOWSinkPin( FDataTypeSources.Items[ Index ] );
-end;
-}
-//---------------------------------------------------------------------------
 procedure TOWSourcePin.DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
 var
   I             : Integer;
@@ -5298,8 +5361,8 @@ begin
   if( ForPin = Self ) then
     begin
     for I := 0 to SinkCount - 1 do
-      if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-        TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+        TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
     Exit;
     end;
@@ -5307,7 +5370,7 @@ begin
   if( FDataTypeSources.Count > 0 ) then
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
-      TOWSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
     end
 
@@ -5332,8 +5395,8 @@ begin
   if( ForPin = Self ) then
     begin
     for I := 0 to SinkCount - 1 do
-      if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-        TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+        TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
     Exit;
     end;
@@ -5341,7 +5404,7 @@ begin
   if( FDataTypeSources.Count > 0 ) then
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
-      TOWSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
     end
 
@@ -5402,12 +5465,12 @@ begin
 }
 
   for I := 0 to SinkCount - 1 do
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+      TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
 {
   for I := 0 to FDataTypeSources.Count - 1 do
-    TOWSinkPin( FDataTypeSources.Items[ I ] ).ForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).ForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 }
 end;
 //---------------------------------------------------------------------------
@@ -5436,12 +5499,12 @@ begin
     end;
 
   for I := 0 to SinkCount - 1 do
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+      TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWSourcePin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -5455,7 +5518,7 @@ begin
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
       begin
-      Result := TOWSinkPin( FDataTypeSources.Items[ I ] ).DownStreamForthQueryPossybleInterface( IID, Self );
+      Result := TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).DownStreamForthQueryPossybleInterface( IID, Self );
       if( Result <> S_OK ) then
         Exit;
 
@@ -5464,7 +5527,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWSourcePin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -5476,7 +5539,7 @@ begin
 
   for I := 0 to FDataTypeSources.Count - 1 do
     begin
-    Result := TOWSinkPin( FDataTypeSources.Items[ I ] ).UpStreamForthQueryPossybleInterface( IID, Self );
+    Result := TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).UpStreamForthQueryPossybleInterface( IID, Self );
     if( Result <> S_OK ) then
       Exit;
 
@@ -5484,7 +5547,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSourcePin.UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -5498,8 +5561,8 @@ begin
     begin
     for I := 0 to SinkCount - 1 do
       begin
-      if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-        Result := TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthQueryPossybleInterface( IID, ForPin );
+      if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+        Result := TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthQueryPossybleInterface( IID, ForPin );
         
       if( Result <> S_OK ) then
         Break;
@@ -5513,7 +5576,7 @@ begin
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
       begin
-      Result := TOWSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackQueryPossybleInterface( IID, ForPin );
+      Result := TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackQueryPossybleInterface( IID, ForPin );
       if( Result <> S_OK ) then
         Break;
 
@@ -5526,7 +5589,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSourcePin.DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I             : Integer;
   AReadLock : IOWLockSection;
@@ -5539,8 +5602,8 @@ begin
     begin
     for I := 0 to SinkCount - 1 do
       begin
-      if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-        Result := TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthQueryPossybleInterface( IID, ForPin );
+      if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+        Result := TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthQueryPossybleInterface( IID, ForPin );
         
       if( Result <> S_OK ) then
         Break;
@@ -5554,7 +5617,7 @@ begin
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
       begin
-      Result := TOWSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackQueryPossybleInterface( IID, ForPin );
+      Result := TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackQueryPossybleInterface( IID, ForPin );
       if( Result <> S_OK ) then
         Break;
 
@@ -5598,7 +5661,7 @@ begin
   if( FDataTypeSources.Count > 0 ) then
     begin
     for I := 0 to FDataTypeSources.Count - 1 do
-      TOWSinkPin( FDataTypeSources.Items[ I ] ).BackChainReconnect( DownIID, UpIID );
+      TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).BackChainReconnect( DownIID, UpIID );
 
     end
 
@@ -5618,36 +5681,14 @@ begin
   for I := 0 to SinkCount - 1 do
     begin
     ChangeConnectionType( I, DownIID );
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).ForthChainReconnect( DownIID, UpIID );
+    if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+      TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).ForthChainReconnect( DownIID, UpIID );
       
     end;
 
 end;
 //---------------------------------------------------------------------------
-{
-procedure TOWSourcePin.CheckLinks();
-var
-  I, J : Integer;
-  T    : Integer;
-
-begin
-  T := 0;
-  for I := 0 to SinkCount - 1 do
-    begin
-    for J := I + 1 to SinkCount - 1 do
-      begin
-      if( Sinks[ I ].GetFullName( True ) = Sinks[ J ].GetFullName( True ) ) then
-        begin
-        Inc( T );
-        end;
-      end;
-    end;
-
-end;
-}
-//---------------------------------------------------------------------------
-function  TOWSourcePin.DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
+function TOWSourcePin.DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
 var
   PossibleStreamTypes   : TOWPinTypeRestricted;
   I                     : Integer;
@@ -5721,7 +5762,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSourcePin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I       : Integer;
   Unknown : IUnknown;
@@ -5739,8 +5780,8 @@ begin
 
   for I := 0 to SinkCount - 1 do
     begin
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      Result := TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthQueryPossybleInterface( IID, ForPin );
+    if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+      Result := TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).UpStreamForthQueryPossybleInterface( IID, ForPin );
 
     if( Result <> S_OK ) then
       Exit;
@@ -5749,7 +5790,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSourcePin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I          : Integer;
   EntryFound : Boolean;
@@ -5781,8 +5822,8 @@ begin
 
   for I := 0 to SinkCount - 1 do
     begin
-    if( FSinkPins.Items[ I ].ConnectionPin is TOWSinkPin ) then
-      Result := TOWSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthQueryPossybleInterface( IID, ForPin );
+    if( FSinkPins.Items[ I ].ConnectionPin is TOWBasicSinkPin ) then
+      Result := TOWBasicSinkPin( FSinkPins.Items[ I ].ConnectionPin ).DownStreamForthQueryPossybleInterface( IID, ForPin );
       
     if( Result <> S_OK ) then
       Exit;
@@ -5791,7 +5832,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.RequestInterface(const IID: TGUID; out Obj): HResult;
+function TOWSourcePin.RequestInterface(const IID: TGUID; out Obj): HResult;
 var
   AReadLock : IOWLockSection;
 
@@ -5815,7 +5856,7 @@ begin
 
   inherited DownStreamFillPossibleStreamTypes( PossibleStreamTypes, ForPin );
   for I := 0 to FDataTypeSources.Count - 1 do
-    TOWSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
 end;
 //---------------------------------------------------------------------------
@@ -5828,7 +5869,7 @@ begin
   AReadLock := ReadLock();
   inherited UpStreamFillPossibleStreamTypes( PossibleStreamTypes, ForPin );
   for I := 0 to FDataTypeSources.Count - 1 do
-    TOWSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    TOWBasicSinkPin( FDataTypeSources.Items[ I ] ).UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
 
 end;
 //---------------------------------------------------------------------------
@@ -5841,11 +5882,10 @@ begin
   AWriteLock := WriteLock();
 
   inherited;
-  if( ADeletedPin is TOWSinkPin ) then
+  if( ADeletedPin is TOWBasicSinkPin ) then
     begin
-    FFunctionSources.Remove( TOWSinkPin( ADeletedPin ) );
-    FDataTypeSources.Remove( TOWSinkPin( ADeletedPin ) );
-//    FPumpSources.Remove( TOWSinkPin( ADeletedPin ) );
+    FFunctionSources.Remove( TOWBasicSinkPin( ADeletedPin ) );
+    FDataTypeSources.Remove( TOWBasicSinkPin( ADeletedPin ) );
     end;
 
   for I := SinkCount - 1 downto 0 do
@@ -5887,6 +5927,50 @@ begin
 //  ShowMessage( 'TOWSourcePin.GetConnectedPin - ' + IntToHex( Integer( Result ), 8 ) );
 end;
 //---------------------------------------------------------------------------
+function TOWSourcePin.GetEditorString() : String;
+var
+  LinksCount : Integer;
+  
+begin
+  LinksCount := SinkCount;
+  if( LinksCount = 0 ) then
+    Result := inherited GetEditorString()
+
+  else
+    begin
+    if( LinksCount = 1 ) then
+      begin
+      if( FDispatcher = NIL ) then
+        begin
+        if( SinkCount = 1 ) then
+          Result := GetLinkStr( 0 )
+
+        else
+          Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+        end
+
+      else
+        Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+      end
+
+    else
+      if( FDispatcher = NIL ) then
+        Result := '( ' + IntToStr( LinksCount ) + ' Links )'
+
+      else
+        Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+    end;
+      
+end;
+//---------------------------------------------------------------------------
+function TOWSourcePin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+begin
+  Result := TryLinkTo( ARoot, AValue, AValue, '', False );
+end;
+//---------------------------------------------------------------------------
 function TOWSourcePin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
 var
   PEntry : POWPinEntry;
@@ -5906,7 +5990,7 @@ begin
   Result := ConnectAfter( OtherPin, NIL ); 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWSourcePin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
   if( OtherPin <> NIL ) then
     begin
@@ -5917,26 +6001,23 @@ begin
     end;
 
   Result := IntConnectAfter( OtherPin, NotifyAfterPin );
-//  CheckLinks();
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWSourcePin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   AWriteLock : IOWLockSection;
 
 begin
-//  AGlobalWriteLock := OWGlobalLock.WriteLock();
   AWriteLock := WriteLock();
   Result := False;
 
   if( OtherPin <> NIL ) then
-    if( ( OtherPin is TOWSinkPin ) or ( OtherPin is TOWStatePin ) or ( OtherPin is TOWUnloadedPin )) then
+    if( ( OtherPin is TOWBasicSinkPin ) or ( OtherPin is TOWStatePin ) or ( OtherPin is TOWUnloadedPin )) then
       Result := OtherPin.ConnectAfter( Self, NotifyAfterPin );
 
-//  CheckLinks();
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWSourcePin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
   I : Integer;
 
@@ -6053,9 +6134,9 @@ begin
   Dec( FInSending );
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWSourcePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
-  SinkPin : TOWSinkPin;
+  SinkPin : TOWBasicSinkPin;
   StatePin : TOWStatePin;
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -6065,9 +6146,9 @@ begin
   AReadLock := ReadLock();
   Result := False;
 
-  if( OtherPin is TOWSinkPin ) then
+  if( OtherPin is TOWBasicSinkPin ) then
     begin
-    SinkPin := TOWSinkPin( OtherPin );
+    SinkPin := TOWBasicSinkPin( OtherPin );
     Result := SinkPin.IsCompatible( Self, UseConverters );
     end
     
@@ -6084,7 +6165,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWSourcePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -6109,7 +6190,7 @@ begin
     begin
     if( OtherPin <> Self ) then
       begin
-      if( OtherPin is TOWSinkPin ) then
+      if( OtherPin is TOWBasicSinkPin ) then
         Result := OtherPin.CanConnectTo( Self, UseConverters );
 
       end;
@@ -6117,19 +6198,17 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsConnected() : Boolean;
+function TOWSourcePin.IsConnected() : Boolean;
 begin
   Result := ( FSinkPins.Count > 0 ) or inherited IsConnected();
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWSourcePin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   I : Integer;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   Result := False;
   
@@ -6140,7 +6219,7 @@ begin
   if( OtherPin <> NIL ) then
     begin
     for I := 0 to FFunctionSources.Count - 1 do
-      if( FFunctionSources.Items[ I ] = OtherPin ) then
+      if( FFunctionSources[ I ] = OtherPin ) then
         begin
         Result := True;
         FInDependOn := False;
@@ -6153,7 +6232,7 @@ begin
   FInDependOn := False;
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWSourcePin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -6170,7 +6249,7 @@ begin
     begin
     Result := True;
     for I := 0 to FFunctionSources.Count - 1 do
-      if( FFunctionSources.Items[ I ] = OtherPin ) then
+      if( FFunctionSources[ I ] = OtherPin ) then
         begin
         Result := True;
         FInDependOn := False;
@@ -6178,7 +6257,7 @@ begin
         end;
 
     for I := 0 to FFunctionSources.Count - 1 do
-      if( TOWPin( FFunctionSources.Items[ I ] ).DependsOn( OtherPin ) ) then
+      if( FFunctionSources[ I ].DependsOn( OtherPin ) ) then
         begin
         FInDependOn := False;
         Exit;
@@ -6201,7 +6280,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.GetAfterPinDisplayName( APin : TOWPin ) : String;
+function TOWSourcePin.GetAfterPinDisplayName( APin : TOWPin ) : String;
 var
   I : Integer;
   
@@ -6221,7 +6300,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWSourcePin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
 var
 //  I     : Integer;
   PEntry : POWPinEntry;
@@ -6239,14 +6318,14 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.GetPrimaryConnectionID() : TGUID;
+function TOWSourcePin.GetPrimaryConnectionID() : TGUID;
 var
   AReadLock : IOWLockSection;
 
 begin
   AReadLock := ReadLock();
   if( GetSinkCount() > 0 ) then
-    Result := GetSubmitID( 0 )
+    Result := FSinkPins[ 0 ].ConnectedID
 
   else
     Result := inherited GetPrimaryConnectionID();
@@ -6279,7 +6358,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsConnectedToPinName( OtherPinName : String ) : Boolean;
+function TOWSourcePin.IsConnectedToPinName( OtherPinName : String ) : Boolean;
 var
   I     : Integer;
   AReadLock : IOWLockSection;
@@ -6296,14 +6375,12 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
+function TOWSourcePin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
 var
-//  AGlobalReadLock : IOWLockSection;
   I     : Integer;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   
   Result := True;
@@ -6314,14 +6391,12 @@ begin
   Result := inherited IsConnectedTo( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWSourcePin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   I     : Integer;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   
   Result := inherited IsConnectedByConverterTo( OtherPin );
@@ -6342,7 +6417,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.CheckDownStreamInterfaces( const OtherPin : TOWSinkPin; UseConverters : Boolean ) : Boolean;
+function TOWSourcePin.CheckDownStreamInterfaces( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
   AConverterClass : TOWFormatConverterClass;
   AConverter : TOWFormatConverter;
@@ -6351,7 +6426,7 @@ begin
   Result := not IsEqualGUID( DownStreamFindConnectionID( OtherPin, UseConverters, True, AConverter, AConverterClass ), OWNULLID );
 end;
 //---------------------------------------------------------------------------
-function  TOWSourcePin.IsLinkedTo( SinkName : String ) : Boolean;
+function TOWSourcePin.IsLinkedTo( SinkName : String ) : Boolean;
 var
   I     : Integer; 
   AReadLock : IOWLockSection;
@@ -6365,8 +6440,9 @@ begin
     if( SinkName = Sinks[ I ].GetFullName( True )) then // GetLinkStr( I, False )) then
       Exit;
 
-    if( SinkName = Sinks[ I ].GetFullName( False )) then
-      Exit;
+    if( Sinks[ I ].GetRootName() = GetRootName() ) then
+      if( SinkName = Sinks[ I ].GetFullName( False )) then
+        Exit;
 
     end;
 
@@ -6375,78 +6451,1378 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.Disconnect();
 var
-//  AStreamWriteLock : IOWLockSection;
   ADestroyLock : IOWDestroyLockSection;
   AWriteLock  : IOWLockSection;
 
   I         : Integer;
-  SinkPin   : TOWBasicPin;
-  DesignFormClosing : Boolean;
-  OldInDisconnect : Boolean;
 
 begin
-//  CheckLinks();
-//  AStreamWriteLock := FStreamLock.WriteLock();
   AWriteLock := WriteLock();
   ADestroyLock := FDestroyLock.DestroyLock();
 
   inherited Disconnect();
   for I := GetSinkCount() - 1 downto 0 do
-    begin
-    SinkPin := GetSink( I );
-    DesignFormClosing := False;
-    if( OwnerInDesigning() ) then
-      if( RootInDestroying() ) then
-        DesignFormClosing := True;
-
-    OWNotifyDisconnected( Self, SinkPin );
-    OldInDisconnect := FInDisconnect;
-    FInDisconnect := True;
-    IntDisconnect( SinkPin, DesignFormClosing );
-    FInDisconnect := OldInDisconnect;
-    SinkPin.IntDisconnect( Self, DesignFormClosing );
-//    if( SinkPin is TOWSinkPin ) then
-//      TOWSinkPin( SinkPin ).PopulateStreamLocks();
-
-    SinkPin.CheckRemove();
-    end;
+    IntDisconnectFrom( GetSink( I ) );
 
   FSinkPins.Clear();
+end;
+//---------------------------------------------------------------------------
+procedure TOWSourcePin.IntDisconnectFrom( OtherPin : TOWBasicPin );
+var
+  DesignFormClosing : Boolean;
+  OldInDisconnect : Boolean;
+  
+begin
+  DesignFormClosing := False;
+  if( OwnerInDesigning() ) then
+    if( RootInDestroying() ) then
+      DesignFormClosing := True;
+
+  OWNotifyDisconnected( Self, OtherPin );
+  OldInDisconnect := FInDisconnect;
+  FInDisconnect := True;
+  IntDisconnect( OtherPin, DesignFormClosing );
+  FInDisconnect := OldInDisconnect;
+  OtherPin.IntDisconnect( Self, DesignFormClosing );
+  OtherPin.CheckRemove();
+end;
+//---------------------------------------------------------------------------
+procedure TOWSourcePin.DisconnectFrom( OtherPin : TOWBasicPin );
+var
+  ADestroyLock : IOWDestroyLockSection;
+  AWriteLock  : IOWLockSection;
+
+begin
+  if( not IsConnectedTo( OtherPin ) ) then
+    inherited DisconnectFrom( OtherPin )
+
+  else
+    begin
+    AWriteLock := WriteLock();
+    ADestroyLock := FDestroyLock.DestroyLock();
+    IntDisconnectFrom( OtherPin );
+    end;
+    
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWBasicSinkPin.Create(AOwner: TComponent);
+begin
+  inherited;
+  IntCreate();
+end;
+//---------------------------------------------------------------------------
+constructor TOWBasicSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+begin
+  inherited;
+  IntCreate();
+end;
+//---------------------------------------------------------------------------
+destructor TOWBasicSinkPin.Destroy();
+begin
+  FFunctionDependants.Free();
+  FDataTypeDependants.Free();
+  inherited;
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.IntCreate();
+begin
+  FFunctionDependants := TObjectList.Create( False );
+  FDataTypeDependants := TObjectList.Create( False );
+end;
+//---------------------------------------------------------------------------
+function TOWBasicSinkPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+var
+  SourcePin       : TOWSourcePin;
+  StatePin        : TOWStatePin;
+  AConverter      : TOWFormatConverter;
+  AConverterClass : TOWFormatConverterClass;
+  AReadLock       : IOWLockSection;
+
+begin
+  if( OtherPin = NIL ) then
+    begin
+    Result := True;
+    Exit
+    end;
+
+  Result := False;
+
+  AReadLock := ReadLock();
+  if( OtherPin is TOWSourcePin ) then
+    begin
+    SourcePin := TOWSourcePin( OtherPin );
+
+    Result := SourcePin.CheckDownStreamInterfaces( Self, UseConverters );
+
+    if( Result and not IgnoreUpstream ) then
+      Result := CheckUpStreamInterfaces( SourcePin, UseConverters );
+
+    end
+
+  else if( OtherPin is TOWStatePin ) then
+    begin
+    StatePin := TOWStatePin( OtherPin );
+    Result := not IsEqualGUID( StatePin.FindConnectionID( Self, AConverter, AConverterClass, UseConverters ), OWNULLID );
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function  TOWBasicSinkPin.HasToIgnoreUpstream() : Boolean;
+var
+  AReadLock : IOWLockSection;
+  
+begin
+  AReadLock := ReadLock();
+  Result := FIgnoreUpstream;
+  if( not Result ) then
+    Result := ( StreamType.Count = 0 );
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+var
+  I       : Integer;
+  Unknown : IUnknown;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  if( ForPin = Self ) then
+    Exit;
+
+  I := 0;
+  while( I < PossibleStreamTypes.Count ) do
+    begin
+    if( RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
+      Inc( I )
+
+    else
+      PossibleStreamTypes.RemoveType( PossibleStreamTypes.ID[ I ] );
+
+    end;
+
+  for I := 0 to FDataTypeDependants.Count - 1 do
+    TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+var
+  I, J          : Integer;
+  EntryFound    : Boolean;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  if( HasToIgnoreUpstream() ) then
+    Exit;
+
+  if( ForPin = Self ) then
+    Exit;
+
+  I := 0;
+  while( I < PossibleStreamTypes.Count ) do
+    begin
+    EntryFound := False;
+    for J := 0 to StreamType.Count - 1 do
+      begin
+      if( IsEqualGUID( StreamType.ID[ J ], PossibleStreamTypes.ID[ I ] )) then
+        begin
+        EntryFound := True;
+        Break;
+        end;
+
+      end;
+
+    if( EntryFound ) then
+      Inc( I )
+
+    else
+      PossibleStreamTypes.RemoveType( PossibleStreamTypes.ID[ I ] );
+
+    end;
+
+  for I := 0 to FDataTypeDependants.Count - 1 do
+    TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+
+end;
+//---------------------------------------------------------------------------
+function  TOWBasicSinkPin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+var
+  I          : Integer;
+  EntryFound : Boolean;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := S_OK;
+  if( ForPin = Self ) then
+    Exit;
+
+  EntryFound := False;
+  for I := 0 to StreamType.Count - 1 do
+    begin
+    if( IsEqualGUID( IID, StreamType.ID[ I ] )) then
+      begin
+      EntryFound := True;
+      Break;
+      end;
+    end;
+
+  if( not EntryFound ) then
+    begin
+    Result := E_NOINTERFACE;
+    Exit;
+    end;
+
+  for I := 0 to FDataTypeDependants.Count - 1 do
+    begin
+    Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthQueryPossybleInterface( IID, ForPin );
+    if( Result <> S_OK ) then
+      Exit;
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function  TOWBasicSinkPin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+var
+  I : Integer;
+  Unknown : IUnknown;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := S_OK;
+  if( ForPin = Self ) then
+    Exit;
+
+  Result := inherited RequestInterface( IID, Unknown );
+  if( Result <> S_OK ) then
+    Exit;
+
+  for I := 0 to FDataTypeDependants.Count - 1 do
+    begin
+    Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthQueryPossybleInterface( IID, ForPin );
+    if( Result <> S_OK ) then
+      Exit;
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.IntAddFunctionDependance( FunctionDependancePin : TOWSourcePin );
+var
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FFunctionDependants.Add( FunctionDependancePin );
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.IntRemoveFunctionDependance( FunctionDependancePin : TOWSourcePin );
+var
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FFunctionDependants.Remove( FunctionDependancePin );
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.IntAddDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
+var
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FDataTypeDependants.Add( DataTypeDependancePin );
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.IntRemoveDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
+var
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FDataTypeDependants.Remove( DataTypeDependancePin );
+end;
+//---------------------------------------------------------------------------
+function  TOWBasicSinkPin.UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
+var
+  PossibleStreamTypes   : TOWPinTypeRestricted;
+  I                     : Integer;
+  Unknown               : IUnknown;
+
+var
+  AReadLock : IOWLockSection;
+  
+begin
+  AReadLock := ReadLock();
+  Result := OWNULLID;
+  if( OtherPin <> NIL ) then
+    begin
+    PossibleStreamTypes := TOWPinTypeRestricted.Create();
+
+////    UpStreamFillPossibleStreamTypes( PossibleStreamTypes, OtherPin );
+    OtherPin.UpStreamFillPossibleStreamTypes( PossibleStreamTypes, Self );
+
+//    ReportTypes( PossibleStreamTypes );
+
+    for I := PossibleStreamTypes.Count - 1 downto 0 do
+      begin
+      if( OtherPin.RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
+//      if( RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
+        begin
+        if( IsEqualGUID( PossibleStreamTypes.ID[ I ], PreferedID )) then
+          begin
+          Result := PossibleStreamTypes.ID[ I ];
+          PossibleStreamTypes.Free();
+          Exit;
+          end;
+
+        if( IsEqualGUID( Result, OWNULLID )) then
+          Result := PossibleStreamTypes.ID[ I ];
+
+        end;
+      end;
+
+    PossibleStreamTypes.Free();
+    end;
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicSinkPin.ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+begin
+  BackChainReconnect( DownIID, UpIID );
+end;
+//---------------------------------------------------------------------------
+function TOWBasicSinkPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  Result := False;
+  if( not( FOwner is TOWFormatConverter ) and not( OtherPin.Owner is TOWFormatConverter )) then
+    begin
+    if( ( OtherPin.OwnerInDesigning() ) and ( not OwnerInDesigning() )) then
+      Exit;
+
+    if( ( not ( OtherPin.OwnerInDesigning() ) and OwnerInDesigning())) then
+      Exit;
+
+    end;
+
+  AReadLock := ReadLock();
+  Result := inherited CanConnectToInt( OtherPin, AConverter, AConverterClass, UseConverters );
+  if( Result ) then
+    Exit;
+
+  if( OtherPin = NIL ) then
+    Exit;
+
+  if( OtherPin = Self ) then
+    Exit;
+
+  if( IsCompatible( OtherPin, UseConverters )) then
+    Result := not OtherPin.DependsOn( Self );
+
+end;
+//---------------------------------------------------------------------------
+function TOWBasicSinkPin.CheckUpStreamInterfaces( const OtherPin : TOWSourcePin; UseConverters : Boolean ) : Boolean;
+var
+  AReadLock : IOWLockSection;
+  AConverterClass : TOWFormatConverterClass;
+  AConverter : TOWFormatConverter;
+  
+begin
+  AReadLock := ReadLock();
+  if( HasToIgnoreUpstream() ) then
+    Result := True
+
+  else
+    Result := not IsEqualGUID( UpStreamFindConnectionID( OtherPin, OtherPin.DownStreamFindConnectionID( Self, UseConverters, False, AConverter, AConverterClass ) ), OWNULLID );
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWEventSinkPin.Create(AOwner: TComponent);
+begin
+  inherited;
+//  FInDependOn := False;
+  FSourcePins  := TOWPinEntryList.Create();
+  FFormatConverters := TOWFormatConverterList.Create();
+end;
+//---------------------------------------------------------------------------
+constructor TOWEventSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+begin
+  inherited;
+//  FInDependOn := False;
+  FSourcePins  := TOWPinEntryList.Create();
+  FFormatConverters := TOWFormatConverterList.Create();
+end;
+//---------------------------------------------------------------------------
+destructor TOWEventSinkPin.Destroy();
+var
+  ADestroyLock : IOWDestroyLockSection;
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  ADestroyLock := FDestroyLock.DestroyLock();
+  Disconnect();
+
+  FFormatConverters.Free();
+  FSourcePins.Free();
+
+  ADestroyLock := NIL;
+  AWriteLock := NIL;
+  inherited;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetSourceCount() : Integer; // const;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := FSourcePins.Count;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetSource( Index : Integer ) : TOWBasicPin;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := FSourcePins.Items[ Index ].RealPin;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetConverterCount() : Integer;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := FFormatConverters.Count;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetConverter( Index : Integer ) : TOWFormatConverter;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := FFormatConverters.Items[ Index ];
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetPinType() : TOWPinType;
+begin
+  Result := ptEventSink;
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.GetLinkStr( Item : Integer ) : String;
+var
+  AddRoot : Boolean;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+
+  AddRoot := False;
+  if( SourceCount > 0 ) then
+    AddRoot := OWGetMainOwnerComponent( Sources[ Item ].Owner ) <> OWGetMainOwnerComponent( Owner );
+
+//  Result := Sinks[ Item ].GetFullName( ( AddRoot ) or (( Sinks[ Item ].Owner = NIL ) or ( Sinks[ Item ].Owner.Owner = NIL )) );
+  Result := Sources[ Item ].GetFullName( AddRoot );
+{
+  if(( AddRoot ) and ( Sinks[ Item ].Owner.Owner = NIL )) then
+    Result := Sinks[ Item ].GetRootName() + '.' + OWValueToString( Sinks[ Item ], '.', False, False )
+
+  else
+    Result := OWValueToString( Sinks[ Item ], '.', AddRoot, SaveFormat );
+}
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.TryLinkTo( Root : TComponent; SourceIdent : String; SourceName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
+var
+  Values          : TStringList;
+  SourcePin       : TOWBasicPin;
+  I               : Integer;
+  RootName        : String;
+  MyRoot          : TComponent;
+  PinValueFilters : TOWPinValueFilters;
+
+  AWriteLock      : IOWLockSection;
+
+begin
+  if( SaveForm ) then
+    PinValueFilters := [ pvoFullList, pvoSaveValue ]
+
+  else
+    PinValueFilters := [ pvoFullList ];
+
+  Result := True;
+  if( SourceIdent = '' ) then
+    begin
+    if( not SaveForm ) then
+      Disconnect();
+
+//    CheckLinks();
+    Exit;
+    end;
+
+  AWriteLock := WriteLock();
+
+  Result := False;
+
+  Values := TStringList.Create();
+  try
+    MyRoot := OWGetMainOwnerComponent( Owner );
+    if( ( MyRoot <> Root ) and ( Root <> NIL )) then
+      begin
+      RootName := Root.Name;
+      if( not OWGetPinsValueListSingle( Values, Root, Self, '.', RootName, PinValueFilters )) then
+        Result := True;
+
+      end
+
+    else
+      if( not OWGetPinsValueList( Values, Self, '.', PinValueFilters )) then
+        Result := True;
+
+    for I := 0 to Values.Count - 1 do
+      begin
+      if( Values.Strings[ I ] = SourceIdent ) then
+        begin
+        SourcePin := TOWBasicPin( Values.Objects[ i ] );
+        Connect( SourcePin );
+        Result := True;
+        Break;
+        end;
+
+      end;
+
+//    CheckLinks();
+  finally
+    Values.Free();
+
+  end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetEditorString() : String;
+var
+  LinksCount : Integer;
+  
+begin
+  LinksCount := SourceCount;
+  if( LinksCount = 0 ) then
+    Result := inherited GetEditorString()
+
+  else
+    begin
+    if( LinksCount = 1 ) then
+      begin
+      if( FDispatcher = NIL ) then
+        begin
+        if( SourceCount = 1 ) then
+          Result := GetLinkStr( 0 )
+
+        else
+          Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+        end
+
+      else
+        Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+      end
+
+    else
+      if( FDispatcher = NIL ) then
+        Result := '( ' + IntToStr( LinksCount ) + ' Links )'
+
+      else
+        Result := '( ' + IntToStr( LinksCount + FDispatcher.PinCount - 1 ) + ' Links )';
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+begin
+  Result := TryLinkTo( ARoot, AValue, AValue, '', False );
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+begin
+  if( OtherPin <> NIL ) then
+    begin
+    Result := CanConnectAfter( OtherPin, NotifyAfterPin );
+    if( not Result ) then
+      Exit;
+
+    end;
+
+  Result := IntConnectAfter( OtherPin, NotifyAfterPin );
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+begin
+  if( OtherPin = NIL ) then
+    Result := True
+
+  else
+    Result := OtherPin.CanConnectAfter( Self, NotifyAfterPin, UseConverters );
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.IntConnect( SourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin );
+var
+  PEntry : POWPinEntry;
+  AWriteLock : IOWLockSection;
+  AConverterClass : TOWFormatConverterClass;
+  AConverter : TOWFormatConverter;
+
+begin
+  AWriteLock := WriteLock();
+
+  PEntry := FSourcePins.Add();
+  PEntry.RealPin := SourcePin;
+  PEntry.NotifyAfterPin := NIL; // Only SourcePins use NotifyAfterPin;
+  PEntry.ConnectionPin := NIL;
+  AConverter := NIL;
+//  PEntry.ConnectedID := UpStreamFindConnectionID( TOWSourcePin( SourcePin ), TOWSourcePin( SourcePin ).GetConnectionID( Self ) ); //  UpStreamFindConnectionID( TOWSourcePin( SourcePin ), True, True, AConverter, AConverterClass );
+  PEntry.ModificationLevel := 0;
+  PEntry.SubmitFunction := NIL;
+{
+  if( AConverterClass <> NIL ) then
+    begin
+    AConverter := AConverterClass.Create();
+    FFormatConverters.Add( AConverter );
+    end;
+}
+{
+  if( AConverter <> NIL ) then
+    begin
+    PEntry.ConnectionPin := AConverter.FInputPin;
+    AConverter.FOutputPin.ConnectAfter( SourcePin, NotifyAfterPin );
+    TOWSourcePin( SourcePin ).FConnectionSourcePin := AConverter.FOutputPin;
+    end
+
+  else
+    PEntry.ConnectionPin := SinkPin;
+}
+  PEntry.SubmitFunction := GetSubmitFunctionID( PEntry.ConnectedID );
+  PEntry.ModificationLevel := 0;
+
+{
+  if( Owner <> NIL ) then
+    RootName := OWGetMainOwnerComponent( Owner ).Name
+
+  else
+    RootName := '';
+}
+////  SinkPin.FDownStreamLinkName := GetLinkNameID( PEntry.ConnectedID );
+
+//  SinkPins.Add( PEntry );
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+var
+  DataTypeID      : TGUID;
+  AWriteLock      : IOWLockSection;
+  ASourcePin      : TOWBasicPin;
+  AConverterClass : TOWFormatConverterClass;
+  AConverter      : TOWFormatConverter;
+  ADownStreamID   : TGUID;
+  ARealSourcePin  : TOWBasicPin;
+  I               : Integer;
+  PEntry          : POWPinEntry;
+
+begin
+  if( OtherPin = NIL ) then
+    begin
+    Result := False;
+    Exit
+    end;
+
+  ARealSourcePin := NIL;
+  AWriteLock := WriteLock();
+  for I := 0 to FSourcePins.Count - 1 do
+    begin
+    if( OtherPin = FSourcePins[ I ].RealPin ) then
+      begin
+      ARealSourcePin := FSourcePins[ I ].RealPin;
+      Break;
+      end;
+
+    if( OtherPin = FSourcePins[ I ].ConnectionPin ) then
+      begin
+      Result := True;
+      Exit
+      end;
+    end;
+
+  if( ARealSourcePin <> NIL ) then
+    begin
+    if( OtherPin.GetConnectedAfterForPin( Self ) = NotifyAfterPin ) then
+      begin
+      Result := True;
+      Exit
+      end;
+    end;
+
+  if( CanConnectTo( OtherPin )) then
+    begin
+    if( FDispatcher <> NIL ) then
+      Disconnect();
+      
+    if( OtherPin is TOWSourcePin ) then
+      begin
+      PEntry := FSourcePins.Add();
+      PEntry.ConnectionPin := OtherPin;
+      PEntry.RealPin := OtherPin;
+      PEntry.NotifyAfterPin := NIL; // Only the Source Pin uses AfterPin 
+      AWriteLock := NIL;
+      AWriteLock := OtherPin.WriteLock();
+      TOWSourcePin( OtherPin ).IntConnect( Self, NotifyAfterPin );
+      AWriteLock := NIL;
+      AWriteLock := WriteLock();
+      PEntry.RealPin := OtherPin;
+//      FRealSourcePin := TOWSourcePin( OtherPin );
+//      FIntRealSourcePin := TOWSourcePin( OtherPin );
+
+      Result := True;
+      if( PEntry.RealPin is TOWSourcePin ) then
+        begin
+        DataTypeID := TOWSourcePin( PEntry.RealPin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass );
+        PEntry.ConnectedID := UpStreamFindConnectionID( TOWSourcePin( OtherPin ), DataTypeID );
+        PEntry.SubmitFunction := GetSubmitFunctionID( PEntry.ConnectedID );
+        ASourcePin := PEntry.RealPin;
+        AWriteLock := NIL;
+        AWriteLock := ASourcePin.WriteLock();
+        TOWSourcePin( ASourcePin ).NewConnection( Self );
+
+//      FSourcePin.NewConnection( Self, FSourcePin.GetSubmitFunctionID( DataTypeID ));
+        ADownStreamID := TOWSourcePin( ASourcePin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass ); 
+        AWriteLock := NIL;
+        AWriteLock := WriteLock();
+        ChainReconnect( ADownStreamID, PEntry.ConnectedID );
+        end;
+        
+      end
+
+    else
+      Result := OtherPin.Connect( Self );
+
+    OWNotifyConnected( Self, OtherPin );
+    OWNotifyChangePin( Self );
+    Exit;
+    end;
+
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.Disconnect();
+var
+  ADestroyLock : IOWDestroyLockSection;
+  AWriteLock  : IOWLockSection;
+
+  I         : Integer;
+
+begin
+  AWriteLock := WriteLock();
+  ADestroyLock := FDestroyLock.DestroyLock();
+
+  inherited Disconnect();
+  for I := SourceCount - 1 downto 0 do
+    DisconnectFrom( Sources[ I ] );
+
+  FSourcePins.Clear();
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.IntDisconnectFrom( OtherPin : TOWBasicPin );
+var
+  DesignFormClosing : Boolean;
+//  OldInDisconnect : Boolean;
+  
+begin
+  DesignFormClosing := False;
+  if( OwnerInDesigning() ) then
+    if( RootInDestroying() ) then
+      DesignFormClosing := True;
+
+  OWNotifyDisconnected( Self, OtherPin );
+//  OldInDisconnect := FInDisconnect;
+//  FInDisconnect := True;
+  IntDisconnect( OtherPin, DesignFormClosing );
+//  FInDisconnect := OldInDisconnect;
+  OtherPin.IntDisconnect( Self, DesignFormClosing );
+  OtherPin.CheckRemove();
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.DisconnectFrom( OtherPin : TOWBasicPin );
+var
+  ADestroyLock : IOWDestroyLockSection;
+  AWriteLock  : IOWLockSection;
+
+begin
+  if( not IsConnectedTo( OtherPin ) ) then
+    inherited DisconnectFrom( OtherPin )
+
+  else
+    begin
+    AWriteLock := WriteLock();
+    ADestroyLock := FDestroyLock.DestroyLock();
+    IntDisconnectFrom( OtherPin );
+    end;
+    
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean );
+var
+  Index           : Integer;
+  I               : Integer;
+  PEntry          : POWPinEntry;
+  LinkIdent       : String;
+  LinkIdentName   : String;
+  ADestroyLock    : IOWDestroyLockSection;
+  AWriteLock      : IOWLockSection;
+  ATmpPin         : TOWUnloadedPin;
+
+begin
+  if( FInDisconnect ) then
+    Exit;
+
+  AWriteLock := WriteLock();
+  ADestroyLock := FDestroyLock.DestroyLock();
+  FInDisconnect := True;
+
+  if( DesignFormClosing ) then
+    if( not RootInDestroying()) then
+      begin
+      LinkIdent := OtherPin.GetFullIdentName( True ); //GetLinkStr( Index, True ); //OWValueToString( FSourcePin, '.', True, True );
+      LinkIdentName := OtherPin.GetFullName( True ); // GetLinkStr( Index, False );
+      ATmpPin := TOWUnloadedPin.Create( GetRoot(), ptSink, LinkIdent, LinkIdentName, GetFullName( True ) );
+      Connect( ATmpPin );
+      end;
+
+  FInDisconnect := False;
+
+  for Index := 0 to SourceCount - 1 do
+    begin
+    PEntry := FSourcePins[ Index ];
+    if( PEntry.RealPin = OtherPin ) then
+      begin
+      if( PEntry.RealPin <> PEntry.ConnectionPin ) then
+        begin
+        for I := FFormatConverters.Count - 1 downto 0 do
+          begin
+          FFormatConverters[ I ].FOutputPin.IntDisconnect( OtherPin, False );
+          if( not FFormatConverters[ I ].FOutputPin.IsConnected() ) then
+            FFormatConverters.Delete( I );
+            
+          end;
+        end; 
+//      ANotifyAfterPin := PEntry.NotifyAfterPin;
+//      Dispose( PEntry );
+      FSourcePins.Delete( Index );
+
+      ADestroyLock := NIL;
+      AWriteLock := NIL;
+      OWNotifyChangePin( Self );
+      OtherPin.CheckRemove();
+      end;
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+var
+  AReadLock : IOWLockSection;
+  I         : Integer;
+
+begin
+  AReadLock := ReadLock();
+
+  for I := 0 to SourceCount - 1 do
+    begin
+    if( OtherPin = FSourcePins[ I ].RealPin ) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+    if( FSourcePins[ I ].RealPin.DependsOn( OtherPin ) ) then
+      begin
+      Result := True;
+      Exit;
+      end;      
+    end;
+
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+var
+  AReadLock : IOWLockSection;
+  I         : Integer;
+
+begin
+  AReadLock := ReadLock();
+  
+  for I := 0 to SourceCount - 1 do
+    begin
+    if( FSourcePins[ I ].RealPin.DirectDependsOn( OtherPin ) ) then
+      begin
+      Result := True;
+      Exit;
+      end;      
+    end;
+
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.IsConnected() : Boolean;
+begin
+  Result := ( FSourcePins.Count > 0 ) or inherited IsConnected();
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
+var
+  I         : Integer;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  
+  Result := True;
+  for I := 0 to SourceCount - 1 do
+    if( OtherPin = Sources[ I ] ) then
+      Exit;
+
+  Result := inherited IsConnectedTo( OtherPin );
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+var
+  I         : Integer;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  
+  Result := inherited IsConnectedByConverterTo( OtherPin );
+  if( Result ) then
+    Exit;
+    
+  if( IsConnectedTo( OtherPin )) then
+    begin
+    for I := FFormatConverters.Count - 1 downto 0 do
+      begin
+      if( FFormatConverters[ I ].OutputPin.IsConnectedTo( OtherPin )) then
+        begin
+        Result := True;
+        Exit;
+        end;
+      end;
+    end;
+    
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.Assign(Source: TPersistent);
+var
+  OtherPin : TOWEventSinkPin;
+  I        : Integer;
+
+begin
+  if( Source = NIL ) then
+    Connect( NIL )
+
+  else
+    begin
+    OtherPin := Source as TOWEventSinkPin;
+    if( OtherPin <> NIL ) then
+      begin
+      for I := 0 to OtherPin.SourceCount - 1 do
+        Connect( OtherPin.Sources[ I ] );
+        
+      end
+      
+    else
+      inherited;
+      
+    end;
+    
+end;
+//---------------------------------------------------------------------------
+function  TOWEventSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+begin
+  Result := NotifyPin( NIL, Operation );
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
+var
+  I      : Integer;
+  J      : Integer;
+  State  : TOWNotifyState;
+  Status : TOWNotifyResult;
+  DataTypeID : TGUID;
+//  OperationIntf :  IOWNotifyOperation;
+  ALock : IOWLockSection;
+  ASourcePin   : TOWBasicPin;
+  ARealSourcePin   : TOWBasicPin;
+//  ASinkReadLock : IOWLockSection;
+
+  ASourcesList    : TOWPinEntryList;
+  Entry : POWPinEntry;
+  AUnlock : IOWLockSection;
+  ADestroyLock : IOWDestroyLockSection;
+
+begin
+  ALock := ReadLock();
+
+  ASourcesList := TOWPinEntryList.Create();
+
+  ASourcesList.CopyFromList( FSourcePins );
+
+  for I := ASourcesList.Count - 1 downto 0 do
+    begin
+    if( ASourcesList[ I ].ConnectionPin <> ASourcesList[ I ].RealPin ) then
+      begin 
+      for J := I - 1 downto 0 do
+        begin
+        if( ASourcesList[ I ].ConnectionPin = ASourcesList[ J ].ConnectionPin ) then
+          begin
+          ASourcesList.Delete( I );
+          Break;
+          end;
+        end;
+      end;
+    end;
+    
+  try
+  
+//  OperationIntf := Operation; 
+    if( FInSending > 200 ) then
+      begin
+      ALock := NIL;
+      raise EOWException.Create( 'The pin depends on itself. Please protect with functional dependency.' );
+      Exit;
+      end;
+
+    Inc( FInSending );
+  //  Result := [];
+    Result := inherited Notify( Operation );
+
+  //  AWriteLock := NIL;
+    for I := 0 to ASourcesList.Count - 1 do
+      begin
+      if( I < ASourcesList.Count - 1 ) then
+        State := []
+
+      else
+        State := [nsLastIteration];
+
+      Entry := ASourcesList.Items[ I ];
+      
+      DataTypeID := Entry.ConnectedID;
+      ASourcePin := Entry.ConnectionPin;
+      ARealSourcePin := Entry.RealPin;
+      if(( APin = NIL ) or ( APin = ARealSourcePin )) then
+        begin
+        if( Assigned( Entry.SubmitFunction )) then
+          begin
+//          ASinkReadLock := ASinkPin.ReadLock();
+    //    DataTypeID := GetSubmitID( I );
+    //    ASinkPin := GetSink( I );
+    //    ASinkWriteLock := ASinkPin.WriteLock();
+            try
+              ALock := NIL;
+//              AUnlock := NIL;
+              ADestroyLock := FDestroyLock.Lock();
+              if( ADestroyLock <> NIL ) then
+                begin
+                if( FOwnerLock <> NIL ) then
+                  AUnlock := FOwnerLock.UnlockAll();
+
+                Status := TOWSubmit( Entry.SubmitFunction )( ASourcePin, @DataTypeID, Operation, State );
+                AUnlock := NIL;
+                end;
+                
+              ALock := NIL;
+            finally
+//              if( FOwnerLock <> NIL ) then
+//                AUnlock := FOwnerLock.UnlockAll();
+                
+              ALock := ReadLock();
+//              ASinkReadLock := NIL;
+            end;
+          end;
+
+    //    Status := TOWSubmitFunction( GetSubmit( I ))( 0, GetSink( I ), Operation, Data, State );
+
+        if( nrDataChanged in Status ) then
+          begin
+          if( Entry.ModificationLevel < 10000 ) then
+            Inc( Entry.ModificationLevel, 4 );
+
+          end;
+    //      SinkChangedData( I );
+
+        end;
+      end;
+
+  finally
+    ASourcesList.Free();
+
+    ALock := WriteLock();
+    if( not FInDisconnect ) then
+      ReorderChangedData();
+
+    Dec( FInSending );
+    ALock := NIL;
+//    AUnlock := NIL;
+  end;
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.ReorderChangedData();
+var
+  PEntry1    : POWPinEntry;
+  PEntry2    : POWPinEntry;
+  I, J       : Integer;
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+
+  for I:= 0 to FSourcePins.Count - 1 do
+    begin
+    PEntry1 := FSourcePins[ I ];
+    if( PEntry1.ModificationLevel > 0 ) then
+      Dec( PEntry1.ModificationLevel );
+
+    end;
+
+  FSourcePins.Sort( PinSortMethod );
+
+  for I := 0 to FSourcePins.Count - 1 do
+    begin
+    PEntry1 := FSourcePins[ I ];
+    if( PEntry1.NotifyAfterPin <> NIL ) then
+      begin
+      for J := 0 to FSourcePins.Count - 1 do
+        begin
+        PEntry2 := FSourcePins[ J ];
+        if( PEntry1.NotifyAfterPin = PEntry2.RealPin ) then
+          begin
+          if( I < J ) then
+            FSourcePins.Move( I, J );
+
+          end;
+        end;
+      end;
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+var
+  AWriteLock : IOWLockSection;
+  I : Integer;
+  AFound : Boolean;
+
+begin
+  AWriteLock := WriteLock();
+
+  AFound := False;
+  for I := 0 to FSourcePins.Count - 1 do
+    if( FSourcePins[ I ].ConnectionPin is TOWSourcePin ) then
+      begin
+      TOWSourcePin( FSourcePins[ I ].ConnectionPin ).BackChainReconnect( DownIID, UpIID );
+      AFound := True;
+      end;
+
+  if( not AFound ) then
+    ForthChainReconnect( DownIID, UpIID );
+    
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+var
+  I : Integer; 
+  AWriteLock : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
+  for I := 0 to FSourcePins.Count - 1 do
+    if( FSourcePins[ I ].ConnectionPin is TOWSourcePin ) then
+      begin
+      FSourcePins[ I ].ConnectedID := UpStreamFindConnectionID( TOWSourcePin( FSourcePins[ I ].ConnectionPin ), FSourcePins[ I ].ConnectionPin.GetConnectionID( Self ) );
+      FSourcePins[ I ].SubmitFunction := GetSubmitFunctionID( FSourcePins[ I ].ConnectedID );
+      end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.DoWrite() : Boolean;
+var
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := ( SourceCount > 0 ) and not ( DoStateWrite() or DoStateConverterWrite() );
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.DoFormWrite() : Boolean;
+begin
+  Result := (( inherited DoFormWrite() ) or DoWrite() );
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty( 'SourcePin', ReadConnectionsData, WriteConnectionsData, DoWrite());
+//  Filer.DefineProperty( 'StateConverter', ReadStateConverterConnectionsData, WriteStateConverterConnectionsData, DoStateConverterWrite());
+end;
+//---------------------------------------------------------------------------
+procedure TOWEventSinkPin.ReadConnectionsData( Reader : TReader );
+var
+  ReadIdent       : String;
+  ReadIdentAfter  : String;
+  ReadName        : String;
+  AWriteLock      : IOWLockSection;
+  ABasePin        : TOWBasicPin;
+  ABasePinAfter   : TOWBasicPin;
+
+begin
+  AWriteLock := WriteLock();
+  CheckVirtualList();
+  
+  Reader.ReadListBegin();
+  while not Reader.EndOfList do
+    begin
+    ReadIdentAfter := '';
+    ABasePinAfter := NIL;
+    if( Reader.NextValue() = vaList ) then
+      begin
+      Reader.ReadListBegin();
+      ReadIdent := Reader.ReadIdent();
+      if( Reader.NextValue() = vaIdent ) then
+        begin
+        ReadIdentAfter := Reader.ReadIdent();
+        ApplyFormName( ReadIdentAfter );
+        ABasePinAfter := GOWPins.GetByNameCreate( GetRoot(), ptSink, ReadIdentAfter, ReadIdentAfter, GetFullName( True ) ); 
+        end;
+
+      ReadName := ReadIdent;
+      if( GOWIsStringValueType( Reader.NextValue() ) ) then
+        ReadName := Reader.ReadString();
+       
+//      TryLinkTo( Reader.Root, ReadIdent, ReadName, ReadIdentAfter, True );
+
+      Reader.ReadListEnd();
+      end
+
+    else
+      begin
+      ReadIdent := Reader.ReadIdent();
+      ReadName := ReadIdent; 
+//      TryLinkTo( Reader.Root, ReadIdent, ReadIdent, '', True );
+      end;
+
+    ApplyFormName( ReadIdent );
+    ApplyFormName( ReadName );
+    ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSink, ReadIdent, ReadName, GetFullName( True ) );
+    IntConnectAfter( ABasePin, ABasePinAfter );
+    end;
+
+  Reader.ReadListEnd();
 //  CheckLinks();
+
+  AWriteLock := NIL;
 end;
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSinkPin.Create(AOwner: TComponent);
+procedure TOWEventSinkPin.WriteConnectionsData( Writer : TWriter );
 var
-  AWriteLock : IOWLockSection;
+  I          : Integer;
+  Ident      : String;
+  IdentAfter : String;
+  IdentName  : String;
+  AReadLock  : IOWLockSection;
 
 begin
-  inherited;
-  AWriteLock := WriteLock();
-  FConnectionSourcePin := NIL;
-  FRealSourcePin := NIL;
-  FIntRealSourcePin := NIL;
-  FSourceChains := TOWObjectList.Create();
-  FFunctionDependants := TObjectList.Create( False );
-  FDataTypeDependants := TObjectList.Create( False );
+  // TODO: Write state converters data.
+  AReadLock := ReadLock();
+  Writer.WriteListBegin();
+  for I := 0 to SourceCount - 1 do
+    begin
+    Ident := Sources[ I ].GetFullIdentName( True ); // GetLinkStr( I, True );
+    IdentName := Sources[ I ].GetFullName( True ); // GetLinkStr( I, False );
+    if( Ident = IdentName ) then
+      begin
+      if( FSourcePins[ I ].NotifyAfterPin <> NIL ) then
+        begin
+        IdentAfter := FSourcePins[ I ].NotifyAfterPin.GetFullIdentName( True ); // GetLinkAfterStr( I );
+
+        Writer.WriteListBegin();
+        Writer.WriteIdent( Ident );
+        Writer.WriteIdent( IdentAfter );
+        Writer.WriteListEnd();
+        end
+
+      else
+        Writer.WriteIdent( Ident );
+
+      end
+
+    else
+      begin
+      Writer.WriteListBegin();
+      if( FSourcePins.Items[ I ].NotifyAfterPin <> NIL ) then
+        begin
+        IdentAfter := FSourcePins.Items[ I ].NotifyAfterPin.GetFullIdentName( True ); // GetLinkAfterStr( I );
+//        IdentAfter := GetLinkAfterStr( I );
+
+//        Writer.WriteListBegin();
+        Writer.WriteIdent( Ident );
+        Writer.WriteIdent( IdentAfter );
+//        Writer.WriteListEnd();
+        end
+
+      else
+        Writer.WriteIdent( Ident );
+
+      Writer.WriteString( IdentName );
+      Writer.WriteListEnd();
+      end;
+
+    end;
+
+  Writer.WriteListEnd();
 end;
 //---------------------------------------------------------------------------
-constructor TOWSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
-var
-  AWriteLock : IOWLockSection;
-
+function TOWEventSinkPin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
 begin
-  inherited;
-  AWriteLock := WriteLock();
-  FConnectionSourcePin := NIL;
-  FRealSourcePin := NIL;
-  FIntRealSourcePin := NIL;
-  FSourceChains := TOWObjectList.Create();
-  FFunctionDependants := TObjectList.Create( False );
-  FDataTypeDependants := TObjectList.Create( False );
+  Result := DoWrite(); 
+  if( Result ) then
+    begin
+    Writer.WriteIdent( 'Sources' );
+    WriteConnectionsData( Writer );
+    end;
+
 end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 destructor TOWSinkPin.Destroy();
 var
@@ -6459,13 +7835,6 @@ begin
 
   Connect( NIL );
   AWriteLock := NIL;
-
-  if( CurrentEditorPtr <> NIL )then
-    CurrentEditorPtr^ := NIL;
-
-  FSourceChains := NIL;
-  FFunctionDependants.Free();
-  FDataTypeDependants.Free();
 
   ADestroyLock := NIL;
   AWriteLock := NIL;
@@ -6491,7 +7860,7 @@ begin
   Result := ptSink;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetConnectedPinCount() : Integer;
+function TOWSinkPin.GetConnectedPinCount() : Integer;
 begin
   if( FIntRealSourcePin <> NIL ) then
     Result := 1
@@ -6501,13 +7870,12 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
+function TOWSinkPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
 begin
   Result := FIntRealSourcePin;
-//  ShowMessage( 'TOWSinkPin.GetConnectedPin - ' + IntToHex( Integer( Result ), 8 ) );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
+function TOWSinkPin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
 begin
   if( FIntRealSourcePin <> NIL ) then
     if( OtherPin = FIntRealSourcePin ) then
@@ -6517,42 +7885,6 @@ begin
       end;
 
   Result := inherited GetConnectedAfterForPin( OtherPin );
-end;
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.IntAddFunctionDependance( FunctionDependancePin : TOWSourcePin );
-var
-  AWriteLock : IOWLockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FFunctionDependants.Add( FunctionDependancePin );
-end;
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.IntRemoveFunctionDependance( FunctionDependancePin : TOWSourcePin );
-var
-  AWriteLock : IOWLockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FFunctionDependants.Remove( FunctionDependancePin );
-end;
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.IntAddDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
-var
-  AWriteLock : IOWLockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FDataTypeDependants.Add( DataTypeDependancePin );
-end;
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.IntRemoveDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
-var
-  AWriteLock : IOWLockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FDataTypeDependants.Remove( DataTypeDependancePin );
 end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
@@ -6624,51 +7956,7 @@ begin
   FConnectionSourcePin := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
-var
-  PossibleStreamTypes   : TOWPinTypeRestricted;
-  I                     : Integer;
-  Unknown               : IUnknown;
-
-var
-  AReadLock : IOWLockSection;
-  
-begin
-  AReadLock := ReadLock();
-  Result := OWNULLID;
-  if( OtherPin <> NIL ) then
-    begin
-    PossibleStreamTypes := TOWPinTypeRestricted.Create();
-
-////    UpStreamFillPossibleStreamTypes( PossibleStreamTypes, OtherPin );
-    OtherPin.UpStreamFillPossibleStreamTypes( PossibleStreamTypes, Self );
-
-//    ReportTypes( PossibleStreamTypes );
-
-    for I := PossibleStreamTypes.Count - 1 downto 0 do
-      begin
-      if( OtherPin.RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
-//      if( RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
-        begin
-        if( IsEqualGUID( PossibleStreamTypes.ID[ I ], PreferedID )) then
-          begin
-          Result := PossibleStreamTypes.ID[ I ];
-          PossibleStreamTypes.Free();
-          Exit;
-          end;
-
-        if( IsEqualGUID( Result, OWNULLID )) then
-          Result := PossibleStreamTypes.ID[ I ];
-
-        end;
-      end;
-
-    PossibleStreamTypes.Free();
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.Connect( OtherPin : TOWBasicPin ) : Boolean;
+function TOWSinkPin.Connect( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := ConnectAfter( OtherPin, NIL );
 end;
@@ -6688,18 +7976,13 @@ var
   DataTypeID : TGUID;
   DesignFormClosing : Boolean;
   AWriteLock : IOWLockSection;
-//  AChain : IOWObjectList;
-//  ANewStreamLock : IOWLockObject;
-//  AOldStreamLock : IOWLockObject;
   ASourcePin : TOWBasicPin;
   AConverterClass : TOWFormatConverterClass;
   AConverter : TOWFormatConverter;
   ADownStreamID : TGUID;
 
 begin
-//  AChain := FSourceChains;
   ASourcePin := NIL;
-//  LockStreamLocks( AChain );
   AWriteLock := WriteLock();
   if( OtherPin = FRealSourcePin ) then
     begin
@@ -6747,8 +8030,6 @@ begin
 //    ASourcePin := FSourcePin;
     FSubmitFunction := NIL;
 
-//    PopulateStreamLocks();
-
     Result := True;
 
     OWNotifyChangePin( Self );
@@ -6793,12 +8074,7 @@ begin
     if( OtherPin is TOWSourcePin ) then
       begin
 
-//      AOldStreamLock := FStreamLock;
-//      ANewStreamLock := TOWGlobalLockObject.Create();
-//      ANewStreamLock.BeginWrite();
-//      ForthPopulateStreamLocks( ANewStreamLock );
       FConnectionSourcePin := TOWSourcePin( OtherPin );
-////    FUpStreamLinkName := GetLinkNameID( FConnectedID );
       FIntRealSourcePin := TOWSourcePin( OtherPin );
       AWriteLock := NIL;
       AWriteLock := OtherPin.WriteLock();
@@ -6807,9 +8083,6 @@ begin
       AWriteLock := WriteLock();
       FRealSourcePin := TOWSourcePin( OtherPin );
       FIntRealSourcePin := TOWSourcePin( OtherPin );
-
-//    FDownStreamLinkName := FSourcePin.GetLinkNameID( FSourcePin.DownStreamFindConnectionID( TOWSinkPin(Self) ));
-
 
       Result := True;
       if( FRealSourcePin is TOWSourcePin ) then
@@ -6834,36 +8107,12 @@ begin
     else
       Result := OtherPin.Connect( Self );
 
-//    PopulateStreamLocks();
     OWNotifyConnected( Self, OtherPin );
     OWNotifyChangePin( Self );
     Exit;
     end;
 
   Result := False;
-end;
-//---------------------------------------------------------------------------
-{
-procedure TOWSinkPin.ChangeConnectionType( const IID : TGUID );
-begin
-  if( not IsEqualGUID( FConnectedID, IID )) then
-    begin
-    FConnectedID   := IID;
-    SubmitFunction := GetSubmitFunctionID( IID );
-    end;
-
-end;
-}
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
-//var
-//  I : Integer;
-  
-begin
-  BackChainReconnect( DownIID, UpIID );
-//  for I := 0 to FDataTypeDependants.Count - 1 do
-//    TOWSourcePin( FDataTypeDependants.Items[ I ] ).ForthChainReconnect( IID );
-    
 end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
@@ -6907,7 +8156,7 @@ begin
   
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetConnectedID() : PDataTypeID;
+function TOWSinkPin.GetConnectedID() : PDataTypeID;
 begin
   Result := @FConnectedID;
 end;
@@ -6938,59 +8187,14 @@ begin
   ASourceWriteLock := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.CheckUpStreamInterfaces( const OtherPin : TOWSourcePin; UseConverters : Boolean ) : Boolean;
-var
-  AReadLock : IOWLockSection;
-  AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
-  
+procedure TOWSinkPin.DisconnectFrom( OtherPin : TOWBasicPin );
 begin
-  AReadLock := ReadLock();
-  if( HasToIgnoreUpstream() ) then
-    Result := True
+  if( IsConnectedTo( OtherPin )) then
+    Disconnect()
 
   else
-    Result := not IsEqualGUID( UpStreamFindConnectionID( OtherPin, OtherPin.DownStreamFindConnectionID( Self, UseConverters, False, AConverter, AConverterClass ) ), OWNULLID );
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
-var
-  SourcePin    : TOWSourcePin;
-  StatePin : TOWStatePin;
-  AConverter : TOWFormatConverter;
-  AConverterClass : TOWFormatConverterClass;
-  AReadLock : IOWLockSection;
-
-begin
-  if( OtherPin = NIL ) then
-    begin
-    Result := True;
-    Exit
-    end;
-
-  Result := False;
-
-  AReadLock := ReadLock();
-  if( OtherPin is TOWSourcePin ) then
-    begin
-    SourcePin := TOWSourcePin( OtherPin );
-
-    Result := SourcePin.CheckDownStreamInterfaces( Self, UseConverters );
-
-    if( Result and not IgnoreUpstream ) then
-      Result := CheckUpStreamInterfaces( SourcePin, UseConverters );
-
-    end
+    inherited DisconnectFrom( OtherPin );
     
-  else if( OtherPin is TOWStatePin ) then
-    begin
-
-    StatePin := TOWStatePin( OtherPin );
-
-    Result := not IsEqualGUID( StatePin.FindConnectionID( Self, AConverter, AConverterClass, UseConverters ), OWNULLID );
-    end;
-
 end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.IntStateDisconnect();
@@ -7004,10 +8208,44 @@ begin
       FRealSourcePin.CheckRemove();
 
     end;
-    
-end;      
+
+end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean;
+function TOWSinkPin.GetEditorString() : String;
+begin
+  if( SourcePin <> NIL ) then
+    Result := GetLinkStr()
+
+  else
+    Result := inherited GetEditorString();
+
+end;
+//---------------------------------------------------------------------------
+function TOWSinkPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+var
+  ADispatcher : TOWStateDispatcher;
+
+begin
+  Result := IsConnected();
+  if( ( AValue = '' ) or ( AValue = GOWDISCONNECTED ) ) then
+    begin
+    Disconnect();
+    Exit;
+    end;
+    
+  if( TryLinkTo( ARoot, AValue, AValue, False )) then
+    begin
+    Result := True;
+    Exit;
+    end;
+
+  ADispatcher := TOWStateDispatcher.GetByName( AValue, True );
+  if( ConnectToState( ADispatcher )) then
+    Result := True;
+
+end;
+//---------------------------------------------------------------------------
+function TOWSinkPin.ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean;
 var
   AWriteLock : IOWLockSection;
 
@@ -7016,7 +8254,7 @@ begin
   Result := inherited ConnectToState( ADispatcher );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWSinkPin.ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   I : Integer;
 //  AConverter : TOWFormatConverter;
@@ -7084,7 +8322,7 @@ begin
   OWNotifyConnected( Self, ADispatcher );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWSinkPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -7102,7 +8340,7 @@ begin
     end;
 
   for I := 0 to ADispatcher.PinCount - 1 do
-    if( not( ADispatcher[ I ] is TOWSinkPin )) then
+    if( not( ADispatcher[ I ] is TOWBasicSinkPin )) then
       if( not CanConnectToInt( ADispatcher[ I ], AConverter, AConverterClass, UseConverters )) then
 //      if( not CanConnectTo( ADispatcher[ I ] )) then
         Exit;
@@ -7110,46 +8348,11 @@ begin
   Result := True;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWSinkPin.GetPrimaryConnectionID() : TGUID;
 var
   AReadLock : IOWLockSection;
 
 begin
-  Result := False;
-  if( not( FOwner is TOWFormatConverter ) and not( OtherPin.Owner is TOWFormatConverter )) then
-    begin 
-    if( ( OtherPin.OwnerInDesigning() ) and ( not OwnerInDesigning() )) then
-      Exit;
-
-    if( ( not ( OtherPin.OwnerInDesigning() ) and OwnerInDesigning())) then
-      Exit;
-      
-    end;
-
-  AReadLock := ReadLock();
-  Result := inherited CanConnectToInt( OtherPin, AConverter, AConverterClass, UseConverters );
-  if( Result ) then
-    Exit;
-    
-//  Result := False;
-  if( OtherPin = NIL ) then
-    Exit;
-
-  if( OtherPin = Self ) then
-    Exit;
-
-  if( IsCompatible( OtherPin, UseConverters )) then
-    Result := not OtherPin.DependsOn( Self );
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.GetPrimaryConnectionID() : TGUID;
-var
-//  AGlobalReadLock : IOWLockSection;
-  AReadLock : IOWLockSection;
-
-begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   Result := FConnectedID;
   if( IsEqualGUID( Result, OWNULLID )) then
@@ -7157,18 +8360,16 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWSinkPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   Result := FConnectedID;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.IsConnectedToPinName( OtherPinName : String ) : Boolean;
+function TOWSinkPin.IsConnectedToPinName( OtherPinName : String ) : Boolean;
 var
   AReadLock : IOWLockSection;
   
@@ -7184,13 +8385,11 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
+function TOWSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   
   Result := ( FIntRealSourcePin = OtherPin );
@@ -7199,13 +8398,11 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   Result := False;
   if( FIntRealSourcePin = OtherPin ) then
@@ -7216,18 +8413,16 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.IsConnected() : Boolean;
+function TOWSinkPin.IsConnected() : Boolean;
 begin
   Result := ( FIntRealSourcePin <> NIL ) or inherited IsConnected();
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWSinkPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   
 {
@@ -7246,7 +8441,7 @@ begin
   Result := FIntRealSourcePin.DirectDependsOn( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -7274,7 +8469,7 @@ var
 
 begin
   if( Source = NIL ) then
-    Connect( NIL ) //Clear();
+    Connect( NIL )
 
   else
     begin
@@ -7348,75 +8543,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPin.DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
-var
-  I       : Integer;
-  Unknown : IUnknown;
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  if( ForPin = Self ) then
-    Exit;
-
-  I := 0; 
-  while( I < PossibleStreamTypes.Count ) do
-    begin
-    if( RequestInterface( PossibleStreamTypes.ID[ I ], Unknown ) = S_OK ) then
-      Inc( I )
-
-    else
-      PossibleStreamTypes.RemoveType( PossibleStreamTypes.ID[ I ] );
-
-    end;
-
-  for I := 0 to FDataTypeDependants.Count - 1 do
-    TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
-    
-end;
-//---------------------------------------------------------------------------
-procedure TOWSinkPin.UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
-var
-  I, J          : Integer;
-  EntryFound    : Boolean;
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  if( HasToIgnoreUpstream() ) then
-    Exit;
-
-  if( ForPin = Self ) then
-    Exit;
-
-  I := 0;
-  while( I < PossibleStreamTypes.Count ) do
-    begin
-    EntryFound := False;
-    for J := 0 to StreamType.Count - 1 do
-      begin
-      if( IsEqualGUID( StreamType.ID[ J ], PossibleStreamTypes.ID[ I ] )) then
-        begin
-        EntryFound := True;
-        Break;
-        end;
-
-      end;
-
-    if( EntryFound ) then
-      Inc( I )
-
-    else
-      PossibleStreamTypes.RemoveType( PossibleStreamTypes.ID[ I ] );
-
-    end;
-
-  for I := 0 to FDataTypeDependants.Count - 1 do
-    TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.RequestInterface(const IID: TGUID; out Obj) : HResult;
+function TOWSinkPin.RequestInterface(const IID: TGUID; out Obj) : HResult;
 var
   AReadLock : IOWLockSection;
   
@@ -7429,7 +8556,7 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-function  TOWSinkPin.UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSinkPin.UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -7459,7 +8586,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWSinkPin.DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -7489,84 +8616,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.HasToIgnoreUpstream() : Boolean;
-var
-  AReadLock : IOWLockSection;
-  
-begin
-  AReadLock := ReadLock();
-  Result := FIgnoreUpstream;
-  if( not Result ) then
-    Result := ( StreamType.Count = 0 );
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-var
-  I          : Integer;
-  EntryFound : Boolean;
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := S_OK;
-  if( ForPin = Self ) then
-    Exit;
-
-  EntryFound := False;
-  for I := 0 to StreamType.Count - 1 do
-    begin
-    if( IsEqualGUID( IID, StreamType.ID[ I ] )) then
-      begin
-      EntryFound := True;
-      Break;
-      end;
-    end;
-
-  if( not EntryFound ) then
-    begin
-    Result := E_NOINTERFACE;
-    Exit;
-    end;
-
-  for I := 0 to FDataTypeDependants.Count - 1 do
-    begin
-    Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthQueryPossybleInterface( IID, ForPin );
-    if( Result <> S_OK ) then
-      Exit;
-
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
-var
-  I : Integer;
-  Unknown : IUnknown;
-var
-  AReadLock : IOWLockSection;
-  
-begin
-  AReadLock := ReadLock();
-  Result := S_OK;
-  if( ForPin = Self ) then
-    Exit;
-
-  Result := inherited RequestInterface( IID, Unknown );
-  if( Result <> S_OK ) then
-    Exit;
-
-  for I := 0 to FDataTypeDependants.Count - 1 do
-    begin
-    Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthQueryPossybleInterface( IID, ForPin );
-    if( Result <> S_OK ) then
-      Exit;
-
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function  TOWSinkPin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWSinkPin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -7588,7 +8638,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWSinkPin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 var
   I : Integer;
 var
@@ -7647,7 +8697,7 @@ begin
   Connect( SourcePin );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetSourcePin() : TOWBasicPin;
+function TOWSinkPin.GetSourcePin() : TOWBasicPin;
 var
   AReadLock : IOWLockSection;
   
@@ -7656,7 +8706,7 @@ begin
   Result := FIntRealSourcePin;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetFormatConverter() : TOWFormatConverter;
+function TOWSinkPin.GetFormatConverter() : TOWFormatConverter;
 var
   AReadLock : IOWLockSection;
   
@@ -7671,7 +8721,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetUpStreamLinkName() : String;
+function TOWSinkPin.GetUpStreamLinkName() : String;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -7705,7 +8755,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetDownStreamLinkName() : String;
+function TOWSinkPin.GetDownStreamLinkName() : String;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -7743,7 +8793,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetUpStreamID() : TGUID;
+function TOWSinkPin.GetUpStreamID() : TGUID;
 var
   AReadLock : IOWLockSection;
 
@@ -7757,7 +8807,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetDownStreamID() : TGUID;
+function TOWSinkPin.GetDownStreamID() : TGUID;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -8055,7 +9105,7 @@ begin
   AWriteLock := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.TryLinkTo( Root : TComponent; Soutce : String; SoutceName : String; SaveForm : Boolean ) : Boolean;
+function TOWSinkPin.TryLinkTo( Root : TComponent; Soutce : String; SoutceName : String; SaveForm : Boolean ) : Boolean;
 var
   AWriteLock : IOWLockSection;
   ASourcePin : TOWBasicPin;
@@ -8129,6 +9179,14 @@ begin
     
 end;
 //---------------------------------------------------------------------------
+function TOWSinkPin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
+begin
+  Result := DoWrite(); 
+  if( Result ) then
+    WriteConnectionsData( Writer );
+    
+end;
+//---------------------------------------------------------------------------
 procedure TOWSinkPin.UpdateStateValue();
 var
   AWriteLock : IOWLockSection;
@@ -8140,7 +9198,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.GetLinkStr() : String;
+function TOWSinkPin.GetLinkStr() : String;
 var
   AddRoot : Boolean;
   AReadLock : IOWLockSection;
@@ -8158,7 +9216,7 @@ begin
   Result := FRealSourcePin.GetFullIdentName( AddRoot );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.DoWrite() : Boolean;
+function TOWSinkPin.DoWrite() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -8167,18 +9225,13 @@ begin
   Result := ( SourcePin <> NIL ) and not ( DoStateWrite() or DoStateConverterWrite() );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPin.DoFormWrite() : Boolean;
+function TOWSinkPin.DoFormWrite() : Boolean;
 begin
   Result := (( inherited DoFormWrite() ) or DoWrite() );
 end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.DefineProperties(Filer: TFiler);
 begin
-  if( DoStateWrite() ) then
-    begin
-    Filer := Filer;
-    end;
-    
   inherited;
   Filer.DefineProperty( 'SourcePin', ReadConnectionsData, WriteConnectionsData, DoWrite());
   Filer.DefineProperty( 'StateConverter', ReadStateConverterConnectionsData, WriteStateConverterConnectionsData, DoStateConverterWrite());
@@ -8799,15 +9852,9 @@ end;
 //---------------------------------------------------------------------------
 function TOWPinList.GetCount() : Integer;
 var
-//  AUnLock : IOWLockSection;
-//  AGlobalReadLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  if( FOwnerLock <> NIL ) then
-//    AUnLock := FOwnerLock.UnlockAll();
-    
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
 
   if( not FInUnload ) then
@@ -8828,15 +9875,9 @@ end;
 //---------------------------------------------------------------------------
 function TOWPinList.GetPin( Item : Integer ) : TOWBasicPin;
 var
-//  AGlobalReadLock : IOWLockSection;
-//  AUnLock : IOWLockSection;
   AReadLock : IOWLockSection;
 
 begin
-//  if( FOwnerLock <> NIL ) then
-//    AUnLock := FOwnerLock.UnlockAll();
-    
-//  AGlobalReadLock := OWGlobalLock.ReadLock();
   AReadLock := ReadLock();
   if( not FInUnload ) then
     begin
@@ -8853,15 +9894,9 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinList.SetPin( Item : Integer; Pin : TOWBasicPin );
 var
-//  AUnLock : IOWLockSection;
-//  AGlobalWriteLock : IOWLockSection;
   AWriteLock : IOWLockSection;
 
 begin
-//  if( FOwnerLock <> NIL ) then
-//    AUnLock := FOwnerLock.UnlockAll();
-    
-//  AGlobalWriteLock := OWGlobalLock.WriteLock();
   AWriteLock := WriteLock();
   FPinsList.Objects[ Item ] := Pin;
   OWNotifyChangePin( Pin );
@@ -9260,6 +10295,31 @@ begin
             Reader.ReadListEnd();
             end
 
+          else if( Ident = 'Sources' ) then
+            begin
+            Reader.ReadListBegin();
+            while not Reader.EndOfList do
+              begin
+              if( Reader.NextValue() = vaList ) then
+                begin
+                Reader.ReadListBegin();
+                Ident := Reader.ReadIdent();
+                IdentName := Reader.ReadString();
+                Reader.ReadListEnd();
+                end
+
+              else
+                begin
+                Ident := Reader.ReadIdent();
+                IdentName := Ident;
+                end;
+
+              ConnectPin( CurrentPinIndex, ptEventSink, ptSource, Ident, IdentName );
+              end;
+
+            Reader.ReadListEnd();
+            end
+            
           else
             begin
             if( Ident <> 'State' ) then
@@ -9290,6 +10350,31 @@ begin
               end;
 
             ConnectPin( CurrentPinIndex, ptSource, ptSink, Ident, IdentName );
+            end;
+
+          Reader.ReadListEnd();
+          end
+
+        else if( Ident = 'Sources' ) then
+          begin
+          Reader.ReadListBegin();
+          while not Reader.EndOfList do
+            begin
+            if( Reader.NextValue() = vaList ) then
+              begin
+              Reader.ReadListBegin();
+              Ident := Reader.ReadIdent();
+              IdentName := Reader.ReadString();
+              Reader.ReadListEnd();
+              end
+
+            else
+              begin
+              Ident := Reader.ReadIdent();
+              IdentName := Ident;
+              end;
+
+            ConnectPin( CurrentPinIndex, ptEventSink, ptSource, Ident, IdentName );
             end;
 
           Reader.ReadListEnd();
@@ -9329,6 +10414,8 @@ begin
   Writer.WriteListBegin();
   for I := 0 to Count - 1 do
     begin
+    Pins[ I ].WriteListEntry( Writer );
+{
     if( Pins[ I ].DoStateWrite() ) then
       begin
       // Write all the pin connections under the State indicator !
@@ -9339,7 +10426,17 @@ begin
         begin
         if( TOWSinkPin( Pins[ I ] ).DoWrite() ) then
           TOWSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
-          
+
+        end
+
+      else if( Pins[ I ] is TOWEventSinkPin ) then
+        begin
+        if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+          begin
+          Writer.WriteIdent( 'Sources' );
+          TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+          end;
+
         end
 
       else if( Pins[ I ] is TOWSourcePin ) then
@@ -9355,7 +10452,7 @@ begin
       Writer.WriteListEnd();
       Continue;
       end
-      
+
     else if( Pins[ I ] is TOWSinkPin ) then
       begin
       if( TOWSinkPin( Pins[ I ] ).DoWrite() ) then
@@ -9364,7 +10461,17 @@ begin
         Continue;
         end
       end
-      
+
+    else if( Pins[ I ] is TOWEventSinkPin ) then
+      begin
+      if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+        begin
+        Writer.WriteIdent( 'Sources' );
+        TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+        Continue;
+        end
+      end
+
     else if( Pins[ I ] is TOWSourcePin ) then
       begin
       if( TOWSourcePin( Pins[ I ] ).DoWrite() ) then
@@ -9376,8 +10483,9 @@ begin
       end;
 
     Writer.WriteIdent( 'nil' );
+}
     end;
-    
+
   Writer.WriteListEnd();
 end;
 //---------------------------------------------------------------------------
@@ -9581,50 +10689,11 @@ begin
             // Here it goes state pin connection !
             Reader.ReadListBegin();
             Pin.ReadStateConnectionsData( Reader );
-{
-            if( Pin is TOWSinkPin )then
-              TOWSinkPin( Pin ).TryLinkTo( Reader.Root, Ident, Ident, True )
-
-            else if( Pin is TOWSourcePin )then
-              begin
-              if( Ident = 'Sinks' ) then
-                begin
-                Reader.ReadListBegin();
-                while not Reader.EndOfList do
-                  begin
-                  if( Reader.NextValue() = vaList ) then
-                    begin
-                    Reader.ReadListBegin();
-                    Ident := Reader.ReadIdent();
-                    IdentName := Reader.ReadString();
-                    Reader.ReadListEnd();
-                    end
-
-                  else
-                    begin
-                    Ident := Reader.ReadIdent();
-                    IdentName := Ident;
-                    end;
-
-                  TOWSourcePin( Pin ).TryLinkTo( Reader.Root, Ident, IdentName, '', True );
-                  end;
-
-                Reader.ReadListEnd();
-                end
-
-              else
-                TOWSourcePin( Pin ).TryLinkTo( Reader.Root, Ident, Ident, '', True );
-
-              end;
-}
             Reader.ReadListEnd();
             end
 
           else if( Pin is TOWSinkPin )then
-            begin
-            ConnectPin( Counter - 1, ptSink, ptSource, Ident, Ident ); 
-//            TOWSinkPin( Pin ).TryLinkTo( Reader.Root, Ident, Ident, True )
-            end
+            ConnectPin( Counter - 1, ptSink, ptSource, Ident, Ident )
 
           else if( Pin is TOWSourcePin )then
             begin
@@ -9648,7 +10717,6 @@ begin
                   end;
 
                 ConnectPin( Counter - 1, ptSource, ptSink, Ident, IdentName ); 
-//                TOWSourcePin( Pin ).TryLinkTo( Reader.Root, Ident, IdentName, '', True );
                 end;
 
               Reader.ReadListEnd();
@@ -9656,7 +10724,6 @@ begin
 
             else
               ConnectPin( Counter - 1, ptSource, ptSink, Ident, Ident );
-//              TOWSourcePin( Pin ).TryLinkTo( Reader.Root, Ident, Ident, '', True );
 
             end;
 
@@ -9799,18 +10866,6 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-{
-function TOWStatePin.DoTryLink( Root : TComponent; SaveForm : Boolean ): Boolean;
-begin
-  if( FDispatcher <> NIL ) then
-    Result := FDispatcher.DoTryLink( Root, SaveForm )
-
-  else
-    Result := True;
-
-end;
-}
-//---------------------------------------------------------------------------
 function  TOWStatePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
 //  StatePin : TOWStatePin;
@@ -9845,7 +10900,7 @@ begin
 
     end
 
-  else if(  OtherPin is TOWSinkPin ) then
+  else if(  OtherPin is TOWBasicSinkPin ) then
     Result := not IsEqualGUID( FindConnectionID( OtherPin, AConverter, AConverterClass, UseConverters ), OWNULLID )
 
   else if( OtherPin is TOWSourcePin ) then
@@ -9930,7 +10985,59 @@ begin
 }
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function  TOWStatePin.GetEditorString() : String;
+begin
+  if( FDispatcher = NIL ) then
+    begin
+    Result := GOWDISCONNECTED;
+    Exit;
+    end;
+
+  if( FDispatcher.PinCount = 2 ) then
+    begin
+    if( FDispatcher.Pins[ 0 ].GetFullIdentName( True ) = GetFullIdentName( True ) ) then
+      Result := FDispatcher.Pins[ 1 ].GetFullName( True )
+
+    else
+      Result := FDispatcher.Pins[ 0 ].GetFullName( True );
+
+    end
+
+  else
+    Result := FDispatcher.Name;
+
+end;
+//---------------------------------------------------------------------------
+function TOWStatePin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+var
+  ADispatcher : TOWStateDispatcher;
+  
+begin
+  Result := False;
+  if( ( AValue = '' ) or ( AValue = GOWDISCONNECTED ) ) then
+    begin
+    Disconnect();
+    Result := True;
+    Exit;
+    end;
+
+  ADispatcher := TOWStateDispatcher.GetByName( AValue, True );
+    
+  if( ADispatcher <> NIL ) then
+    if( ConnectToState( ADispatcher )) then  
+      begin
+      Result := True;
+      Exit;
+      end;
+
+  if( TryLinkTo( ARoot, AValue )) then
+    begin
+    Result := True;
+    end;
+    
+end;
+//---------------------------------------------------------------------------
+function TOWStatePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -10164,7 +11271,7 @@ begin
     end;
 
   for I := 0 to PinCount - 1 do
-    if( not( Pins[ I ] is TOWSinkPin )) then
+    if( not( Pins[ I ] is TOWBasicSinkPin )) then
       begin
       if( Pins[ I ] = APin ) then
         Pins[ I ].NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], NIL )
@@ -10549,25 +11656,25 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function  TOWSinkPinEntryList.Add() : POWPinEntry;
+function  TOWPinEntryList.Add() : POWPinEntry;
 begin
   New( Result );
   inherited Add( Result );
 end;
 //---------------------------------------------------------------------------
-function  TOWSinkPinEntryList.Remove( Item: POWPinEntry ) : Integer;
+function  TOWPinEntryList.Remove( Item: POWPinEntry ) : Integer;
 begin
   Dispose( Item ); 
   Result := inherited Remove( Item );
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPinEntryList.Delete( Index: Integer );
+procedure TOWPinEntryList.Delete( Index: Integer );
 begin
   Dispose( Items[ Index ] );
   inherited Delete( Index );
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPinEntryList.Clear();
+procedure TOWPinEntryList.Clear();
 var
   I : Integer;
   
@@ -10578,7 +11685,7 @@ begin
   inherited Clear();
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPinEntryList.CopyFromList( AList : TOWSinkPinEntryList );
+procedure TOWPinEntryList.CopyFromList( AList : TOWPinEntryList );
 var
   I : Integer;
   Entry : POWPinEntry;
@@ -10596,12 +11703,12 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function TOWSinkPinEntryList.GetItem( Index : Integer ) : POWPinEntry;
+function TOWPinEntryList.GetItem( Index : Integer ) : POWPinEntry;
 begin
   Result := POWPinEntry( inherited Items[ Index ] );
 end;
 //---------------------------------------------------------------------------
-function TOWSinkPinEntryList.GetItemByPin( APin : TOWBasicPin ) : POWPinEntry;
+function TOWPinEntryList.GetItemByPin( APin : TOWBasicPin ) : POWPinEntry;
 var
   I : Integer;
 
@@ -10651,16 +11758,16 @@ begin
   Result := FList.Count;
 end;
 //---------------------------------------------------------------------------
-function TOWSinkPinList.GetItem( Index : Integer ) : TOWSinkPin;
+function TOWSinkPinList.GetItem( Index : Integer ) : TOWBasicSinkPin;
 var
   AReadLock : IOWLockSection;
 
 begin
   AReadLock := FOwner.ReadLock();
-  Result := TOWSinkPin( FList.Items[ Index ] );
+  Result := TOWBasicSinkPin( FList.Items[ Index ] );
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPinList.Add( APin : TOWSinkPin ); //; ShareLock : Boolean = True );
+procedure TOWSinkPinList.Add( APin : TOWBasicSinkPin ); //; ShareLock : Boolean = True );
 var
   AWriteLock : IOWLockSection;
 
@@ -10672,7 +11779,7 @@ begin
   FList.Add( APin );
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPinList.Remove( APin : TOWSinkPin );
+procedure TOWSinkPinList.Remove( APin : TOWBasicSinkPin );
 var
   AWriteLock : IOWLockSection;
 
@@ -10681,7 +11788,7 @@ begin
   FList.Remove( APin );
 end;
 //---------------------------------------------------------------------------
-procedure TOWFunctionSinkPinList.Add( APin : TOWSinkPin );
+procedure TOWFunctionSinkPinList.Add( APin : TOWBasicSinkPin );
 var
   AWriteLock : IOWLockSection;
 
@@ -10692,7 +11799,7 @@ begin
   APin.IntAddFunctionDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
-procedure TOWFunctionSinkPinList.Remove( APin : TOWSinkPin );
+procedure TOWFunctionSinkPinList.Remove( APin : TOWBasicSinkPin );
 var
   AWriteLock : IOWLockSection;
 
@@ -10704,7 +11811,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure TOWDataTypeSinkPinList.Add( APin : TOWSinkPin; ShareLock : Boolean = True );
+procedure TOWDataTypeSinkPinList.Add( APin : TOWBasicSinkPin; ShareLock : Boolean = True );
 var
   AWriteLock : IOWLockSection;
 
@@ -10716,7 +11823,7 @@ begin
   APin.IntAddDataTypeDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
-procedure TOWDataTypeSinkPinList.Remove( APin : TOWSinkPin );
+procedure TOWDataTypeSinkPinList.Remove( APin : TOWBasicSinkPin );
 var
   AWriteLock : IOWLockSection;
 
@@ -10830,7 +11937,7 @@ begin
   FRoot := ARoot;
 
   GOWUnloadedPins.Add( Self );
-  FConnectedPins := TOWSinkPinEntryList.Create();
+  FConnectedPins := TOWPinEntryList.Create();
 //  FConnectedPins := TOWBasicPinList.Create( False );
 end;
 //---------------------------------------------------------------------------
@@ -10992,6 +12099,9 @@ begin
   if( OtherPin is TOWSourcePin ) then
     TOWSourcePin( OtherPin ).IntConnect( Self, NotifyAfterPin )
 
+  else if( OtherPin is TOWEventSinkPin ) then
+    TOWEventSinkPin( OtherPin ).IntConnect( Self, NotifyAfterPin )
+
   else if( OtherPin is TOWSinkPin ) then
     begin
     TOWSinkPin( OtherPin ).Disconnect();
@@ -11049,11 +12159,18 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWUnloadedPin.PopulatePinAndDestroy( APin : TOWBasicPin );
 var
-  I : Integer;
+  I         : Integer;
+  ARealPin  : TOWBasicPin;
 
 begin
   for I := FConnectedPins.Count - 1 downto 0 do
-    APin.ConnectAfter( FConnectedPins[ I ].RealPin, FConnectedPins[ I ].NotifyAfterPin );
+    begin
+    ARealPin := FConnectedPins[ I ].RealPin; 
+    APin.ConnectAfter( ARealPin, FConnectedPins[ I ].NotifyAfterPin );
+    if( ARealPin <> NIL ) then
+      ARealPin.DisconnectFrom( Self );
+      
+    end;
 
   for I := 0 to GOWPins.Count - 1 do
     GOWPins[ I ].PinReplacedNotify( Self, APin );
@@ -11206,7 +12323,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWFormatConverter.SourceOperationEvent( Sender : TOWPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+function TOWFormatConverter.SourceOperationEvent( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 begin
   Result := FInputPin.Notify( Operation );
 end;
@@ -11822,3 +12939,4 @@ finalization
     end;
 //---------------------------------------------------------------------------
 end.
+

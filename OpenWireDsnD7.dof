@@ -76,9 +76,9 @@ LocaleToUnicode=1
 ImagebaseMultiple=1
 SuspiciousTypecast=1
 PrivatePropAccessor=1
-UnsafeType=1
-UnsafeCode=1
-UnsafeCast=1
+UnsafeType=0
+UnsafeCode=0
+UnsafeCast=0
 [Linker]
 MapFile=3
 OutputObjs=0
@@ -112,10 +112,10 @@ RootDir=
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
-MajorVer=2
+MajorVer=4
 MinorVer=0
 Release=0
-Build=7
+Build=0
 Debug=0
 PreRelease=0
 Special=0
@@ -126,22 +126,43 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=
-FileVersion=2.0.0.7
+FileVersion=4.0.0.0
 InternalName=
 LegalCopyright=
 LegalTrademarks=
 OriginalFilename=
 ProductName=
 ProductVersion=0.0.0.0
-Compile Date=Sunday, October 30, 2005 12:50 PM
+CompileDate=Friday, January 22, 2010 3:16 PM
+[Excluded Packages]
+c:\program files (x86)\borland\delphi7\Projects\Bpl\VideoLabAxisPkgD7.bpl=(untitled)
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VideoLabBasicPkgD7.bpl=Mitov - VideoLab Basic Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\NewDevelopmentPkgD7.bpl=(untitled)
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\AudioLabEssentialPkgD7.bpl=Mitov - AudioLab Essential Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\AudioLabPkgD7.bpl=Mitov - AudioLab Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\AudioLabBasicDsnD7.bpl=Mitov - AudioLab Basic Design Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\AudioLabDsnD7.bpl=Mitov - AudioLab Design Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\AudioLabEssentialDsnD7.bpl=Mitov - AudioLab Essential Design Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VisionLabPkgD7.bpl=Mitov - Vision Lab Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VideoLabAdditionalPkgD7.bpl=Mitov - VideoLab Additional Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VideoLabPkgD7.bpl=Mitov - VideoLab Package
+c:\program files (x86)\borland\delphi7\Projects\Bpl\LabPacksCodeSitePkgD7.bpl=(untitled)
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\SignalLabAdditionalPkgD7.bpl=Mitov - SignalLab Additional Package
+c:\program files (x86)\borland\delphi7\Projects\Bpl\SignalLabAdditionalDsnD7.bpl=Mitov - SignalLab Additional Design Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VideoLabBasicDsnD7.bpl=Mitov - VideoLab Basic Design Package
+C:\Program Files (x86)\Borland\Delphi7\Projects\Bpl\VideoLabAdditionalDsnD7.bpl=Mitov - VideoLab Additional Design Package
+c:\program files (x86)\borland\delphi7\Projects\Bpl\VideoLabDsnD7.bpl=Mitov - VideoLab Design Package
+c:\program files (x86)\borland\delphi7\Projects\Bpl\VisionLabDsnD7.bpl=Mitov - Vision Lab Design Package
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [HistoryLists\hlSearchPath]
-Count=3
-Item0=$(DELPHI)\OpenWire;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source
-Item1=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components;$(DELPHI)\OpenWire\OpenWireLabDemo
-Item2=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components
+Count=5
+Item0=$(DELPHI)\Lib\Debug;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source\Vcl;$(DELPHI)\OpenWire
+Item1=$(DELPHI)\Source\ToolsAPI
+Item2=$(DELPHI)\OpenWire;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source
+Item3=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components;$(DELPHI)\OpenWire\OpenWireLabDemo
+Item4=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components
 [HistoryLists\hlOutputDirectorry]
 Count=1
 Item0=C:\Program Files\Borland\Delphi6\OpenWire
