@@ -51,12 +51,16 @@ uses
 {$ELSE}
   Windows,
 
-  {$IFDEF D6}
-    DesignEditors,
-    DesignIntf,
-    TypInfo,
+  {$IFDEF __VSDESIGN__}
+    VSDesign,
   {$ELSE}
-    dsgnintf,
+    {$IFDEF D6}
+      DesignEditors,
+      DesignIntf,
+      TypInfo,
+    {$ELSE}
+      dsgnintf,
+    {$ENDIF}
   {$ENDIF}
 
 {$ENDIF}
@@ -110,6 +114,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
+{$IFNDEF __VSDESIGN__}
 function  OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
 procedure OWLinkAwaitsLinkingAllForms();
 procedure OWRequestDesignerRefresh();
@@ -117,6 +122,7 @@ procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : T
 function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
+{$ENDIF}
 //---------------------------------------------------------------------------
 const
 {$IFDEF fpc}
@@ -175,6 +181,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+{$IFNDEF __VSDESIGN__}
 function OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
 var
   Component : TComponent;
@@ -352,6 +359,7 @@ begin
 
 {$ENDIF}
 end;
+{$ENDIF}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

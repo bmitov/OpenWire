@@ -98,7 +98,7 @@
       <FILE FILENAME="OWAboutFormUnit.pas" FORMNAME="OWAboutForm" UNITNAME="OWAboutFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWExtCollectionEditor.pas" FORMNAME="" UNITNAME="OWExtCollectionEditor" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWAfterPinSelectFormUnit.pas" FORMNAME="OWAfterPinSelectForm" UNITNAME="OWAfterPinSelectFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireLabDemo\Projects\Lib\OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireExpert\OpenWireLabDemo\Projects\Lib\OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

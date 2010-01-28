@@ -178,9 +178,13 @@ type
 
   public
     procedure AfterConstruction(); override;
-    
+
   public
+  {$IFDEF __VSDESIGN__}
+    constructor Create(AComponent: TComponent; ADesigner: IDesigner); override;
+  {$ELSE}
     constructor Create(AComponent: TComponent; ADesigner: IOWDesigner); override;
+  {$ENDIF}
     destructor Destroy(); override;
     
   end;
@@ -359,7 +363,11 @@ begin
   Result := LastIProp;
 end;
 //---------------------------------------------------------------------------
+{$IFDEF __VSDESIGN__}
+constructor TOWComponentEditor.Create(AComponent: TComponent; ADesigner: IDesigner);
+{$ELSE}
 constructor TOWComponentEditor.Create(AComponent: TComponent; ADesigner: IOWDesigner);
+{$ENDIF}
 begin
   inherited;
   FMenuItems := TOWComponentEditorItems.Create();
