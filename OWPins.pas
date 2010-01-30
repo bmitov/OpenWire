@@ -586,6 +586,8 @@ protected
   procedure PinDeletedNotify( ADeletedPin : TOWBasicPin ); virtual;
   procedure PinReplacedNotify( AOldPin : TOWBasicPin; ANewPin : TOWBasicPin ); virtual;
   procedure SetNotifyAfterByName( APin : TOWPin; AfterPinName : String ); virtual;
+  
+public
   function  GetAfterPinDisplayName( APin : TOWPin ) : String; virtual;
 
 end;
@@ -673,6 +675,9 @@ protected
   function  GetEditorString() : String; virtual;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; virtual;
 
+public
+  function  IsLinkedTo( PinName : String ) : Boolean; virtual;
+
 public // State support
   function  ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean; virtual;
   function  ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
@@ -759,7 +764,7 @@ public
   function  GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID; override;
   function  GetConnectionName( const OtherPin : TOWBasicPin ) : String;
   function  GetPrimaryConnectionID() : TGUID; virtual;
-
+  
 protected
   function  GetSubmitFunctionID( const IID : TGUID ) : TOWSubmit;
   function  GetLinkNameID( const IID : TGUID ) : String;
@@ -977,7 +982,7 @@ protected
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
 public
-  function  IsLinkedTo( SinkName : String ) : Boolean;
+  function  IsLinkedTo( PinName : String ) : Boolean; override;
 
 protected
   function  GetSinkCount() : Integer;                           virtual; // const;
@@ -1177,6 +1182,13 @@ protected
   procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
 
 public
+  function  IsLinkedTo( PinName : String ) : Boolean; override;
+
+public
+  function  GetConnectedPinCount() : Integer; override;
+  function  GetConnectedPin( Index : Integer ) : TOWBasicPin; override;
+  
+public
   function  ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; override;
   function  CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
   procedure Disconnect(); override;
@@ -1296,6 +1308,9 @@ protected
   function  GetEditorString() : String; override;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
+public
+  function  IsLinkedTo( PinName : String ) : Boolean; override;
+  
 protected
   function  GetLinkStr() : String;
 
@@ -1368,9 +1383,6 @@ public
   function  GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID; override;
   function  DependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
   function  DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean; override;
-
-public
-  function  IsLinkedTo( PinName : String ) : Boolean;
 
 protected
   function  GetPinCount() : Integer;            virtual; // const;
@@ -3467,6 +3479,26 @@ begin
      
 end;
 //---------------------------------------------------------------------------
+function  TOWBasicPin.IsLinkedTo( PinName : String ) : Boolean;
+var
+  I : Integer;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := False;
+  if( FDispatcher = NIL ) then
+    Exit;
+
+  for I := 0 to FDispatcher.PinCount - 1 do
+    if( FDispatcher.Pins[ I ].GetFullName( True ) = PinName ) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+end;
+//---------------------------------------------------------------------------
 function  TOWBasicPin.ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean;
 begin
   Result := ConnectToStateAfter( ADispatcher, NIL );
@@ -5097,7 +5129,7 @@ begin
 
   FInDisconnect := False;
 
-  for Index := 0 to GetSinkCount() - 1 do
+  for Index := GetSinkCount() - 1 downto 0 do
     begin
     PEntry := FSinkPins.Items[ Index ];
     if( PEntry.RealPin = OtherPin ) then
@@ -5924,7 +5956,6 @@ end;
 function TOWSourcePin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
 begin
   Result := Sinks[ Index ];
-//  ShowMessage( 'TOWSourcePin.GetConnectedPin - ' + IntToHex( Integer( Result ), 8 ) );
 end;
 //---------------------------------------------------------------------------
 function TOWSourcePin.GetEditorString() : String;
@@ -6426,7 +6457,7 @@ begin
   Result := not IsEqualGUID( DownStreamFindConnectionID( OtherPin, UseConverters, True, AConverter, AConverterClass ), OWNULLID );
 end;
 //---------------------------------------------------------------------------
-function TOWSourcePin.IsLinkedTo( SinkName : String ) : Boolean;
+function TOWSourcePin.IsLinkedTo( PinName : String ) : Boolean;
 var
   I     : Integer; 
   AReadLock : IOWLockSection;
@@ -6437,11 +6468,11 @@ begin
   
   for I := 0 to GetSinkCount() - 1 do
     begin
-    if( SinkName = Sinks[ I ].GetFullName( True )) then // GetLinkStr( I, False )) then
+    if( PinName = Sinks[ I ].GetFullName( True )) then // GetLinkStr( I, False )) then
       Exit;
 
     if( Sinks[ I ].GetRootName() = GetRootName() ) then
-      if( SinkName = Sinks[ I ].GetFullName( False )) then
+      if( PinName = Sinks[ I ].GetFullName( False )) then
         Exit;
 
     end;
@@ -7060,6 +7091,39 @@ begin
   Result := TryLinkTo( ARoot, AValue, AValue, '', False );
 end;
 //---------------------------------------------------------------------------
+function TOWEventSinkPin.IsLinkedTo( PinName : String ) : Boolean;
+var
+  I     : Integer;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  Result := True;
+  
+  for I := 0 to GetSourceCount() - 1 do
+    begin
+    if( PinName = Sources[ I ].GetFullName( True )) then // GetLinkStr( I, False )) then
+      Exit;
+
+    if( Sources[ I ].GetRootName() = GetRootName() ) then
+      if( PinName = Sources[ I ].GetFullName( False )) then
+        Exit;
+
+    end;
+
+  Result := False;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetConnectedPinCount() : Integer;
+begin
+  Result := SourceCount;
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
+begin
+  Result := Sources[ Index ];
+end;
+//---------------------------------------------------------------------------
 function TOWEventSinkPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
   if( OtherPin <> NIL ) then
@@ -7316,7 +7380,7 @@ begin
 
   FInDisconnect := False;
 
-  for Index := 0 to SourceCount - 1 do
+  for Index := SourceCount - 1 downto 0 do
     begin
     PEntry := FSourcePins[ Index ];
     if( PEntry.RealPin = OtherPin ) then
@@ -9198,6 +9262,11 @@ begin
     
 end;
 //---------------------------------------------------------------------------
+function TOWSinkPin.IsLinkedTo( PinName : String ) : Boolean;
+begin
+  Result := ( GetLinkStr() = PinName ); 
+end;
+//---------------------------------------------------------------------------
 function TOWSinkPin.GetLinkStr() : String;
 var
   AddRoot : Boolean;
@@ -10938,26 +11007,6 @@ end;
 function  TOWStatePin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := IsConnectedTo( OtherPin );
-end;
-//---------------------------------------------------------------------------
-function  TOWStatePin.IsLinkedTo( PinName : String ) : Boolean;
-var
-  I : Integer;
-  AReadLock : IOWLockSection;
-
-begin
-  AReadLock := ReadLock();
-  Result := False;
-  if( FDispatcher = NIL ) then
-    Exit;
-
-  for I := 0 to FDispatcher.PinCount - 1 do
-    if( FDispatcher.Pins[ I ].GetFullName( True ) = PinName ) then
-      begin
-      Result := True;
-      Exit;
-      end;
-
 end;
 //---------------------------------------------------------------------------
 function  TOWStatePin.GetPinType() : TOWPinType;

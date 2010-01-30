@@ -5882,6 +5882,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 initialization
+  OWRegisterStream( IOWClockStream,       'Clock' );
   OWRegisterStream( IOWIntegerStream,     '32 bit Integer single' );
   OWRegisterStream( IOWInt64Stream,       '64 bit Integer single' );
   OWRegisterStream( IOWFloatStream,       'Float single' );

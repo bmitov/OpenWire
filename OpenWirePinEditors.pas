@@ -195,12 +195,16 @@ type
     procedure PopulateSingleForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
     procedure PopulateSingleFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
 
+    procedure PopulateSingleFormInt( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
+{
     procedure PopulateSingleSinkForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
+    procedure PopulateSingleEventSinkForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
     procedure PopulateSingleSourceForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
 
     procedure PopulateSingleSinkFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
+    procedure PopulateSingleEventSinkFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
     procedure PopulateSingleSourceFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
-
+}
     procedure FillFormsInfo();
     function  RootFromName( RootName : String ) : TComponent;
     
@@ -212,6 +216,8 @@ type
     Designer      : TOWPropertyDesigner;
     FSourcePin    : TOWSourcePin;
     FSinkPin      : TOWSinkPin;
+    FEventSinkPin : TOWEventSinkPin;
+    FPin          : TOWPin;
     Root          : TComponent;
     PinsList      : TOWEPinsList;
     ListUpdating  : Boolean;
@@ -221,8 +227,9 @@ type
     procedure OWMUpdateInspector(var Message: TMessage); message OWMSG_UPDATE_INSPECTOR;
 
   public
-    function ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer; virtual;
-    function ExecuteForSink( ADesigner : TOWPropertyDesigner; ASinkPin : TOWSinkPin ): Integer; virtual;
+    function ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
+    function ExecuteForSink( ADesigner : TOWPropertyDesigner; ASinkPin : TOWSinkPin ): Integer;
+    function ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWEventSinkPin ): Integer;
 
   private
     ColumnToSort : Integer;
@@ -719,6 +726,158 @@ begin
 
 end;
 //---------------------------------------------------------------------------
+function EventSinkPinEdit( Designer : TOWPropertyDesigner; EventSinkPin : TOWEventSinkPin ) : Boolean;
+var
+  I             : Integer;
+  OtherPin      : TOWBasicPin;
+  AfterPin      : TOWBasicPin;
+  Dispatcher    : TOWStateDispatcher;
+  SourceRoot    : TComponent;
+  SourceChanged : Boolean;
+  PinIdent      : String;
+
+begin
+  Result := False;
+  if( EventSinkPin = NIL ) then
+    Exit;
+
+  try
+    if( GOWPinEditorForm.ExecuteForEventSink( Designer, EventSinkPin ) = mrOk ) then
+      begin
+      for I := 0 to GOWPinEditorForm.Items.Count - 1 do
+        begin
+        Dispatcher := NIL;
+
+        SourceChanged := False;
+//        if( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] is TOWPin ) then
+          OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin; // TOWPin( GOWPinEditorForm.Items[ I ].SubItems.Objects[ 0 ] );
+
+//        else if( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] is TOWStateDispatcher ) then
+//          Dispatcher := TOWStateDispatcher( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] );
+
+//        PinIdent := GOWPinEditorForm.Items[ I ].SubItems.Strings[ 4 ];
+        PinIdent := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).PinConnectIdent;
+        if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
+          begin
+          if( Dispatcher <> NIL ) then
+            begin
+            if( not Dispatcher.IsConnectedTo( EventSinkPin )) then
+              SourceChanged := True;
+
+            end
+
+          else if( OtherPin = NIL ) then
+            begin
+            if( not TOWExposedSinkPin( EventSinkPin ).IsConnectedToPinName( PinIdent )) then
+              SourceChanged := True;
+
+            end
+
+          else
+            begin
+            if( not EventSinkPin.IsConnectedTo( OtherPin )) then
+              SourceChanged := True;
+
+            end;
+          end
+
+        else
+          begin
+          if( Dispatcher <> NIL ) then
+            begin
+            if( Dispatcher.IsConnectedTo( EventSinkPin )) then
+              SourceChanged := True;
+
+            end
+
+          else if( OtherPin = NIL ) then
+            if( TOWExposedSinkPin( EventSinkPin ).IsConnectedToPinName( PinIdent )) then
+              SourceChanged := True
+              
+          else
+            begin
+            if( EventSinkPin.IsConnectedTo( OtherPin )) then
+              SourceChanged := True;
+              
+            end;
+          end;
+
+        if( SourceChanged ) then
+          begin
+          { TODO : Modify the forms connected trough the Dispatcher }
+
+{$IFDEF FPC}
+          Designer.Modified( EventSinkPin );
+{$ELSE}
+          Designer.Modified();
+{$ENDIF}
+          if( OtherPin <> NIL ) then
+            begin
+            if( OtherPin is TOWPin ) then
+              begin 
+              SourceRoot := OWGetMainDesignOwner( TOWPin( OtherPin ).Owner );
+              if( SourceRoot is TCustomForm ) then
+                if( Assigned( TCustomForm( SourceRoot ).Designer )) then
+                  TCustomForm( SourceRoot ).Designer.Modified();
+
+              end;
+
+            end;
+
+          Break;
+          end;
+
+        end;
+
+      EventSinkPin.Disconnect();
+      for I := 0 to GOWPinEditorForm.Items.Count - 1 do
+        begin
+        Dispatcher := NIL;
+
+        OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin;
+        AfterPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedAfterPin;
+
+        if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
+          begin
+          if( Dispatcher <> NIL ) then
+            EventSinkPin.ConnectToStateAfter( Dispatcher, AfterPin )
+
+          else
+            begin
+            if( OtherPin is TOWStatePin ) then
+              begin
+              if( TOWExposedPin( EventSinkPin ).FDispatcher <> NIL ) then
+                OtherPin.ConnectToStateAfter( TOWExposedPin( EventSinkPin ).FDispatcher, AfterPin )
+
+              else if( TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).IsDispatcher ) then
+                EventSinkPin.ConnectByStateAfter( OtherPin, AfterPin )
+                
+              else
+                EventSinkPin.ConnectAfter( OtherPin, AfterPin );
+
+              end
+
+            else
+              EventSinkPin.ConnectAfter( OtherPin, AfterPin );
+
+            end;
+            
+          end;
+
+        if( OtherPin <> NIL ) then
+          TOWExposedPin( OtherPin ).SetInEditor( False );
+
+        end;
+
+      Result := True;
+      end;
+
+  finally
+    GOWPinEditorForm.ClearData();
+  end;
+
+end;
+//---------------------------------------------------------------------------
 function SourcePinEdit( Designer : TOWPropertyDesigner; SourcePin : TOWSourcePin ) : Boolean;
 var
   I             : Integer;
@@ -810,11 +969,6 @@ begin
     GOWPinEditorForm.ClearData();
   end;
 
-end;
-//---------------------------------------------------------------------------
-function EventSinkPinEdit( Designer : TOWPropertyDesigner; EventSinkPin : TOWEventSinkPin ) : Boolean;
-begin
-  Result := False;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -1335,24 +1489,112 @@ begin
 end;
 
 procedure TOWPinEditorForm.PopulateSingleFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
+var
+  Values        : TStringList;
+  I             : Integer;
+  OtherPin      : TOWPin;
+  Entry         : TOWEPinEntry;
+  iPos          : Integer;
+  Str           : String;
+  OwnRoot       : Boolean;
+  OwnDataModule : Boolean;
+  LinkName      : String;
+  PinStr        : String;
+  Dispatcher    : TOWStateDispatcher;
+
 begin
+{
   if( FSourcePin <> NIL ) then
     PopulateSingleSourceFormEntries( CurrentRoot, ARootComponent, FullPath, FilterPins )
 
+  else if( FSinkPin <> NIL ) then
+    PopulateSingleSinkFormEntries( CurrentRoot, ARootComponent, FullPath, FilterPins )
+
   else
-    PopulateSingleSinkFormEntries( CurrentRoot, ARootComponent, FullPath, FilterPins );
+    PopulateSingleEventSinkFormEntries( CurrentRoot, ARootComponent, FullPath, FilterPins );
+}
+  Values := TStringList.Create;
+  try
+    OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( FPin.Owner ));
+    OwnDataModule := False;
+
+    if( not OwnRoot ) then
+      OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( FPin.Owner ).Name );
+
+    for I := 0 to OWGetDispatcherCount() - 1 do
+      begin
+      Dispatcher := OWGetDispatcher( I );
+      if( not FPin.CanConnectToState( Dispatcher )) then
+        Continue;
+
+      Entry := TOWEPinEntry.Create();
+      PinsList.Add( Entry );
+      Entry.Dispatcher := Dispatcher;
+      Entry.PinName := Dispatcher.Name;
+      Entry.Checked := FPin.IsConnectedToState( Dispatcher );
+      end;
+
+    OWGetPinValueList( ARootComponent, FPin, Values, FilterPins );
+    for I := 0 to Values.Count - 1 do
+      begin
+      OtherPin := TOWPin( Values.Objects[ I ] );
+
+      if( ( not ( OtherPin is TOWSourcePin )) and ( not ( OtherPin is TOWStatePin )) ) then
+        Continue;
+
+      if( OtherPin is TOWStatePin ) then
+        if( OtherPin.IsConnected() ) then
+          Continue; // Those pins are represented by the Dispatchers.
+
+      Entry := TOWEPinEntry.Create();
+      PinsList.Add( Entry );
+
+      Str := LinkToDisplayString( ARootComponent, Values.Strings[ I ], FullPath, OwnRoot, PinStr );
+      Entry.PinName := PinStr;
+
+      Entry.OwnerName := Str; 
+      Entry.Pin := OtherPin;
+      if( not FPin.CanConnectTo( OtherPin )) then
+        begin
+        Entry.SavedChecked := False;
+        Entry.Checked := False;
+        end
+
+      else
+        begin
+        LinkName := Values.Strings[ I ];
+        if( OwnDataModule ) then
+          begin
+          iPos := Pos( '.', LinkName );
+          Delete( LinkName, 1, iPos );
+          end;
+
+        Entry.SavedChecked := FPin.IsLinkedTo( LinkName );
+        Entry.Checked := Entry.SavedChecked;
+        end;
+      end;
+
+  finally
+    Values.Free;
+
+  end;
 
 end;
 
 procedure TOWPinEditorForm.PopulateSingleForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
 begin
   ListUpdating := True;
+  PopulateSingleFormInt( CurrentRoot, ARootComponent, OnlyConnected, FullPath, FilterPins ); 
+{
   if( FSourcePin <> NIL ) then
     PopulateSingleSourceForm( CurrentRoot, ARootComponent, OnlyConnected, FullPath, FilterPins )
 
-  else
-    PopulateSingleSinkForm( CurrentRoot, ARootComponent, OnlyConnected, FullPath, FilterPins );
+  else if( FSinkPin <> NIL ) then
+    PopulateSingleSinkForm( CurrentRoot, ARootComponent, OnlyConnected, FullPath, FilterPins )
 
+  else
+    PopulateSingleEventSinkForm( CurrentRoot, ARootComponent, OnlyConnected, FullPath, FilterPins );
+}
   ListUpdating := False;
 end;
 
@@ -1389,6 +1631,7 @@ begin
     
 end;
 
+{
 procedure TOWPinEditorForm.PopulateSingleSinkFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
 var
   Values        : TStringList;
@@ -1398,13 +1641,10 @@ var
   iPos          : Integer;
   Str           : String;
   OwnRoot       : Boolean;
-//  OwnRoot1      : Boolean;
   OwnDataModule : Boolean;
   LinkName      : String;
   PinStr        : String;
   Dispatcher    : TOWStateDispatcher;
-
-//  FullSinkPath  : Boolean;
 
 begin
   Values := TStringList.Create;
@@ -1426,18 +1666,6 @@ begin
       Entry.Dispatcher := Dispatcher;
       Entry.PinName := Dispatcher.Name;
       Entry.Checked := FSinkPin.IsConnectedToState( Dispatcher );
-
-//      Entry.CanConnect := True;
-{
-      for J := 0 to Dispatcher.PinCount - 1 do
-        begin
-        Entry := TOWEPinEntry.Create();
-        Entry.Dispatcher := Dispatcher;
-        Entry.Pin := Dispatcher[ J ];
-        Entry.PinName := Dispatcher[ J ].Name;
-        PinsList.Add( Entry );
-        end;
-}
       end;
 
     OWGetPinValueList( ARootComponent, FSinkPin, Values, FilterPins );
@@ -1452,10 +1680,6 @@ begin
         if( OtherPin.IsConnected() ) then
           Continue; // Those pins are represented by the Dispatchers.
 
-//      if( OtherPin is TOWSourcePin ) then
-//        SourcePin := TOWSourcePin( OtherPin );
-        
-
       Entry := TOWEPinEntry.Create();
       PinsList.Add( Entry );
 
@@ -1464,12 +1688,10 @@ begin
 
       Entry.OwnerName := Str; 
       Entry.Pin := OtherPin;
-////      Entry.CanConnect := True;
       if( not FSinkPin.CanConnectTo( OtherPin )) then
         begin
         Entry.SavedChecked := False;
         Entry.Checked := False;
-////        Entry.CanConnect := False;
         end
 
       else
@@ -1481,9 +1703,91 @@ begin
           Delete( LinkName, 1, iPos );
           end;
 
-        Entry.SavedChecked := ( TOWExposedSinkPin( FSinkPin ).GetLinkStr() = LinkName );
+        Entry.SavedChecked := FSinkPin.IsLinkedTo( LinkName );
         Entry.Checked := Entry.SavedChecked;
+        end;
+      end;
 
+  finally
+    Values.Free;
+
+  end;
+
+end;
+
+procedure TOWPinEditorForm.PopulateSingleEventSinkFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean; FilterPins : Boolean );
+var
+  Values        : TStringList;
+  I             : Integer;
+  OtherPin      : TOWPin;
+  Entry         : TOWEPinEntry;
+  iPos          : Integer;
+  Str           : String;
+  OwnRoot       : Boolean;
+  OwnDataModule : Boolean;
+  LinkName      : String;
+  PinStr        : String;
+  Dispatcher    : TOWStateDispatcher;
+
+begin
+  Values := TStringList.Create;
+  try
+    OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( FEventSinkPin.Owner ));
+    OwnDataModule := False;
+
+    if( not OwnRoot ) then
+      OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( FEventSinkPin.Owner ).Name );
+
+    for I := 0 to OWGetDispatcherCount() - 1 do
+      begin
+      Dispatcher := OWGetDispatcher( I );
+      if( not FEventSinkPin.CanConnectToState( Dispatcher )) then
+        Continue;
+
+      Entry := TOWEPinEntry.Create();
+      PinsList.Add( Entry );
+      Entry.Dispatcher := Dispatcher;
+      Entry.PinName := Dispatcher.Name;
+      Entry.Checked := FEventSinkPin.IsConnectedToState( Dispatcher );
+      end;
+
+    OWGetPinValueList( ARootComponent, FEventSinkPin, Values, FilterPins );
+    for I := 0 to Values.Count - 1 do
+      begin
+      OtherPin := TOWPin( Values.Objects[ I ] );
+
+      if( ( not ( OtherPin is TOWSourcePin )) and ( not ( OtherPin is TOWStatePin )) ) then
+        Continue;
+
+      if( OtherPin is TOWStatePin ) then
+        if( OtherPin.IsConnected() ) then
+          Continue; // Those pins are represented by the Dispatchers.
+
+      Entry := TOWEPinEntry.Create();
+      PinsList.Add( Entry );
+
+      Str := LinkToDisplayString( ARootComponent, Values.Strings[ I ], FullPath, OwnRoot, PinStr );
+      Entry.PinName := PinStr;
+
+      Entry.OwnerName := Str; 
+      Entry.Pin := OtherPin;
+      if( not FEventSinkPin.CanConnectTo( OtherPin )) then
+        begin
+        Entry.SavedChecked := False;
+        Entry.Checked := False;
+        end
+
+      else
+        begin
+        LinkName := Values.Strings[ I ];
+        if( OwnDataModule ) then
+          begin
+          iPos := Pos( '.', LinkName );
+          Delete( LinkName, 1, iPos );
+          end;
+
+        Entry.SavedChecked := FEventSinkPin.IsLinkedTo( LinkName );
+        Entry.Checked := Entry.SavedChecked;
         end;
       end;
 
@@ -1528,18 +1832,6 @@ begin
       Entry.Dispatcher := Dispatcher;
       Entry.PinName := Dispatcher.Name;
       Entry.Checked := FSourcePin.IsConnectedToState( Dispatcher );
-
-//      Entry.CanConnect := True;
-{
-      for J := 0 to Dispatcher.PinCount - 1 do
-        begin
-        Entry := TOWEPinEntry.Create();
-        Entry.Dispatcher := Dispatcher;
-        Entry.Pin := Dispatcher[ J ];
-        Entry.PinName := Dispatcher[ J ].Name;
-        PinsList.Add( Entry );
-        end;
-}
       end;
       
     OWGetPinValueList( ARootComponent, FSourcePin, Values, FilterPins );
@@ -1561,7 +1853,6 @@ begin
         Entry.PinName := PinStr;
 
         Entry.OwnerName := Str;
-////        Entry.CanConnect := True;
 
 //        if( OtherPin is TOWSinkPin ) then
           begin
@@ -1569,7 +1860,6 @@ begin
             begin
             Entry.Checked := False;
             Entry.SavedChecked := False;
-////          Entry.CanConnect := False;
             end
 
           else
@@ -1583,7 +1873,6 @@ begin
 
             Entry.Checked := FSourcePin.IsLinkedTo( LinkName );
             Entry.SavedChecked := Entry.Checked;
-
             end;            
           end;
         end;
@@ -1596,6 +1885,7 @@ begin
   end;
 
 end;
+}
 
 function TOWPinEditorForm.EntryFromPin( Pin : TOWBasicPin ) : TOWEPinEntry;
 var
@@ -1629,6 +1919,291 @@ begin
 
 end;
 
+procedure TOWPinEditorForm.PopulateSingleFormInt( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
+var
+  Values        : TStringList;
+  I             : Integer;
+  J             : Integer;
+  AOtherPin     : TOWBasicPin;
+  ASinkPin      : TOWSinkPin;
+  Item          : TListItem;
+  iPos          : Integer;
+  Str           : String;
+  LinkedTo      : String;
+  LinkType      : String;
+  NotifyAfter   : String;
+  OwnRoot       : Boolean;
+  OwnDataModule : Boolean;
+  LinkName      : String;
+  PinStr        : String;
+  Dispatcher    : TOWStateDispatcher;
+
+  Entry         : TOWEPinEntry;
+  Linked        : Boolean;
+
+  ItemDataEntry : TOWEItemEntry;
+
+begin
+  Items.BeginUpdate();
+  Values := TStringList.Create;
+  try
+    if( ARootComponent = NIL ) then
+      ARootComponent := OWGetMainOwnerComponent( FPin.Owner );
+
+    OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( FPin.Owner ));
+    OwnDataModule := False;
+
+    if( not OwnRoot ) then
+      OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( FPin.Owner ).Name );
+
+    for I := 0 to OWGetDispatcherCount() - 1 do
+      begin
+      Dispatcher := OWGetDispatcher( I );
+      if( not FPin.CanConnectToState( Dispatcher )) then
+        Continue;
+
+      Entry := EntryFromDispatcher( Dispatcher );
+      Item := Items.Add();
+      
+
+      Item.ImageIndex := -1;
+      Item.Caption := Dispatcher.Name;
+
+      ItemDataEntry := TOWEItemEntry.Create( Item, FPin );
+      ItemDataEntry.IsDispatcher := True;
+      Item.Data := ItemDataEntry;
+
+      Item.SubItems.Add( Str );
+      
+      if( Dispatcher.Pins[ 0 ] = FPin ) then
+        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 1 ]
+        
+      else
+        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 0 ];
+
+      Item.StateIndex := Ord( Entry.Checked );
+
+      if( Dispatcher.PinCount = 2 ) then
+        begin
+        if( Dispatcher.Pins[ 0 ] = FPin ) then
+          Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ) )
+
+        else
+          Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ) );
+
+        end
+
+      else
+        Item.SubItems.Add( IntToStr( Dispatcher.PinCount - 1 ) + ' Pins' );
+
+      if( FSourcePin = NIL ) then
+        LinkType := GetLinkType( FPin )
+
+      else
+        begin
+        if( Dispatcher.PinCount = 0 ) then
+          LinkType := 'Unknown'
+        
+        else
+          begin
+          LinkType := FSourcePin.GetConnectionName( Dispatcher.Pins[ 0 ] );
+          for J := 1 to Dispatcher.PinCount - 1 do
+            begin
+            if( FSourcePin <> Dispatcher[ J ] ) then 
+              if( LinkType <> FSourcePin.GetConnectionName( Dispatcher[ J ] )) then
+                begin
+                LinkType := 'Multiple types';
+                Break;
+                end;
+            
+            end;          
+          end;
+        end;
+
+      Item.SubItems.Add( Dispatcher.GetAfterPinDisplayName( FPin ));
+      Item.SubItems.Add( LinkType );
+      Item.SubItems.Add( Dispatcher.Name );
+      end;
+
+    OWGetPinValueList( ARootComponent, FPin, Values, FilterPins );
+    for I := 0 to Values.Count - 1 do
+      begin
+      AOtherPin := TOWBasicPin( Values.Objects[ I ] );
+      if( not ( AOtherPin is TOWStatePin ) ) then 
+        if( FSourcePin = NIL ) then
+          begin
+          if( not ( AOtherPin is TOWSourcePin ) ) then
+            Continue;
+
+          end
+
+        else
+          begin
+          if( not ( AOtherPin is TOWBasicSinkPin ) ) then
+            Continue;
+          
+          end;
+
+      if( AOtherPin is TOWStatePin ) then
+        if( AOtherPin.IsConnected() ) then
+          Continue; // Those pins are represented by the Dispatchers.
+
+{
+      if( OtherPin is TOWSourcePin ) then
+        ASourcePin := TOWSourcePin( OtherPin )
+
+      else
+        ASourcePin := NIL;
+}
+      Entry := EntryFromPin( AOtherPin );
+      if( OnlyConnected ) then
+        begin
+        if( Entry <> NIL ) then
+          begin
+          if( not Entry.Checked ) then
+            Continue;
+        
+          end
+
+        else
+          if( not FEventSinkPin.IsLinkedTo( Values.Strings[ I ] ) ) then
+            Continue;
+
+        end;
+
+      Item := Items.Add();
+      ItemDataEntry := TOWEItemEntry.Create( Item, FPin );
+      Item.Data := ItemDataEntry;
+
+      if( AOtherPin.GetRoot() <> FPin.GetRoot() ) then
+        Item.ImageIndex := 3
+
+      else
+        Item.ImageIndex := -1;
+
+      Str := LinkToDisplayString( ARootComponent, Values.Strings [ I ], FullPath, OwnRoot, PinStr );
+      Item.Caption := PinStr;
+
+//      Item.SubItems.AddObject( Str, Values.Objects [ I ] );
+      Item.SubItems.Add( Str );
+      ItemDataEntry.ConnectedToPin := TOWBasicPin( Values.Objects [ I ] );
+      if( not FPin.CanConnectTo( AOtherPin )) then
+        begin
+        Item.StateIndex := -1;
+        ItemDataEntry.StateIndex := -1;
+//        Item.Data := Pointer( -1 );
+        end
+
+      else
+        begin
+//        Item.Checked := ASourcePin.IsLinkedTo( FPin );
+        LinkName := Values.Strings[ I ];
+        if( OwnDataModule ) then
+          begin
+          iPos := Pos( '.', LinkName );
+          Delete( LinkName, 1, iPos );
+          end;
+
+        Linked := TOWExposedPin( FPin ).IsLinkedTo( LinkName );
+
+        if( Entry <> NIL ) then
+          Item.StateIndex := Ord( Entry.Checked )
+
+        else
+          Item.StateIndex := Ord( Linked );
+
+        if( AOtherPin is TOWEventSinkPin ) then
+          Item.StateIndex := Item.StateIndex or 2
+
+        else if( AOtherPin is TOWStatePin ) then
+          Item.StateIndex := Item.StateIndex or 4;
+
+        ItemDataEntry.StateIndex := Item.StateIndex; 
+//        Item.Data := Pointer( Item.StateIndex );
+//        Item.StateIndex := Ord( Item.Checked );
+        end;
+
+      LinkType := '';
+      LinkedTo := OWGetPinValueEx( AOtherPin, Designer, CurrentRoot );
+      if( FSourcePin = NIL ) then
+        begin
+        NotifyAfter := AOtherPin.GetAfterPinDisplayName( FPin );
+        if( AOtherPin.ConnectedPinCount > 0 ) then
+          LinkType := GetLinkType( AOtherPin.ConnectedPin[ 0 ] );
+
+        end
+
+      else
+        begin
+        if( AOtherPin is TOWBasicSinkPin ) then
+          begin
+          if( TOWExposedPin( AOtherPin ).GetConnectedPinCount() = 1 ) then
+            NotifyAfter := TOWSourcePin( TOWExposedPin( AOtherPin ).GetConnectedPin( 0 ) ).GetAfterPinDisplayName( TOWBasicSinkPin( AOtherPin ));
+          
+          if( AOtherPin is TOWSinkPin ) then
+            begin
+            ASinkPin := TOWSinkPin( AOtherPin );
+            if( ASinkPin.SourcePin <> NIL ) then
+              begin
+              LinkType := GetLinkType( ASinkPin );
+              NotifyAfter := TOWSourcePin( ASinkPin.SourcePin ).GetAfterPinDisplayName( ASinkPin );
+              end;
+            end
+
+          else
+            begin
+            if( AOtherPin.ConnectedPinCount > 0 ) then
+              LinkType := GetLinkType( AOtherPin.ConnectedPin[ 0 ] );
+            
+            end;
+          end;
+        end;
+
+      Item.SubItems.Add( LinkedTo );
+      Item.SubItems.Add( NotifyAfter );
+      Item.SubItems.Add( LinkType );
+      Item.SubItems.Add( Values.Strings[ I ] );
+      end;
+
+    for I := 0 to FPin.ConnectedPinCount - 1 do
+      begin
+      if( FPin.ConnectedPin[ I ].GetRoot() = NIL ) then
+        begin
+        Item := Items.Add();
+
+        ItemDataEntry := TOWEItemEntry.Create( Item, FPin );
+        Item.Data := ItemDataEntry;
+
+        ItemDataEntry.ConnectedToPin := FPin.ConnectedPin[ I ];
+
+        Item.ImageIndex := 2;
+        Item.StateIndex := 1;
+        ItemDataEntry.StateIndex := Item.StateIndex;
+
+        Item.Caption := FPin.ConnectedPin[ I ].GetName();
+        Item.SubItems.Add( FPin.ConnectedPin[ I ].GetOwnerName() );
+        Item.SubItems.Add( FPin.GetFullName( False ) );
+        end;        
+      end;
+      
+  finally
+    Values.Free;
+    for I := 0 to Items.Count - 1 do
+      begin
+      if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
+        begin
+        AOtherPin := TOWEItemEntry( Items[ I ].Data ).ConnectedToPin;
+        TOWExposedPin( AOtherPin ).SetInEditor( True );
+        end;
+      end;
+      
+    Items.EndUpdate();
+
+  end;
+
+end;
+
+(*
 procedure TOWPinEditorForm.PopulateSingleSinkForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
 var
   Values        : TStringList;
@@ -1696,17 +2271,14 @@ begin
         begin
         if( Dispatcher.Pins[ 0 ] = FSinkPin ) then
           Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ) )
-//          Item.SubItems.AddObject( Dispatcher.PinProxies[ 1 ].DisplayName, Entry )
 
         else
           Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ) );
-//          Item.SubItems.AddObject( Dispatcher.PinProxies[ 0 ].DisplayName, Entry );
 
         end
 
       else
         Item.SubItems.Add( IntToStr( Dispatcher.PinCount - 1 ) + ' Pins' );
-//        Item.SubItems.AddObject( IntToStr( Dispatcher.PinProxyCount - 1 ) + ' Pins', Entry );
 
       LinkType := GetLinkType( FSinkPin );
 
@@ -1743,7 +2315,7 @@ begin
           end
 
         else
-          if( TOWExposedSinkPin( FSinkPin ).GetLinkStr() <> Values.Strings[ I ] ) then
+          if( not FEventSinkPin.IsLinkedTo( Values.Strings[ I ] ) ) then
             Continue;
 
         end;
@@ -1781,7 +2353,7 @@ begin
           Delete( LinkName, 1, iPos );
           end;
 
-        Linked := ( TOWExposedSinkPin( FSinkPin ).GetLinkStr() = LinkName );
+        Linked := TOWExposedSinkPin( FSinkPin ).IsLinkedTo( LinkName );
 
         if( Entry <> NIL ) then
           Item.StateIndex := Ord( Entry.Checked )
@@ -1833,6 +2405,224 @@ begin
         Item.SubItems.Add( FSinkPin.GetFullName( False ) );
         end;
         
+      end;
+    
+  finally
+    Values.Free;
+    for I := 0 to Items.Count - 1 do
+      begin
+      if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
+        begin
+        OtherPin := TOWEItemEntry( Items[ I ].Data ).ConnectedToPin;
+        TOWExposedPin( OtherPin ).SetInEditor( True );
+        end;
+      end;
+      
+    Items.EndUpdate();
+
+  end;
+
+end;
+
+procedure TOWPinEditorForm.PopulateSingleEventSinkForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean; FilterPins : Boolean );
+var
+  Values        : TStringList;
+  I             : Integer;
+  ASourcePin    : TOWSourcePin;
+  OtherPin      : TOWBasicPin;
+  Item          : TListItem;
+  iPos          : Integer;
+  Str           : String;
+  LinkedTo      : String;
+  LinkType      : String;
+  NotifyAfter   : String;
+  OwnRoot       : Boolean;
+  OwnDataModule : Boolean;
+  LinkName      : String;
+  PinStr        : String;
+  Dispatcher    : TOWStateDispatcher;
+
+  Entry         : TOWEPinEntry;
+  Linked        : Boolean;
+
+  ItemDataEntry : TOWEItemEntry;
+
+begin
+  Items.BeginUpdate();
+  Values := TStringList.Create;
+  try
+    if( ARootComponent = NIL ) then
+      ARootComponent := OWGetMainOwnerComponent( FEventSinkPin.Owner );
+
+    OwnRoot := ( ARootComponent = OWGetMainOwnerComponent( FEventSinkPin.Owner ));
+    OwnDataModule := False;
+
+    if( not OwnRoot ) then
+      OwnDataModule := ( ARootComponent.Name = OWGetMainOwnerComponent( FEventSinkPin.Owner ).Name );
+
+    for I := 0 to OWGetDispatcherCount() - 1 do
+      begin
+      Dispatcher := OWGetDispatcher( I );
+      if( not FEventSinkPin.CanConnectToState( Dispatcher )) then
+        Continue;
+
+      Entry := EntryFromDispatcher( Dispatcher );
+      Item := Items.Add();
+      
+
+      Item.ImageIndex := -1;
+      Item.Caption := Dispatcher.Name;
+
+      ItemDataEntry := TOWEItemEntry.Create( Item, FEventSinkPin );
+      ItemDataEntry.IsDispatcher := True;
+      Item.Data := ItemDataEntry;
+
+      Item.SubItems.Add( Str );
+      
+      if( Dispatcher.Pins[ 0 ] = FEventSinkPin ) then
+        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 1 ]
+        
+      else
+        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 0 ];
+
+      Item.StateIndex := Ord( Entry.Checked );
+
+      if( Dispatcher.PinCount = 2 ) then
+        begin
+        if( Dispatcher.Pins[ 0 ] = FEventSinkPin ) then
+          Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ) )
+
+        else
+          Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ) );
+
+        end
+
+      else
+        Item.SubItems.Add( IntToStr( Dispatcher.PinCount - 1 ) + ' Pins' );
+
+      LinkType := GetLinkType( FEventSinkPin );
+
+      Item.SubItems.Add( Dispatcher.GetAfterPinDisplayName( FEventSinkPin ));
+      Item.SubItems.Add( LinkType );
+      Item.SubItems.Add( Dispatcher.Name );
+      end;
+
+    OWGetPinValueList( ARootComponent, FEventSinkPin, Values, FilterPins );
+    for I := 0 to Values.Count - 1 do
+      begin
+      OtherPin := TOWPin( Values.Objects[ I ] );
+      if( ( not ( OtherPin is TOWSourcePin )) and ( not ( OtherPin is TOWStatePin )) ) then
+        Continue;
+
+      if( OtherPin is TOWStatePin ) then
+        if( OtherPin.IsConnected() ) then
+          Continue; // Those pins are represented by the Dispatchers.
+
+      if( OtherPin is TOWSourcePin ) then
+        ASourcePin := TOWSourcePin( OtherPin )
+
+      else
+        ASourcePin := NIL;
+
+      Entry := EntryFromPin( OtherPin );
+      if( OnlyConnected ) then
+        begin
+        if( Entry <> NIL ) then
+          begin
+          if( not Entry.Checked ) then
+            Continue;
+        
+          end
+
+        else
+          if( not FEventSinkPin.IsLinkedTo( Values.Strings[ I ] ) ) then
+            Continue;
+
+        end;
+
+      Item := Items.Add();
+      ItemDataEntry := TOWEItemEntry.Create( Item, FEventSinkPin );
+      Item.Data := ItemDataEntry;
+
+      if( OtherPin.GetRoot() <> FEventSinkPin.GetRoot() ) then
+        Item.ImageIndex := 3
+
+      else
+        Item.ImageIndex := -1;
+
+      Str := LinkToDisplayString( ARootComponent, Values.Strings [ I ], FullPath, OwnRoot, PinStr );
+      Item.Caption := PinStr;
+
+//      Item.SubItems.AddObject( Str, Values.Objects [ I ] );
+      Item.SubItems.Add( Str );
+      ItemDataEntry.ConnectedToPin := TOWBasicPin( Values.Objects [ I ] );
+      if( not FEventSinkPin.CanConnectTo( OtherPin )) then
+        begin
+        Item.StateIndex := -1;
+        ItemDataEntry.StateIndex := -1;
+//        Item.Data := Pointer( -1 );
+        end
+
+      else
+        begin
+//        Item.Checked := ASourcePin.IsLinkedTo( FEventSinkPin );
+        LinkName := Values.Strings[ I ];
+        if( OwnDataModule ) then
+          begin
+          iPos := Pos( '.', LinkName );
+          Delete( LinkName, 1, iPos );
+          end;
+
+        Linked := TOWExposedEventSinkPin( FEventSinkPin ).IsLinkedTo( LinkName );
+
+        if( Entry <> NIL ) then
+          Item.StateIndex := Ord( Entry.Checked )
+
+        else
+          Item.StateIndex := Ord( Linked );
+
+        if( OtherPin is TOWEventSinkPin ) then
+          Item.StateIndex := Item.StateIndex or 2
+
+        else if( OtherPin is TOWStatePin ) then
+          Item.StateIndex := Item.StateIndex or 4;
+
+        ItemDataEntry.StateIndex := Item.StateIndex; 
+//        Item.Data := Pointer( Item.StateIndex );
+//        Item.StateIndex := Ord( Item.Checked );
+        end;
+
+      LinkType := '';
+      LinkedTo := OWGetPinValueEx( ASourcePin, Designer, CurrentRoot );
+      NotifyAfter := ASourcePin.GetAfterPinDisplayName( FEventSinkPin );
+      if( ASourcePin.SinkCount > 0 ) then
+        LinkType := GetLinkType( ASourcePin.Sinks[ 0 ] );
+
+      Item.SubItems.Add( LinkedTo );
+      Item.SubItems.Add( NotifyAfter );
+      Item.SubItems.Add( LinkType );
+      Item.SubItems.Add( Values.Strings[ I ] );
+      end;
+
+    for I := 0 to FEventSinkPin.SourceCount - 1 do
+      begin
+      if( FEventSinkPin.Sources[ I ].GetRoot() = NIL ) then
+        begin
+        Item := Items.Add();
+
+        ItemDataEntry := TOWEItemEntry.Create( Item, FEventSinkPin );
+        Item.Data := ItemDataEntry;
+
+        ItemDataEntry.ConnectedToPin := FEventSinkPin.Sources[ I ];
+
+        Item.ImageIndex := 2;
+        Item.StateIndex := 1;
+        ItemDataEntry.StateIndex := Item.StateIndex;
+
+        Item.Caption := FEventSinkPin.Sources[ I ].GetName();
+        Item.SubItems.Add( FEventSinkPin.Sources[ I ].GetOwnerName() );
+        Item.SubItems.Add( FEventSinkPin.GetFullName( False ) );
+        end;        
       end;
     
   finally
@@ -1907,34 +2697,25 @@ begin
       Item.Caption := Dispatcher.Name;
       if( Dispatcher[ 0 ] = FSourcePin ) then
         ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 1 ] 
-//        Item.SubItems.AddObject( Str, Dispatcher[ 1 ] )
-        
+
       else
-        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 0 ]; 
-//        Item.SubItems.AddObject( Str, Dispatcher[ 0 ] );
+        ItemDataEntry.ConnectedToPin := Dispatcher.Pins[ 0 ];
 
       Item.SubItems.Add( Str );
-//      Item.StateIndex := Ord( Entry.Checked ) or 2;
       Item.StateIndex := Ord( Entry.Checked );
 
       if( Dispatcher.PinCount = 2 ) then
         begin
         if( Dispatcher.Pins[ 0 ] = FSourcePin ) then
           Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ) )
-//          Item.SubItems.AddObject( Dispatcher.PinProxies[ 1 ].DisplayName, Entry )
 
         else
           Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ) );
-//          Item.SubItems.AddObject( Dispatcher.PinProxies[ 0 ].DisplayName, Entry );
 
         end
 
       else
         Item.SubItems.Add( IntToStr( Dispatcher.PinCount - 1 ) + ' Pins' );
-//        Item.SubItems.AddObject( IntToStr( Dispatcher.PinProxyCount - 1 ) + ' Pins', Entry );
-
-//      if( FSourcePin.SinkCount > 0 ) then
-//      LinkType := GetLinkType( FSourcePin );
 
       if( Dispatcher.PinCount = 0 ) then
         LinkType := 'Unknown'
@@ -1955,27 +2736,9 @@ begin
           
         end;
 
-//      Item.SubItems.Add( '######' );
       Item.SubItems.Add( Dispatcher.GetAfterPinDisplayName( FSourcePin ) );
       Item.SubItems.Add( LinkType );
       Item.SubItems.Add( Dispatcher.Name );
-{
-      Entry := TOWEPinEntry.Create();
-      PinsList.Add( Entry );
-      Entry.Dispatcher := Dispatcher;
-      Entry.PinName := Dispatcher.Name;
-
-//      Entry.CanConnect := True;
-      for J := 0 to Dispatcher.PinCount - 1 do
-        begin
-        Entry := TOWEPinEntry.Create();
-        Entry.Dispatcher := Dispatcher;
-        Entry.Pin := Dispatcher[ J ];
-        Entry.PinName := Dispatcher[ J ].Name;
-        PinsList.Add( Entry );
-        end;
-}
-
       end;
 
     OWGetPinValueList( ARootComponent, FSourcePin, Values, FilterPins );
@@ -1989,14 +2752,6 @@ begin
         if( AOtherPin.IsConnected() ) then
           Continue; // Those pins are represented by the Dispatchers.
 
-{
-      if( AOtherPin is TOWBasicSinkPin ) then
-        ABasicSinkPin := TOWBasicSinkPin( AOtherPin )
-
-      else
-        ABasicSinkPin := NIL;
-}
-//      Entry := EntryFromPin( ASinkPin );
       Entry := EntryFromPin( AOtherPin );
       if( OnlyConnected ) then
         begin
@@ -2081,7 +2836,7 @@ begin
       if( AOtherPin is TOWBasicSinkPin ) then
         begin
         if( TOWExposedPin( AOtherPin ).GetConnectedPinCount() = 1 ) then
-          NotifyAfter := TOWSourcePin( TOWExposedPin( AOtherPin ).GetConnectedPin( 0 ) ).GetAfterPinDisplayName( AEventSinkPin );
+          NotifyAfter := TOWSourcePin( TOWExposedPin( AOtherPin ).GetConnectedPin( 0 ) ).GetAfterPinDisplayName( TOWBasicSinkPin( AOtherPin ));
           
         if( AOtherPin is TOWSinkPin ) then
           begin
@@ -2146,6 +2901,7 @@ begin
   end;
 
 end;
+*)
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.OWMUpdateInspector(var Message: TMessage);
 var
@@ -2172,8 +2928,10 @@ end;
 function  TOWPinEditorForm.ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
 begin
   Designer := ADesigner;
+  FPin := ASourcePin;
   FSourcePin := ASourcePin;
   FSinkPin := NIL;
+  FEventSinkPin := NIL;
   
 {$IFDEF FPC}
   Root := OWGetMainDesignOwner( ASourcePin.Owner );
@@ -2196,8 +2954,10 @@ end;
 function  TOWPinEditorForm.ExecuteForSink( ADesigner : TOWPropertyDesigner; ASinkPin : TOWSinkPin ): Integer;
 begin
   Designer := ADesigner;
+  FPin := ASinkPin;
   FSinkPin := ASinkPin;
   FSourcePin := NIL;
+  FEventSinkPin := NIL;
 
 {$IFDEF FPC}
   Root := OWGetMainDesignOwner( ASinkPin.Owner );
@@ -2213,6 +2973,32 @@ begin
   Caption := 'Connections - Sink Pin : ' + OWValueToString( FSinkPin, '.', False, False );
 
   ListView.StateImages := SinksImageList;
+  OWLinkAwaitsLinkingAllForms();
+  Result := ShowModal();
+end;
+//---------------------------------------------------------------------------
+function TOWPinEditorForm.ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWEventSinkPin ): Integer;
+begin
+  Designer := ADesigner;
+  FPin := AEventSinkPin;
+  FEventSinkPin := AEventSinkPin;
+  FSinkPin := NIL;
+  FSourcePin := NIL;
+
+{$IFDEF FPC}
+  Root := OWGetMainDesignOwner( AEventSinkPin.Owner );
+{$ELSE}
+  Root := ADesigner.GetRoot();
+{$ENDIF}
+
+  LinkAllButton.Visible := True;
+  UnlinkAllButton.Visible := True;
+
+  ListView.Columns[0].Caption := 'Source pin';
+  ListView.Columns[2].Caption := 'Connections';
+  Caption := 'Connections - Event Sink Pin : ' + OWValueToString( FSinkPin, '.', False, False );
+
+  ListView.StateImages := SourcesImageList;
   OWLinkAwaitsLinkingAllForms();
   Result := ShowModal();
 end;
@@ -2246,40 +3032,10 @@ end;
 procedure TOWPinEditorForm.ListViewChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 
-//var
-//  I     : Integer;
-//  Entry : TOWEPinEntry;
-  
 begin
   if( ListUpdating ) then
     Exit;
 
-{
-  if( Item.Checked and ( TImageIndex(Item.Data) = -1 )) then
-    begin
-    Item.Checked := False;
-    Item.StateIndex := -1;
-    end;
-
-  if( Item.StateIndex <> -1 ) then
-    begin
-    if( Item.StateIndex <> Ord(Item.Checked )) then
-      Item.StateIndex := Ord(Item.Checked )
-
-    end;
-
-  if( ( FSinkPin <> NIL ) AND ( Item.Checked )) then
-    for I := 0 to ListView.Items.Count - 1 do
-      if( ListView.Items[ I ] <> Item ) then
-        if( ListView.Items[ I ].Checked ) then
-          ListView.Items[ I ].Checked := False;
-
-  Entry := TOWEPinEntry( Item.SubItems.Objects[ 1 ] );
-
-  if( Entry <> NIL ) then
-    Entry.Checked := Item.Checked;
-}
-    
   UpdateLinksCount();
 end;
 //---------------------------------------------------------------------------
@@ -2653,7 +3409,7 @@ begin
 
   else
     begin
-    if( FSourcePin = NIL ) then
+    if( FSinkPin <> NIL ) then
       begin
       if( Item.StateIndex < 2 ) then
         begin
