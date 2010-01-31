@@ -1135,6 +1135,8 @@ protected
   procedure IntRemoveFunctionDependance( FunctionDependancePin : TOWSourcePin );
   procedure IntAddDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
   procedure IntRemoveDataTypeDependance( DataTypeDependancePin : TOWSourcePin );
+  function  GetUpStreamLinkName() : String; virtual; abstract;
+  function  GetDownStreamLinkName() : String; virtual; abstract;
 
 public
   function  IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean; override;
@@ -1149,6 +1151,8 @@ public
 
 public
   property IgnoreUpstream       : Boolean read FIgnoreUpstream write FIgnoreUpstream;
+  property DownStreamLinkName   : String read GetDownStreamLinkName;
+  property UpStreamLinkName     : String read GetUpStreamLinkName;
 
 end;
 //---------------------------------------------------------------------------
@@ -1180,6 +1184,8 @@ protected
   procedure ReorderChangedData();
   procedure BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
   procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); override;
+  function  GetUpStreamLinkName() : String; override;
+  function  GetDownStreamLinkName() : String; override;
 
 public
   function  IsLinkedTo( PinName : String ) : Boolean; override;
@@ -1284,8 +1290,8 @@ protected
   function  GetSourcePin() : TOWBasicPin; virtual;
   function  GetFormatConverter() : TOWFormatConverter;
 
-  function  GetUpStreamLinkName() : String;
-  function  GetDownStreamLinkName() : String;
+  function  GetUpStreamLinkName() : String; override;
+  function  GetDownStreamLinkName() : String; override;
   function  GetUpStreamID() : TGUID;
   function  GetDownStreamID() : TGUID;
 
@@ -1347,8 +1353,6 @@ public
 public
   property SourcePin            : TOWBasicPin read GetSourcePin write SetSourcePin;
   property FormatConverter      : TOWFormatConverter read GetFormatConverter;
-  property DownStreamLinkName   : String read GetDownStreamLinkName;
-  property UpStreamLinkName     : String read GetUpStreamLinkName;
 
   property DownStreamID         : TGUID read GetDownStreamID;
   property UpStreamID           : TGUID read GetUpStreamID;
@@ -7737,6 +7741,99 @@ begin
 
 end;
 //---------------------------------------------------------------------------
+function TOWEventSinkPin.GetUpStreamLinkName() : String;
+var
+  AConverter      : TOWFormatConverter;
+  AConverterClass : TOWFormatConverterClass;
+  AReadLock       : IOWLockSection;
+  I               : Integer;
+  
+begin
+  AReadLock := ReadLock();
+
+  Result := '';
+  if( not IsConnected () ) then
+    Exit;
+
+  if( FDispatcher <> NIL ) then
+    begin
+    if( FDispatcher.PinCount > 1 ) then
+      begin
+      if( FDispatcher[ 0 ] = Self ) then
+        Result := GetLinkNameID( FindConnectionID( FDispatcher[ 1 ], AConverter, AConverterClass, True ))
+
+      else
+        Result := GetLinkNameID( FindConnectionID( FDispatcher[ 0 ], AConverter, AConverterClass, True ));
+
+      end;
+    end;
+    
+  for I := 0 to SourceCount - 1 do
+    begin
+    if( Result <> '' ) then
+      begin
+      if( Result <> GetLinkNameID( FSourcePins[ I ].ConnectedID )) then
+        begin
+        Result := 'Multiple...';
+        Exit;
+        end; 
+      end
+      
+    else
+      Result := GetLinkNameID( FSourcePins[ I ].ConnectedID );
+      
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWEventSinkPin.GetDownStreamLinkName() : String;
+var
+  AConverter      : TOWFormatConverter;
+  AConverterClass : TOWFormatConverterClass;
+  DownStreamID    : TGUID;
+  I               : Integer;
+  AReadLock       : IOWLockSection;
+  
+begin
+  AReadLock := ReadLock();
+  
+  Result := '';
+  if( not IsConnected () ) then
+    Exit;
+
+  if( FDispatcher <> NIL ) then
+    begin
+    if( FDispatcher.PinCount > 1 ) then
+      begin
+      if( FDispatcher[ 0 ] = Self ) then
+        Result := GetLinkNameID( FindConnectionID( FDispatcher[ 1 ], AConverter, AConverterClass, True ))
+
+      else
+        Result := GetLinkNameID( FindConnectionID( FDispatcher[ 0 ], AConverter, AConverterClass, True ));
+
+      end;
+    end;
+
+  for I := 0 to SourceCount - 1 do
+    begin
+    DownStreamID := FSourcePins[ I ].RealPin.GetConnectionID( Self );
+
+    if( Result <> '' ) then
+      begin
+      if( Result <> GetLinkNameID( DownStreamID )) then 
+        begin
+        Result := 'Multiple...';
+        Exit;
+        end;
+      end
+      
+    else
+      Result := GetLinkNameID( DownStreamID );
+      
+    end;
+   
+end;
+//---------------------------------------------------------------------------
 function TOWEventSinkPin.DoWrite() : Boolean;
 var
   AReadLock : IOWLockSection;
@@ -8821,10 +8918,10 @@ end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.GetDownStreamLinkName() : String;
 var
-  AConverter : TOWFormatConverter;
+  AConverter      : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
-  DownStreamID : TGUID;
-  AReadLock : IOWLockSection;
+  DownStreamID    : TGUID;
+  AReadLock       : IOWLockSection;
   
 begin
   AReadLock := ReadLock();
