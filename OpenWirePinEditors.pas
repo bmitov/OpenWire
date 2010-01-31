@@ -2032,7 +2032,7 @@ begin
       Inc( Counter );
 
   LinksCountLabel.Caption := IntToStr( Counter );
-  AEnabled := (( FSinkPin <> NIL ) and ( ListView.ItemFocused <> NIL ) and ( ListView.ItemFocused.Checked ) );
+  AEnabled := ((( FSinkPin <> NIL ) or ( FEventSinkPin <> NIL )) and ( ListView.ItemFocused <> NIL ) and ( ListView.ItemFocused.Checked ) );
   if( AEnabled ) then
   if( not( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin is TOWSourcePin )) then
     if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcherCount = 0 ) then
@@ -2503,19 +2503,14 @@ begin
   AForm := TOWAfterPinSelectForm.Create( Self );
 
   if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin is TOWSourcePin ) then
-    AForm.FillFromSourcePin( FSinkPin, TOWSourcePin( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin ), TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin )
+    AForm.FillFromSourcePin( FPin, TOWSourcePin( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin ), TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin )
 
   else
     if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcherCount > 0 ) then
-      AForm.FillFromDisparcher( FSinkPin, TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcher[ 0 ], TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin );
+      AForm.FillFromDisparcher( FPin, TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcher[ 0 ], TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin );
 
   if( AForm.ShowModal() = mrOk ) then
-    begin
-//    TOWExposedPinObject( TOWEItemEntry( ListView.ItemFocused ).ConnectedToPin ).SetNotifyAfterByName( FSinkPin, AForm.GetSelectedName() );
-//    ListView.ItemFocused.SubItems[ 3 ] := TOWExposedPinObject( TOWEItemEntry( ListView.ItemFocused ).ConnectedToPin ).GetAfterPinDisplayName( FSinkPin );
     TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin := AForm.GetSelectedPin();
-//    ListView.ItemFocused.SubItems[ 2 ] := TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin.GetFullName( True ); 
-    end;
 
   AForm.Free();
 end;
