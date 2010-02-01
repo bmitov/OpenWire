@@ -399,9 +399,6 @@ object OWPinEditorForm: TOWPinEditorForm
       BevelOuter = bvNone
       Caption = 'Panel4'
       TabOrder = 1
-      DesignSize = (
-        578
-        29)
       object Label1: TLabel
         Left = 6
         Top = 8

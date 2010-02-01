@@ -1804,6 +1804,15 @@ begin
 //      Item.SubItems.AddObject( Str, Values.Objects [ I ] );
       Item.SubItems.Add( Str );
       ItemDataEntry.ConnectedToPin := TOWBasicPin( Values.Objects [ I ] );
+      if( AOtherPin is TOWSourcePin ) then
+        if( AOtherPin.IsConnectedTo( FPin )) then
+          for J := 0 to FPin.ConnectedPinCount - 1 do
+            if( AOtherPin = FPin.ConnectedPin[ J ] ) then
+              begin
+              ItemDataEntry.ConnectedAfterPin := TOWBasicSinkPin( FPin ).AfterPins[ J ];
+              Break;
+              end;
+
       if( not FPin.CanConnectTo( AOtherPin )) then
         begin
         Item.StateIndex := -1;
@@ -2497,20 +2506,22 @@ end;
 
 procedure TOWPinEditorForm.AfterPinButtonClick(Sender: TObject);
 var
-  AForm : TOWAfterPinSelectForm;
+  AForm  : TOWAfterPinSelectForm;
+  AEntry : TOWEItemEntry;
 
 begin
   AForm := TOWAfterPinSelectForm.Create( Self );
+  AEntry := TOWEItemEntry( ListView.ItemFocused.Data ); 
 
-  if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin is TOWSourcePin ) then
-    AForm.FillFromSourcePin( FPin, TOWSourcePin( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin ), TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin )
+  if( AEntry.ConnectedToPin is TOWSourcePin ) then
+    AForm.FillFromSourcePin( FPin, TOWSourcePin( AEntry.ConnectedToPin ), AEntry.ConnectedAfterPin )
 
   else
-    if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcherCount > 0 ) then
-      AForm.FillFromDisparcher( FPin, TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcher[ 0 ], TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin );
+    if( AEntry.ConnectedToPin.ConnectedDispatcherCount > 0 ) then
+      AForm.FillFromDisparcher( FPin, AEntry.ConnectedToPin.ConnectedDispatcher[ 0 ], AEntry.ConnectedAfterPin );
 
   if( AForm.ShowModal() = mrOk ) then
-    TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedAfterPin := AForm.GetSelectedPin();
+    AEntry.ConnectedAfterPin := AForm.GetSelectedPin();
 
   AForm.Free();
 end;

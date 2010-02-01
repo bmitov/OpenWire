@@ -7249,11 +7249,12 @@ begin
 
   if( CanConnectTo( OtherPin )) then
     begin
-    if( FDispatcher <> NIL ) then
-      Disconnect();
+//    if( FDispatcher <> NIL ) then
+//      Disconnect();
       
     if( OtherPin is TOWSourcePin ) then
       begin
+      DisconnectFrom( OtherPin );
       PEntry := FSourcePins.Add();
       PEntry.ConnectionPin := OtherPin;
       PEntry.RealPin := OtherPin;
@@ -7283,12 +7284,11 @@ begin
         AWriteLock := NIL;
         AWriteLock := WriteLock();
         ChainReconnect( ADownStreamID, PEntry.ConnectedID );
-        end;
-        
+        end;        
       end
 
     else
-      Result := OtherPin.Connect( Self );
+      Result := OtherPin.ConnectAfter( Self, NotifyAfterPin );
 
     OWNotifyConnected( Self, OtherPin );
     OWNotifyChangePin( Self );
@@ -8261,12 +8261,11 @@ begin
         AWriteLock := NIL;
         AWriteLock := WriteLock();
         ChainReconnect( ADownStreamID, FConnectedID );
-        end;
-        
+        end;        
       end
 
     else
-      Result := OtherPin.Connect( Self );
+      Result := OtherPin.ConnectAfter( Self, NotifyAfterPin );
 
     OWNotifyConnected( Self, OtherPin );
     OWNotifyChangePin( Self );
@@ -12309,18 +12308,18 @@ var
   ARealPin  : TOWBasicPin;
 
 begin
+  for I := 0 to GOWPins.Count - 1 do
+    GOWPins[ I ].PinReplacedNotify( Self, APin );
+
   for I := FConnectedPins.Count - 1 downto 0 do
     begin
-    ARealPin := FConnectedPins[ I ].RealPin; 
+    ARealPin := FConnectedPins[ I ].RealPin;
     APin.ConnectAfter( ARealPin, FConnectedPins[ I ].NotifyAfterPin );
     if( ARealPin <> NIL ) then
       ARealPin.DisconnectFrom( Self );
-      
+
     end;
 
-  for I := 0 to GOWPins.Count - 1 do
-    GOWPins[ I ].PinReplacedNotify( Self, APin );
-    
   GOWUnloadedPins.Remove( Self );
 end;
 //---------------------------------------------------------------------------

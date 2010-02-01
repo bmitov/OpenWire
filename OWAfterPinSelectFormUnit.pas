@@ -43,7 +43,7 @@ implementation
 
 procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWStateDispatcher; ANotifyAfterPin : TOWBasicPin );
 var
-  I : Integer;
+  I               : Integer;
   NotifyAfterName : String;
 
 begin
@@ -66,7 +66,7 @@ end;
 
 procedure TOWAfterPinSelectForm.FillFromSourcePin( AExcludePin : TOWBasicPin; ASourcePin : TOWSourcePin; ANotifyAfterPin : TOWBasicPin );
 var
-  I       : Integer;
+  I               : Integer;
   NotifyAfterName : String;
 
 begin
