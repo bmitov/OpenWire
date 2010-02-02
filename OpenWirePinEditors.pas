@@ -727,6 +727,7 @@ var
   SourceRoot    : TComponent;
   SourceChanged : Boolean;
   PinIdent      : String;
+  AEntry        : TOWEItemEntry;
 
 begin
   Result := False;
@@ -741,14 +742,10 @@ begin
         Dispatcher := NIL;
 
         SourceChanged := False;
-//        if( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] is TOWPin ) then
-          OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin; // TOWPin( GOWPinEditorForm.Items[ I ].SubItems.Objects[ 0 ] );
+        AEntry := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ); 
+        OtherPin := AEntry.ConnectedToPin;
 
-//        else if( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] is TOWStateDispatcher ) then
-//          Dispatcher := TOWStateDispatcher( GOWPinEditorForm.Items [ I ].SubItems.Objects[ 0 ] );
-
-//        PinIdent := GOWPinEditorForm.Items[ I ].SubItems.Strings[ 4 ];
-        PinIdent := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).PinConnectIdent;
+        PinIdent := AEntry.PinConnectIdent;
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
           if( Dispatcher <> NIL ) then
@@ -826,8 +823,9 @@ begin
         begin
         Dispatcher := NIL;
 
-        OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin;
-        AfterPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedAfterPin;
+        AEntry := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data );
+        OtherPin := AEntry.ConnectedToPin;
+        AfterPin := AEntry.ConnectedAfterPin;
 
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
@@ -841,7 +839,7 @@ begin
               if( TOWExposedPin( EventSinkPin ).FDispatcher <> NIL ) then
                 OtherPin.ConnectToStateAfter( TOWExposedPin( EventSinkPin ).FDispatcher, AfterPin )
 
-              else if( TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).IsDispatcher ) then
+              else if( AEntry.IsDispatcher ) then
                 EventSinkPin.ConnectByStateAfter( OtherPin, AfterPin )
                 
               else
@@ -875,9 +873,11 @@ var
   I             : Integer;
 //  SinkPin       : TOWSinkPin;
   OtherPin      : TOWBasicPin;
+  AfterPin      : TOWBasicPin;
   SinkRoot      : TComponent;
   SinkChanged   : Boolean;
   PinIdent      : String;
+  AEntry        : TOWEItemEntry;
 
 begin
   Result := False;
@@ -891,16 +891,18 @@ begin
       for I := 0 to GOWPinEditorForm.Items.Count - 1 do
         begin
         SinkChanged := False;
-        if( not( TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin is TOWPin )) then
+        AEntry := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data );
+        if( not( AEntry.ConnectedToPin is TOWPin )) then
           Continue;
 
-        OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin;
+        OtherPin := AEntry.ConnectedToPin;
+        AfterPin := AEntry.ConnectedAfterPin;
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
           if( OtherPin = NIL ) then
             begin
 //            PinIdent := GOWPinEditorForm.Items[ I ].SubItems.Strings[ 4 ];
-            PinIdent := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).PinConnectIdent;
+            PinIdent := AEntry.PinConnectIdent;
             if( not TOWExposedSourcePin( SourcePin ).IsConnectedToPinName( PinIdent )) then
               SinkChanged := True;
               
@@ -938,14 +940,17 @@ begin
         end;
 
       SourcePin.Disconnect();
+      TOWExposedSourcePin( SourcePin ).SetInEditor( True );
       for I := 0 to GOWPinEditorForm.Items.Count - 1 do
         begin
-        OtherPin := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ).ConnectedToPin;
+        AEntry := TOWEItemEntry( GOWPinEditorForm.Items[ I ].Data ); 
+        OtherPin := AEntry.ConnectedToPin;
+        AfterPin := AEntry.ConnectedAfterPin;
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
 
           if( OtherPin <> NIL ) then
-            SourcePin.Connect( OtherPin );
+            SourcePin.ConnectAfter( OtherPin, AfterPin );
 
           end;
 
@@ -956,6 +961,7 @@ begin
 
       Result := True;
       end;
+      TOWExposedSourcePin( SourcePin ).SetInEditor( False );
 
   finally
     GOWPinEditorForm.ClearData();
@@ -1521,8 +1527,16 @@ begin
       begin
       OtherPin := TOWPin( Values.Objects[ I ] );
 
-      if( ( not ( OtherPin is TOWSourcePin )) and ( not ( OtherPin is TOWStatePin )) ) then
-        Continue;
+      if( FSourcePin <> NIL ) then
+        begin
+        if( ( not ( OtherPin is TOWSinkPin )) and ( not ( OtherPin is TOWStatePin )) ) then
+          Continue;
+
+        end
+        
+      else
+        if( ( not ( OtherPin is TOWSourcePin )) and ( not ( OtherPin is TOWStatePin )) ) then
+          Continue;
 
       if( OtherPin is TOWStatePin ) then
         if( OtherPin.IsConnected() ) then
@@ -1649,6 +1663,7 @@ var
   LinkedTo      : String;
   LinkType      : String;
   NotifyAfter   : String;
+  NotifyAfter1  : String;
   OwnRoot       : Boolean;
   OwnDataModule : Boolean;
   LinkName      : String;
@@ -1804,14 +1819,35 @@ begin
 //      Item.SubItems.AddObject( Str, Values.Objects [ I ] );
       Item.SubItems.Add( Str );
       ItemDataEntry.ConnectedToPin := TOWBasicPin( Values.Objects [ I ] );
-      if( AOtherPin is TOWSourcePin ) then
-        if( AOtherPin.IsConnectedTo( FPin )) then
-          for J := 0 to FPin.ConnectedPinCount - 1 do
-            if( AOtherPin = FPin.ConnectedPin[ J ] ) then
-              begin
-              ItemDataEntry.ConnectedAfterPin := TOWBasicSinkPin( FPin ).AfterPins[ J ];
-              Break;
-              end;
+      if( FSourcePin = NIL ) then
+        begin
+        if( AOtherPin is TOWSourcePin ) then
+          begin
+          if( FPin.IsConnectedTo( AOtherPin )) then
+            for J := 0 to AOtherPin.ConnectedPinCount - 1 do
+              if( FPin = AOtherPin.ConnectedPin[ J ] ) then
+                begin
+                ItemDataEntry.ConnectedAfterPin := TOWBasicSinkPin( AOtherPin ).AfterPins[ J ];
+                Break;
+                end;
+
+          end;
+        end
+
+      else
+        begin
+        if( AOtherPin is TOWBasicSinkPin ) then
+          begin
+          if( AOtherPin.IsConnectedTo( FPin )) then
+            for J := 0 to FPin.ConnectedPinCount - 1 do
+              if( AOtherPin = FPin.ConnectedPin[ J ] ) then
+                begin
+                ItemDataEntry.ConnectedAfterPin := TOWBasicSinkPin( FPin ).AfterPins[ J ];
+                Break;
+                end;
+              
+          end;
+        end;
 
       if( not FPin.CanConnectTo( AOtherPin )) then
         begin
@@ -1850,6 +1886,7 @@ begin
         end;
 
       LinkType := '';
+      NotifyAfter := '';
       LinkedTo := OWGetPinValueEx( AOtherPin, Designer, CurrentRoot );
       if( FSourcePin = NIL ) then
         begin
@@ -1863,8 +1900,8 @@ begin
         begin
         if( AOtherPin is TOWBasicSinkPin ) then
           begin
-          if( TOWExposedPin( AOtherPin ).GetConnectedPinCount() = 1 ) then
-            NotifyAfter := TOWSourcePin( TOWExposedPin( AOtherPin ).GetConnectedPin( 0 ) ).GetAfterPinDisplayName( TOWBasicSinkPin( AOtherPin ));
+          if( AOtherPin.ConnectedPinCount = 1 ) then
+            NotifyAfter := TOWSourcePin( AOtherPin.ConnectedPin[ 0 ] ).GetAfterPinDisplayName( TOWBasicSinkPin( AOtherPin ));
           
           if( AOtherPin is TOWSinkPin ) then
             begin
@@ -1879,7 +1916,27 @@ begin
           else
             begin
             if( AOtherPin.ConnectedPinCount > 0 ) then
+              begin
               LinkType := GetLinkType( AOtherPin );
+              for J := 0 to AOtherPin.ConnectedPinCount - 1 do
+                begin
+                NotifyAfter1 := TOWSourcePin( AOtherPin.ConnectedPin[ J ] ).GetAfterPinDisplayName( TOWBasicSinkPin( AOtherPin ));
+                if( NotifyAfter1 <> '' ) then
+                  begin
+                  if( NotifyAfter = '' ) then
+                    NotifyAfter := '(' + NotifyAfter1
+
+                  else
+                    NotifyAfter := NotifyAfter + ', ' + NotifyAfter1;
+                     
+                  end;
+                    
+                end;
+
+              if( NotifyAfter <> '' ) then
+                NotifyAfter := NotifyAfter + ')';
+                
+              end;
             
             end;
           end;

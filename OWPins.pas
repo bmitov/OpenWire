@@ -638,8 +638,10 @@ public
   function  IsConnected() : Boolean; virtual;
   function  IsStateConnected() : Boolean; virtual;
   function  IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; virtual;//const;
+  function  IsConnectedToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;//const;
   function  IsConnectedToState( const ADispatcher : TOWStateDispatcher ) : Boolean; virtual;
   function  IsConnectedByStateTo( OtherPin : TOWBasicPin ) : Boolean; virtual;//const;
+  function  IsConnectedByStateToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;//const;
   function  IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean; virtual;//const;
 
   function  ConnectByState( OtherPin : TOWBasicPin ) : Boolean; virtual;
@@ -968,6 +970,7 @@ protected
   FDataTypeSources      : TOWDataTypeSinkPinList;
   FInDependOn           : Boolean;
   FInDisconnect         : Boolean;
+  FInEditor             : Boolean;
 
 protected
   procedure IntConnect( SinkPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
@@ -980,6 +983,7 @@ protected
   function  GetConnectedPin( Index : Integer ) : TOWBasicPin; override;
   function  GetEditorString() : String; override;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
+  procedure SetInEditor( AValue : Boolean );
 
 public
   function  IsLinkedTo( PinName : String ) : Boolean; override;
@@ -1077,6 +1081,7 @@ public
   function  IsConnected() : Boolean; override;
 
   function  IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; override; //const;
+  function  IsConnectedToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; override;
   function  IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean; override; //const;
 
 protected
@@ -3623,9 +3628,14 @@ begin
   Result := ( FDispatcher <> NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := IsConnectedByStateTo( OtherPin );
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.IsConnectedToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+begin
+  Result := IsConnectedByStateToAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
 function  TOWBasicPin.IsConnectedToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
@@ -3654,13 +3664,33 @@ begin
       if( FDispatcher.FPins[ I ].RealPin = OtherPin ) then
         Exit;
 
-//    Result := ( FDispatcher.FPins.IndexOf( OtherPin ) <> -1 );
     Result := False;
     end;
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.IsConnectedByStateToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+var
+  AReadLock       : IOWLockSection;
+  I               : Integer;
+
+begin
+  AReadLock := ReadLock();
+
+  Result := False;
+  if( FDispatcher <> NIL ) then
+    begin
+    Result := True;
+    for I := 0 to FDispatcher.FPins.Count - 1 do
+      if( ( FDispatcher.FPins[ I ].RealPin = OtherPin ) and ( FDispatcher.FPins[ I ].AfterPin = NotifyAfterPin ) ) then
+        Exit;
+
+    Result := False;
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := False;
 end;
@@ -3669,7 +3699,7 @@ procedure TOWBasicPin.SetInEditor( Value : Boolean );
 begin
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetConnectedPinCount() : Integer;
+function TOWBasicPin.GetConnectedPinCount() : Integer;
 begin
   Result := 0;
 end;
@@ -3711,6 +3741,12 @@ end;
 //---------------------------------------------------------------------------
 function  TOWBasicPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
+  if( OtherPin = Self ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
   Result := ConnectByStateAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
@@ -4190,7 +4226,7 @@ begin
   AReadLock := ReadLock();
   
   if( FOwner <> NIL ) then
-    Result := ( csLoading	in FOwner.ComponentState )
+    Result := ( csLoading in FOwner.ComponentState )
 
   else
     Result := False;
@@ -6006,6 +6042,11 @@ begin
   Result := TryLinkTo( ARoot, AValue, AValue, '', False );
 end;
 //---------------------------------------------------------------------------
+procedure TOWSourcePin.SetInEditor( AValue : Boolean );
+begin
+  FInEditor := AValue;
+end;
+//---------------------------------------------------------------------------
 function TOWSourcePin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
 var
   PEntry : POWPinEntry;
@@ -6027,6 +6068,12 @@ end;
 //---------------------------------------------------------------------------
 function TOWSourcePin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
+  if( OtherPin = Self ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
   if( OtherPin <> NIL ) then
     begin
     Result := CanConnectAfter( OtherPin, NotifyAfterPin );
@@ -6064,19 +6111,25 @@ begin
   if( OtherPin = NotifyAfterPin ) then
     Exit;
 
-  for I := 0 to FSinkPins.Count - 1 do
-    begin
-    if( FSinkPins[ I ].RealPin = NotifyAfterPin ) then
-      begin
-      if( FSinkPins[ I ].NotifyAfterPin <> NIL ) then
-        Result := CanConnectAfter( OtherPin, FSinkPins[ I ].NotifyAfterPin, UseConverters )
+  if( ( not Result ) and ( OwnerInLoading() or FInEditor ) ) then
+    Result := True
 
-      else
-        Result := True;
-        
-      Break;
+  else
+    begin
+    for I := 0 to FSinkPins.Count - 1 do
+      begin
+      if( FSinkPins[ I ].RealPin = NotifyAfterPin ) then
+        begin
+        if( FSinkPins[ I ].NotifyAfterPin <> NIL ) then
+          Result := CanConnectAfter( OtherPin, FSinkPins[ I ].NotifyAfterPin, UseConverters )
+
+        else
+          Result := True;
+
+        Break;
+        end;
+
       end;
-    
     end;
 
 end;
@@ -6424,6 +6477,22 @@ begin
       Exit;
 
   Result := inherited IsConnectedTo( OtherPin );
+end;
+//---------------------------------------------------------------------------
+function TOWSourcePin.IsConnectedToAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+var
+  I     : Integer;
+  AReadLock : IOWLockSection;
+
+begin
+  AReadLock := ReadLock();
+  
+  Result := True;
+  for I := 0 to GetSinkCount() - 1 do
+    if( ( OtherPin = GetSink( I ) ) and ( FSinkPins.Items[ I ].NotifyAfterPin = NotifyAfterPin ) ) then
+      Exit;
+
+  Result := inherited IsConnectedToAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
 function TOWSourcePin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
@@ -7130,6 +7199,12 @@ end;
 //---------------------------------------------------------------------------
 function TOWEventSinkPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
+  if( OtherPin = Self ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
   if( OtherPin <> NIL ) then
     begin
     Result := CanConnectAfter( OtherPin, NotifyAfterPin );
@@ -8143,6 +8218,12 @@ var
   ADownStreamID : TGUID;
 
 begin
+  if( OtherPin = Self ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
   ASourcePin := NIL;
   AWriteLock := WriteLock();
   if( OtherPin = FRealSourcePin ) then
@@ -12230,6 +12311,12 @@ var
   APinEntry : POWPinEntry;
 
 begin
+  if( OtherPin = Self ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
   Result := True;
   if( IsConnectedTo( OtherPin )) then
     Exit;
