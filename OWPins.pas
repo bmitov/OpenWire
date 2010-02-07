@@ -132,6 +132,14 @@ TODO :
 {$MODE DELPHI}{$H+}
 {$DEFINE D6}
 {$DEFINE SYMLOCKS}
+{$ELSE}
+{$IFNDEF VER130}
+{$IFNDEF VER140}
+{$WARN UNSAFE_TYPE OFF}
+{$WARN UNSAFE_CODE OFF}
+{$WARN UNSAFE_CAST OFF}
+{$ENDIF}
+{$ENDIF}
 {$ENDIF}
 
 {$I OWDefs.inc}
@@ -983,7 +991,7 @@ protected
   function  GetConnectedPin( Index : Integer ) : TOWBasicPin; override;
   function  GetEditorString() : String; override;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
-  procedure SetInEditor( AValue : Boolean );
+  procedure SetInEditor( AValue : Boolean ); override;
 
 public
   function  IsLinkedTo( PinName : String ) : Boolean; override;
