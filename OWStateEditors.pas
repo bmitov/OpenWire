@@ -1169,9 +1169,7 @@ initialization
 {$IFDEF FPC}
   {$i OWStateEditors.lrs}
 {$ENDIF}
-{$IFNDEF FPC}
   GOWStatePinEditorForm := TOWStatePinForm.Create( Application );
-{$ENDIF}
 
 finalization
   if( GOWStatePinEditorForm <> NIL ) then

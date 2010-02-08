@@ -2680,8 +2680,7 @@ initialization
   {$i OpenWirePinEditors.lrs}
 {$ENDIF}
   GOWPinEditorForm := TOWPinEditorForm.Create( Application );
-  GOWRefreshHandle := GOWPinEditorForm.Handle; 
-
+  GOWRefreshForm := GOWPinEditorForm;
 {$IFNDEF FPC}
   EditorNotifier := TIOWPinsEditorNotifier.Create();
   if( Assigned( ToolServices )) then
@@ -2704,5 +2703,4 @@ finalization
     GOWPinEditorForm.Free();
 
   GOWPinEditorForm := NIL;
-
 end.

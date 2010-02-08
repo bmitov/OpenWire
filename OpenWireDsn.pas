@@ -8,7 +8,7 @@ interface
 
 uses
     OpenWirePinEditors, OWStateEditors, OWAboutFormUnit, 
-  OWAfterPinSelectFormUnit, OWClassProperty, LazarusPackageIntf;
+  OWAfterPinSelectFormUnit, OWClassProperty, OWDesignTypes, LazarusPackageIntf;
 
 implementation
 

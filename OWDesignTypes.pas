@@ -64,7 +64,7 @@ uses
   {$ENDIF}
 
 {$ENDIF}
-    Messages, Classes, Contnrs, OWPins;
+    Forms, Messages, Classes, Contnrs, OWPins;
 
 {$IFDEF VER130}
   type IProperty = TPropertyEditor;
@@ -126,15 +126,13 @@ procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
 //---------------------------------------------------------------------------
 const
 {$IFDEF fpc}
-  OWM_UPDATE              = WM_USER + 10;
-  OWMSG_UPDATE_INSPECTOR  = WM_USER + 11;
-{$ELSE}
+  WM_APP = $8000;
+{$ENDIF}
   OWM_UPDATE              = WM_APP + 10;
   OWMSG_UPDATE_INSPECTOR  = WM_APP + 11;
-{$ENDIF}
 //---------------------------------------------------------------------------
-var GOWRefreshHandle : Integer;
 var GOWInRefresh   : Boolean;
+var GOWRefreshForm : TForm;
 //---------------------------------------------------------------------------
 implementation
 {$IFDEF FPC}
@@ -161,7 +159,8 @@ const
   SEPARATOR = '.';
 {$ENDIF}
 //---------------------------------------------------------------------------
-var InOppening  : Boolean;
+var
+  InOppening        : Boolean;
 //---------------------------------------------------------------------------
 function TOWEPinsList.GetItem( Index : Integer ) : TOWEPinEntry;
 begin
@@ -290,7 +289,7 @@ begin
 
   PinsNeedRefresh := True;
 
-  PostMessage( GOWRefreshHandle, OWM_UPDATE, 0, 0 );
+  PostMessage( GOWRefreshForm.Handle, OWM_UPDATE, 0, 0 );
 end;
 //---------------------------------------------------------------------------
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
@@ -352,7 +351,7 @@ begin
   if( Assigned( Designer)) then
     begin
     GOWInRefresh := True;
-    PostMessage( GOWRefreshHandle, OWMSG_UPDATE_INSPECTOR,
+    PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_INSPECTOR,
                 Integer( Designer ), 0 );
 
     end;

@@ -1,75 +1,70 @@
 object OWAboutForm: TOWAboutForm
   Left = 100
-  Height = 339
   Top = 100
-  Width = 324
   BorderStyle = bsToolWindow
   Caption = 'About OpenWire'
+  Height = 373
   ClientHeight = 339
+  Width = 332
   ClientWidth = 324
   Color = 15780517
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
+  Font.Style = []
   KeyPreview = True
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
-  Position = poScreenCenter
-  LCLVersion = '0.9.29'
   object Label1: TLabel
     Left = 88
-    Height = 14
     Top = 272
-    Width = 158
-    Caption = 'Copyright 1999-2009 Boian Mitov'
-    ParentColor = False
+    Width = 157
+    Height = 13
+    Caption = 'Copyright 1999-2010 Boian Mitov'
   end
   object OWLabel: TLabel
-    Cursor = crHandPoint
     Left = 120
-    Height = 14
     Top = 256
-    Width = 89
+    Width = 88
+    Height = 13
+    Cursor = crHandPoint
     Caption = 'www.openwire.org'
+    Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsUnderline]
-    ParentColor = False
     ParentFont = False
     OnClick = OWLabelClick
   end
   object Panel2: TPanel
     Left = 0
-    Height = 249
     Top = 0
     Width = 324
+    Height = 249
     Align = alTop
     BevelInner = bvLowered
     BevelOuter = bvNone
     BorderWidth = 10
     Caption = 'Panel1'
-    ClientHeight = 249
-    ClientWidth = 324
     Color = 15780517
-    ParentColor = False
     TabOrder = 0
     object Panel3: TPanel
       Left = 11
-      Height = 227
       Top = 11
       Width = 302
+      Height = 227
       Align = alClient
       Caption = 'Panel2'
-      ClientHeight = 227
-      ClientWidth = 302
       Color = 15780517
-      ParentColor = False
       TabOrder = 0
       object Image1: TImage
         Left = 1
-        Height = 225
         Top = 1
         Width = 300
+        Height = 225
         Align = alClient
         AutoSize = True
         Center = True
@@ -2208,21 +2203,16 @@ object OWAboutForm: TOWAboutForm
           6464646464646464646464646464646464646464646464646464646464646464
           6464646464646464646464646464646464646464646464646464646464646464
           6464646464646464646464646464646464646464646464646464646464646464
-          6464
-        }
+          6464}
       end
     end
   end
   object BitBtn1: TBitBtn
     Left = 128
-    Height = 25
     Top = 296
     Width = 75
-    Caption = '&OK'
-    Default = True
-    Kind = bkOK
-    ModalResult = 1
-    NumGlyphs = 0
+    Height = 25
     TabOrder = 1
+    Kind = bkOK
   end
 end
