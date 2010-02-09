@@ -960,12 +960,12 @@ TOWFunctionSinkPinList = class( TOWSinkPinList )
 public
   procedure Add( APin : TOWBasicSinkPin );
   procedure Remove( APin : TOWBasicSinkPin ); override;
-  
+
 end;
 //---------------------------------------------------------------------------
 TOWDataTypeSinkPinList = class( TOWSinkPinList )
 public
-  procedure Add( APin : TOWBasicSinkPin; ShareLock : Boolean = True );
+  procedure Add( APin : TOWBasicSinkPin );
   procedure Remove( APin : TOWBasicSinkPin ); override;
 
 end;
@@ -12027,9 +12027,8 @@ var
   AWriteLock : IOWLockSection;
 
 begin
-  inherited Add( APin );
-
   AWriteLock := FOwner.WriteLock();
+  inherited Add( APin );
   APin.IntAddFunctionDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
@@ -12039,21 +12038,20 @@ var
 
 begin
   AWriteLock := FOwner.WriteLock();
+  inherited Remove( APin ); 
   APin.IntRemoveFunctionDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure TOWDataTypeSinkPinList.Add( APin : TOWBasicSinkPin; ShareLock : Boolean = True );
+procedure TOWDataTypeSinkPinList.Add( APin : TOWBasicSinkPin );
 var
   AWriteLock : IOWLockSection;
 
 begin
-  inherited Add( APin );
-
   AWriteLock := FOwner.WriteLock();
-
+  inherited Add( APin );
   APin.IntAddDataTypeDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
@@ -12063,6 +12061,7 @@ var
 
 begin
   AWriteLock := FOwner.WriteLock();
+  inherited Remove( APin ); 
   APin.IntRemoveDataTypeDependance( FOwner );
 end;
 //---------------------------------------------------------------------------
