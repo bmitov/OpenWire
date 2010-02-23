@@ -285,9 +285,10 @@ type TOWDBOperation = (
   owdbNone,
   owdbError,
   owdbCreate, owdbDestroy,
-  owdbBeginWriteCreate, owdbWriteCreate, owdbBeginWriteDestroy, owdbWriteDestroy,
-  owdbBeginReadCreate, owdbReadCreate, owdbBeginReadDestroy, owdbReadDestroy,
-  owdbStopCreate, owdbStopDestroy, owdbUnlockCreate, owdbUnlockDestroy );
+  owdbBeginWriteCreate,   owdbWriteCreate,  owdbBeginWriteDestroy,  owdbWriteDestroy,
+  owdbBeginReadCreate,    owdbReadCreate,   owdbBeginReadDestroy,   owdbReadDestroy,
+  owdbBeginStopCreate,    owdbStopCreate,   owdbBeginStopDestroy,   owdbStopDestroy,
+  owdbBeginUnlockCreate,  owdbUnlockCreate, owdbBeginUnlockDestroy, owdbUnlockDestroy );
 
 type TOWDBLockRecord = record
   ID                  : Int64;
@@ -1190,7 +1191,7 @@ protected
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
 
 protected
-  procedure IntConnect( SourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
+  procedure IntConnect( ASourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
   function  IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
   procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
   procedure IntDisconnectFrom( OtherPin : TOWBasicPin );
@@ -1688,6 +1689,7 @@ procedure OWDBGRegisterNotify( ANotify : IOWDBGNotify );
 procedure OWDBGUnregisterNotify( ANotify : IOWDBGNotify );
 
 procedure GOWDBGLog( ALock : TOWLock; ASection : Pointer; AOperation : TOWDBOperation; AThreadID : Integer );
+procedure GOWDBGSaveLocksToFile( AFileName : String; AHistory : PGOWDBGLockHistory; AForLock : TOWLock );
 {$IFDEF __LOCKS_DBG__}
 procedure GOWDBGSaveLocks( ALock : TOWLock );
 {$ENDIF}
@@ -2421,13 +2423,13 @@ begin
   FOwner := FOwnerIntf.Instance();
   TimeOut := 1;
   AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginReadCreate, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountReads );
   FOwner.IntUnlock();
-  
+
 {$ENDIF}
-  GOWDBGLog( FOwner, Self, owdbBeginReadCreate, AThread );
   while( not FOwner.BeginRead( TimeOut ) ) do
     begin
     FOwner.IntLock();
@@ -2464,13 +2466,13 @@ var
   AThread : Cardinal;
 
 begin
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginReadDestroy, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Dec( FOwner.FCountReads );
   FOwner.IntUnlock();
 {$ENDIF}
-  AThread := GetCurrentThreadId();
-  GOWDBGLog( FOwner, Self, owdbBeginReadDestroy, AThread );
   FOwner.EndRead();
 
   GOWDBGLog( FOwner, Self, owdbReadDestroy, AThread );
@@ -2503,13 +2505,12 @@ begin
   
   TimeOut := 1;
   AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginWriteCreate, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountWrites );
   FOwner.IntUnlock();
-
 {$ENDIF}
-  GOWDBGLog( FOwner, Self, owdbBeginWriteCreate, AThread );
   while( not FOwner.BeginWrite( TimeOut ) ) do
     begin
     FOwner.IntLock();
@@ -2547,14 +2548,13 @@ var
   AThread : Cardinal;
 
 begin
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginWriteDestroy, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Dec( FOwner.FCountWrites );
   FOwner.IntUnlock();
 {$ENDIF}
-
-  AThread := GetCurrentThreadId();
-  GOWDBGLog( FOwner, Self, owdbBeginWriteDestroy, AThread );
   FOwner.EndWrite();
 
   GOWDBGLog( FOwner, Self, owdbWriteDestroy, AThread );
@@ -2574,13 +2574,14 @@ var
 begin
   inherited Create( AOwner );
   
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginStopCreate, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountStops );
   FOwner.IntUnlock();
 {$ENDIF}
 
-  AThread := GetCurrentThreadId();
   FOwner.IntLock();
   Inc( FOwner.FInStopCount );
   FOwner.IntUnlock();
@@ -2594,12 +2595,13 @@ var
   AThread : Cardinal;
 
 begin
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginStopDestroy, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Dec( FOwner.FCountStops );
   FOwner.IntUnlock();
 {$ENDIF}
-  AThread := GetCurrentThreadId();
   FOwner.EndStop();
   GOWDBGLog( FOwner, Self, owdbStopDestroy, AThread );
 {$IFDEF __LOCKS_DBG__}
@@ -2619,13 +2621,14 @@ begin
   AOwner.Instance().IntLock();
   inherited Create( AOwner );
 
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginUnlockCreate, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Inc( FOwner.FCountUnlocks );
   FOwner.IntUnlock();
 {$ENDIF}
 
-  AThread := GetCurrentThreadId();
   if( FOwner.FOwningThread <> 0 ) then
     if( FOwner.FOwningThread <> AThread ) then
       begin
@@ -2677,12 +2680,13 @@ var
   AThread : Cardinal;
 
 begin
+  AThread := GetCurrentThreadId();
+  GOWDBGLog( FOwner, Self, owdbBeginUnlockDestroy, AThread );
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Dec( FOwner.FCountUnlocks );
   FOwner.IntUnlock();
 {$ENDIF}
-  AThread := GetCurrentThreadId();
   FOwner.IntBeginWrite( FCountLocks, FCountOtherLocks );
   GOWDBGLog( FOwner, Self, owdbUnlockDestroy, AThread );
   inherited;
@@ -3021,6 +3025,9 @@ begin
     begin
     if( FCountStopLocksOwner > 0 ) then
       Dec( FCountStopLocksOwner )
+
+    else if( FCountLocks > 1 ) then
+      Dec( FCountLocks )
 
     else if( FCountStopLocks > 0 ) then
       Dec( FCountStopLocks )
@@ -7234,22 +7241,33 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.IntConnect( SourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin );
+procedure TOWEventSinkPin.IntConnect( ASourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin );
 var
   PEntry : POWPinEntry;
   AWriteLock : IOWLockSection;
   AConverterClass : TOWFormatConverterClass;
   AConverter : TOWFormatConverter;
+  DataTypeID : TGUID;
+  ADownStreamID   : TGUID;
 
 begin
   AWriteLock := WriteLock();
 
   PEntry := FSourcePins.Add();
-  PEntry.RealPin := SourcePin;
+  PEntry.RealPin := ASourcePin;
   PEntry.NotifyAfterPin := NIL; // Only SourcePins use NotifyAfterPin;
   PEntry.ConnectionPin := NIL;
   AConverter := NIL;
-//  PEntry.ConnectedID := UpStreamFindConnectionID( TOWSourcePin( SourcePin ), TOWSourcePin( SourcePin ).GetConnectionID( Self ) ); //  UpStreamFindConnectionID( TOWSourcePin( SourcePin ), True, True, AConverter, AConverterClass );
+  if( ASourcePin is TOWSourcePin ) then
+    begin
+    DataTypeID := TOWSourcePin( ASourcePin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass );
+    PEntry.ConnectedID := UpStreamFindConnectionID( TOWSourcePin( ASourcePin ), DataTypeID );
+//  PEntry.ConnectedID := UpStreamFindConnectionID( TOWSourcePin( ASourcePin ), TOWSourcePin( ASourcePin ).GetConnectionID( Self ) ); //  UpStreamFindConnectionID( TOWSourcePin( ASourcePin ), True, True, AConverter, AConverterClass );
+
+    ADownStreamID := TOWSourcePin( ASourcePin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass );
+    ChainReconnect( ADownStreamID, PEntry.ConnectedID );
+    end;
+  
   PEntry.ModificationLevel := 0;
   PEntry.SubmitFunction := NIL;
 {
@@ -8323,7 +8341,6 @@ begin
 
     if( OtherPin is TOWSourcePin ) then
       begin
-
       FConnectionSourcePin := TOWSourcePin( OtherPin );
       FIntRealSourcePin := TOWSourcePin( OtherPin );
       AWriteLock := NIL;
@@ -13004,62 +13021,61 @@ begin
 {$ENDIF}
 {$ENDIF}
 end;
-{$IFDEF __LOCKS_DBG__}
 //---------------------------------------------------------------------------
 const GOWDbgStrings : array [owdbNone..owdbUnlockDestroy] of String =
 (
-  'None             ',
-  'Error            ',
-  'Create           ',
-  'Destroy          ',
-  'BeginWriteCreate ',
-  'WriteCreate      ',
-  'BeginWriteDestroy',
-  'WriteDestroy     ',
-  'BeginReadCreate  ',
-  'ReadCreate       ',
-  'BeginReadDestroy ',
-  'ReadDestroy      ',
-  'StopCreate       ',
-  'StopDestroy      ',
-  'UnlockCreate     ',
-  'UnlockDestroy    '
+  'None              ',
+  'Error             ',
+  'Create            ',
+  'Destroy           ',
+  'BeginWriteCreate  ',
+  'WriteCreate       ',
+  'BeginWriteDestroy ',
+  'WriteDestroy      ',
+  'BeginReadCreate   ',
+  'ReadCreate        ',
+  'BeginReadDestroy  ',
+  'ReadDestroy       ',
+  'BeginStopCreate   ',
+  'StopCreate        ',
+  'BeginStopDestroy  ',
+  'StopDestroy       ',
+  'BeginUnlockCreate ',
+  'UnlockCreate      ',
+  'BeginUnlockDestroy',
+  'UnlockDestroy     '
 );
 //---------------------------------------------------------------------------
-procedure GOWDBGSaveLocks( ALock : TOWLock );
+procedure GOWDBGSaveLocksToFile( AFileName : String; AHistory : PGOWDBGLockHistory; AForLock : TOWLock );
 var
   I : Integer;
   F : TextFile;
   ALine : String;
-  
+
 begin
-  LogStorageSection.Enter();
-
-  GOWDBGLog( ALock, NIL, owdbError, GetCurrentThreadId() );
-
-  DeleteFile( 'C:\BugLocks.txt' );
-  AssignFile(F, 'C:\BugLocks.txt');
+  DeleteFile( AFileName );
+  AssignFile( F, AFileName );
   Rewrite(F);
-  I := GOWDBGLockHistory.Index;
-  WriteLn( F, '  Lock     Section   Operation        ThreadID OwnerThread CntLocks StopLks StopLksOwn InStop Read  Write Unlock  Stop' );
+  I := AHistory.Index;
+  WriteLn( F, '  Lock     Section   Operation         ThreadID OwnerThread CntLocks StopLks StopLksOwn InStop Read  Write Unlock  Stop' );
   while( True ) do
     begin
-    if( ALock = GOWDBGLockHistory.History[ I ].Lock ) then
+    if( ( AForLock = AHistory.History[ I ].Lock ) or ( AForLock = NIL )) then
       begin
-      ALine := IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Lock ), 8 ) + '  ';
-      ALine := ALine + IntToHex( Cardinal( GOWDBGLockHistory.History[ I ].Section ), 8 ) + '  ';
-      ALine := ALine + GOWDbgStrings[ GOWDBGLockHistory.History[ I ].Operation ];
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].ThreadID ] ) + '  ';
-      ALine := ALine + Format( '%8d', [ GOWDBGLockHistory.History[ I ].OwningThreadID ] ) + ' ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountLocks ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStopLocks ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStopLocksOwner ] ) + '  ';
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].InStopCount ] );
+      ALine := IntToHex( Cardinal( AHistory.History[ I ].Lock ), 8 ) + '  ';
+      ALine := ALine + IntToHex( Cardinal( AHistory.History[ I ].Section ), 8 ) + '  ';
+      ALine := ALine + GOWDbgStrings[ AHistory.History[ I ].Operation ];
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].ThreadID ] ) + '  ';
+      ALine := ALine + Format( '%8d', [ AHistory.History[ I ].OwningThreadID ] ) + ' ';
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountLocks ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountStopLocks ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountStopLocksOwner ] ) + '  ';
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].InStopCount ] );
 
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountReads ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountWrites ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountUnlocks ] );
-      ALine := ALine + Format( '%7d', [ GOWDBGLockHistory.History[ I ].CountStops ] );
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountReads ] );
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountWrites ] );
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountUnlocks ] );
+      ALine := ALine + Format( '%7d', [ AHistory.History[ I ].CountStops ] );
       WriteLn( F, ALine );
       end;
       
@@ -13067,12 +13083,23 @@ begin
     if( I > GOWDBG_HISTORY_SIZE ) then
       I := 0;
 
-    if( I = GOWDBGLockHistory.Index ) then
+    if( I = AHistory.Index ) then
       Break;
        
     end;
 
   CloseFile(F);
+end;
+{$IFDEF __LOCKS_DBG__}
+//---------------------------------------------------------------------------
+procedure GOWDBGSaveLocks( ALock : TOWLock );
+begin
+  LogStorageSection.Enter();
+
+  GOWDBGLog( ALock, NIL, owdbError, GetCurrentThreadId() );
+
+  GOWDBGSaveLocksToFile( 'C:\BugLocks.txt', GOWDBGLockHistory, ALock );
+  
   LogStorageSection.Leave();
 end;
 {$ENDIF}

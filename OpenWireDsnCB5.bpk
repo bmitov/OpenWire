@@ -28,14 +28,13 @@
     <SYSDEFINES value="_RTLDLL;NO_STRICT;USEPACKAGES"/>
     <MAINSOURCE value="OpenWireDsnCB5.cpp"/>
     <INCLUDEPATH value="$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Source\ToolsApi"/>
-    <LIBPATH value="$(BCB)\lib\debug;..\lib\debug;..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi"/>
+    <LIBPATH value="$(BCB)\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi"/>
     <WARNINGS value="-w-par"/>
   </MACROS>
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\OpenWire -I$(BCB)\include -I$(BCB)\include\vcl 
       -I$(BCB)\Source\ToolsApi -src_suffix cpp -D_DEBUG -boa"/>
-    <CFLAG1 value="-Od -H=$(BCB)\lib\vcl50.csm -Hc -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c 
-      -tWM"/>
+    <CFLAG1 value="-Od -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c -tWM"/>
     <PFLAGS value="-$Y+ -$W -$O- -v -JPHNE -M"/>
     <RFLAGS value=""/>
     <AFLAGS value="/mx /w2 /zd"/>
@@ -50,10 +49,10 @@
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
-MajorVer=2
+MajorVer=4
 MinorVer=0
 Release=0
-Build=1
+Build=0
 Debug=0
 PreRelease=0
 Special=0
@@ -65,7 +64,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=
-FileVersion=2.0.0.1
+FileVersion=4.0.0.0
 InternalName=
 LegalCopyright=
 LegalTrademarks=
@@ -73,6 +72,7 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 
+[Excluded Packages]
 [HistoryLists\hlIncludePath]
 Count=6
 Item0=$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Source\ToolsApi
@@ -83,17 +83,18 @@ Item4=$(BCB)\include;$(BCB)\include\vcl
 Item5=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\include\ToolsAPI
 
 [HistoryLists\hlLibraryPath]
-Count=10
-Item0=..\lib\debug;..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item1=$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item2=$(BCB)\OpenWire;..\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item3=$(BCB)\OpenWire;C:\Program Files\Borland\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item4=$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi;C:\Program Files\Borland\CBuilder5\Projects\Lib
-Item5=..\..\CBuilder5\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item6=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item7=$(BCB)\projects\lib;..\..\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item8=..\..\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
-Item9=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
+Count=11
+Item0=$(BCB)\lib\debug;..\lib\debug;..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item1=..\lib\debug;..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item2=$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item3=$(BCB)\OpenWire;..\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item4=$(BCB)\OpenWire;C:\Program Files\Borland\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item5=$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi;C:\Program Files\Borland\CBuilder5\Projects\Lib
+Item6=..\..\CBuilder5\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item7=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item8=$(BCB)\projects\lib;..\..\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item9=..\..\CBuilder5\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item10=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=1

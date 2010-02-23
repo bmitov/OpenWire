@@ -25,14 +25,13 @@
     <SYSDEFINES value="NO_STRICT;_RTLDLL;USEPACKAGES"/>
     <MAINSOURCE value="OpenWireLabPkgCB5.cpp"/>
     <INCLUDEPATH value="$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl"/>
-    <LIBPATH value="$(BCB)\lib\debug;..\..\lib\debug;..\..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <LIBPATH value="$(BCB)\lib\debug;$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib"/>
     <WARNINGS value="-w-par"/>
   </MACROS>
   <OPTIONS>
     <IDLCFLAGS value="-I$(BCB)\OpenWire -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp 
       -D_DEBUG -boa"/>
-    <CFLAG1 value="-Od -H=$(BCB)\lib\vcl50.csm -Hc -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c 
-      -tWM"/>
+    <CFLAG1 value="-Od -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c -tWM"/>
     <PFLAGS value="-$YD -$W -$O- -v -JPHNE -M"/>
     <RFLAGS value=""/>
     <AFLAGS value="/mx /w2 /zd"/>
@@ -47,10 +46,10 @@
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
-MajorVer=2
+MajorVer=4
 MinorVer=0
 Release=0
-Build=15
+Build=0
 Debug=0
 PreRelease=0
 Special=0
@@ -62,7 +61,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=
 FileDescription=
-FileVersion=2.0.0.15
+FileVersion=4.0.0.0
 InternalName=
 LegalCopyright=
 LegalTrademarks=
@@ -70,6 +69,7 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 
+[Excluded Packages]
 [HistoryLists\hlIncludePath]
 Count=3
 Item0=$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl
@@ -77,11 +77,12 @@ Item1=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\OpenWire
 Item2=$(BCB)\include;$(BCB)\include\vcl
 
 [HistoryLists\hlLibraryPath]
-Count=4
-Item0=$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
-Item1=..\..\..\cbuilder5\lib\debug;..\..\lib\debug;$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
-Item2=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\OpenWire
-Item3=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
+Count=5
+Item0=$(BCB)\lib\debug;..\..\lib\debug;..\..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
+Item1=$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
+Item2=..\..\..\cbuilder5\lib\debug;..\..\lib\debug;$(BCB)\OpenWire;$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
+Item3=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\OpenWire
+Item4=$(BCB)\projects\lib;$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=2

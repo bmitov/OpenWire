@@ -13,7 +13,7 @@ BEGIN
          BEGIN
               VALUE "FileVersion", "4.0.0.0\0"
               VALUE "ProductVersion", "0.0.0.0\0"
-              VALUE "CompileDate", "Sunday, February 07, 2010 9:42 AM\0"
+              VALUE "CompileDate", "Wednesday, February 17, 2010 6:37 PM\0"
          END
     END
     BLOCK "VarFileInfo"
