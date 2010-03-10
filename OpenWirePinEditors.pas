@@ -896,7 +896,7 @@ begin
           Continue;
 
         OtherPin := AEntry.ConnectedToPin;
-        AfterPin := AEntry.ConnectedAfterPin;
+//        AfterPin := AEntry.ConnectedAfterPin;
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
           if( OtherPin = NIL ) then

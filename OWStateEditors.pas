@@ -473,7 +473,7 @@ end;
 procedure TOWStatePinForm.PopulateSingleStateForm( CurrentRoot : TComponent; ARootComponent : TComponent; OnlyConnected : Boolean; FullPath : Boolean );
 var
   Values        : TStringList;
-  OwnRoot       : Boolean;
+//  OwnRoot       : Boolean;
 //  OwnDataModule : Boolean;
   OtherPin      : TOWPin;
   I, J          : Integer;
@@ -638,7 +638,7 @@ end;
 procedure TOWStatePinForm.PopulateSingleStateFormEntries( CurrentRoot : TComponent; ARootComponent : TComponent; FullPath : Boolean );
 var
   Values        : TStringList;
-  OwnRoot       : Boolean;
+//  OwnRoot       : Boolean;
 //  OwnDataModule : Boolean;
   I, J          : Integer;
   Entry         : TOWEPinEntry;

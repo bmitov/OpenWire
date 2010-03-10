@@ -11,7 +11,7 @@ unit OWLComps;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Controls, Forms, Dialogs, OWStdTypes, OWPins, extctrls, stdctrls;
+  SysUtils, Classes, Controls, Forms, Dialogs, OWStdTypes, OWPins, extctrls, stdctrls;
 
 type PSingle = ^Single;
 
