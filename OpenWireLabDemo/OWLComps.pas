@@ -143,7 +143,7 @@ type
 type
   TOWLLabel = class(TLabel)
   protected
-    FInput   : TOWFloatSinkPin;
+    FInputPin : TOWFloatSinkPin;
 
   protected
     procedure PinValueChange( Sender : TOWPin; AValue : Single );
@@ -153,7 +153,7 @@ type
     destructor  Destroy(); override;
 
   published
-    property Input : TOWFloatSinkPin   read FInput write FInput;
+    property InputPin : TOWFloatSinkPin   read FInputPin write FInputPin;
     
   end;
 
@@ -466,12 +466,12 @@ end;
 constructor TOWLLabel.Create(AOwner: TComponent);
 begin
   inherited;
-  FInput := TOWFloatSinkPin.Create( Self, PinValueChange );
+  FInputPin := TOWFloatSinkPin.Create( Self, PinValueChange );
 end;
 //---------------------------------------------------------------------------
 destructor TOWLLabel.Destroy();
 begin
-  FInput.Free();
+  FInputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------

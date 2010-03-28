@@ -208,7 +208,7 @@ type
     Designer      : TOWPropertyDesigner;
     FSourcePin    : TOWSourcePin;
     FSinkPin      : TOWSinkPin;
-    FEventSinkPin : TOWEventSinkPin;
+    FMultiSinkPin : TOWMultiSinkPin;
     FPin          : TOWPin;
     Root          : TComponent;
     PinsList      : TOWEPinsList;
@@ -221,7 +221,7 @@ type
   public
     function ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
     function ExecuteForSink( ADesigner : TOWPropertyDesigner; ASinkPin : TOWSinkPin ): Integer;
-    function ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWEventSinkPin ): Integer;
+    function ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWMultiSinkPin ): Integer;
 
   private
     ColumnToSort : Integer;
@@ -442,10 +442,7 @@ var GOWPinEditorForm : TOWPinEditorForm;
 
 type TOWExposedPin = class(TOWBasicPin);
 type TOWExposedSinkPin = class(TOWSinkPin);
-type TOWExposedEventSinkPin = class(TOWEventSinkPin);
 type TOWExposedSourcePin = class(TOWSourcePin);
-type TOWExposedStateDispatcher = class(TOWStateDispatcher);
-type TOWExposedPinObject = class(TOWPinObject);
 type TOWExposedPinList = class( TOWPinList );
 //---------------------------------------------------------------------------
 procedure GetSinkPinValueList( SinkPin : TOWSinkPin; List : TStrings );
@@ -718,7 +715,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function EventSinkPinEdit( Designer : TOWPropertyDesigner; EventSinkPin : TOWEventSinkPin ) : Boolean;
+function EventSinkPinEdit( Designer : TOWPropertyDesigner; EventSinkPin : TOWMultiSinkPin ) : Boolean;
 var
   I             : Integer;
   OtherPin      : TOWBasicPin;
@@ -1151,11 +1148,11 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWEventSinkPinPropertyEditor.Edit();
 var
-  EventSinkPin : TOWEventSinkPin;
+  EventSinkPin : TOWMultiSinkPin;
 
 begin
   OWRequestRefreshEx( GetIntDesigner() );
-  EventSinkPin := TOWEventSinkPin( GetPin() );
+  EventSinkPin := TOWMultiSinkPin( GetPin() );
   if( EventSinkPinEdit( GetIntDesigner(), EventSinkPin )) then
     Modified();
     
@@ -1204,17 +1201,17 @@ end;
 {$IFDEF D6}
 function TOWEventSinkPinListPropertyEditor.GetPropType: PTypeInfo;
 begin
-  Result := typeinfo( TOWEventSinkPin );
+  Result := typeinfo( TOWMultiSinkPin );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
 procedure TOWEventSinkPinListPropertyEditor.Edit();
 var
-  SinkPin : TOWEventSinkPin;
+  SinkPin : TOWMultiSinkPin;
 
 begin
   OWRequestRefreshEx( GetIntDesigner() );
-  SinkPin := TOWEventSinkPin( GetPin() );
+  SinkPin := TOWMultiSinkPin( GetPin() );
   if( EventSinkPinEdit( GetIntDesigner(), SinkPin )) then
     Modified();
     
@@ -1798,7 +1795,7 @@ begin
           end
 
         else
-          if( not FEventSinkPin.IsLinkedTo( Values.Strings[ I ] ) ) then
+          if( not FMultiSinkPin.IsLinkedTo( Values.Strings[ I ] ) ) then
             Continue;
 
         end;
@@ -1874,7 +1871,7 @@ begin
         else
           Item.StateIndex := Ord( Linked );
 
-        if( AOtherPin is TOWEventSinkPin ) then
+        if( AOtherPin is TOWMultiSinkPin ) then
           Item.StateIndex := Item.StateIndex or 2
 
         else if( AOtherPin is TOWStatePin ) then
@@ -2014,7 +2011,7 @@ begin
   FPin := ASourcePin;
   FSourcePin := ASourcePin;
   FSinkPin := NIL;
-  FEventSinkPin := NIL;
+  FMultiSinkPin := NIL;
   
 {$IFDEF FPC}
   Root := OWGetMainDesignOwner( ASourcePin.Owner );
@@ -2040,7 +2037,7 @@ begin
   FPin := ASinkPin;
   FSinkPin := ASinkPin;
   FSourcePin := NIL;
-  FEventSinkPin := NIL;
+  FMultiSinkPin := NIL;
 
 {$IFDEF FPC}
   Root := OWGetMainDesignOwner( ASinkPin.Owner );
@@ -2060,11 +2057,11 @@ begin
   Result := ShowModal();
 end;
 //---------------------------------------------------------------------------
-function TOWPinEditorForm.ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWEventSinkPin ): Integer;
+function TOWPinEditorForm.ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWMultiSinkPin ): Integer;
 begin
   Designer := ADesigner;
   FPin := AEventSinkPin;
-  FEventSinkPin := AEventSinkPin;
+  FMultiSinkPin := AEventSinkPin;
   FSinkPin := NIL;
   FSourcePin := NIL;
 
@@ -2098,7 +2095,7 @@ begin
       Inc( Counter );
 
   LinksCountLabel.Caption := IntToStr( Counter );
-  AEnabled := ((( FSinkPin <> NIL ) or ( FEventSinkPin <> NIL )) and ( ListView.ItemFocused <> NIL ) and ( ListView.ItemFocused.Checked ) );
+  AEnabled := ((( FSinkPin <> NIL ) or ( FMultiSinkPin <> NIL )) and ( ListView.ItemFocused <> NIL ) and ( ListView.ItemFocused.Checked ) );
   if( AEnabled ) then
   if( not( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin is TOWSourcePin )) then
     if( TOWEItemEntry( ListView.ItemFocused.Data ).ConnectedToPin.ConnectedDispatcherCount = 0 ) then
@@ -2305,7 +2302,7 @@ begin
       else if( Pin is TOWSinkPin ) then
         Proc( TOWSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
 
-      else if( Pin is TOWEventSinkPin ) then
+      else if( Pin is TOWMultiSinkPin ) then
         Proc( TOWEventSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
 
       else if( Pin is TOWStatePin ) then
@@ -2651,13 +2648,13 @@ begin
 {$IFNDEF FPC}
   {$IFDEF D6}
     RegisterPropertyInCategory( 'Input Pins',             typeinfo(TOWSinkPin) );
-    RegisterPropertyInCategory( 'Input Pins',             typeinfo(TOWEventSinkPin) );
+    RegisterPropertyInCategory( 'Input Pins',             typeinfo(TOWMultiSinkPin) );
     RegisterPropertyInCategory( 'Output Pins',            typeinfo(TOWSourcePin) );
     RegisterPropertyInCategory( 'State Pins',             typeinfo(TOWStatePin) );
     RegisterPropertyInCategory( 'Pin Lists',              typeinfo(TOWPinList) );
   {$ELSE}
     RegisterPropertyInCategory( TOWInputPinsCategory,     typeinfo(TOWSinkPin) );
-    RegisterPropertyInCategory( TOWInputPinsCategory,     typeinfo(TOWEventSinkPin) );
+    RegisterPropertyInCategory( TOWInputPinsCategory,     typeinfo(TOWMultiSinkPin) );
     RegisterPropertyInCategory( TOWOutputPinsCategory,    typeinfo(TOWSourcePin) );
     RegisterPropertyInCategory( TOWStatePinsCategory,     typeinfo(TOWStatePin) );
     RegisterPropertyInCategory( TOWPinListCategory,       typeinfo(TOWPinList) );
@@ -2665,7 +2662,7 @@ begin
 {$ENDIF}
 
   RegisterPropertyEditor( typeinfo(TOWSourcePin),     NIL, '', TOWSourcePinPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWEventSinkPin),  NIL, '', TOWEventSinkPinPropertyEditor);
+  RegisterPropertyEditor( typeinfo(TOWMultiSinkPin),  NIL, '', TOWEventSinkPinPropertyEditor);
   RegisterPropertyEditor( typeinfo(TOWSinkPin),       NIL, '', TOWSinkPinPropertyEditor);
   RegisterPropertyEditor( typeinfo(TOWStatePin),      NIL, '', TOWStatePinPropertyEditor);
   RegisterPropertyEditor( typeinfo(TOWPinList),       NIL, '', TOWPinListPropertyEditor);

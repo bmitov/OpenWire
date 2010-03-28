@@ -353,7 +353,7 @@ TOWBasicPin = class;
 TOWStreamPin = class;
 TOWBasicSinkPin = class;
 TOWSinkPin = class;
-TOWEventSinkPin = class;
+TOWMultiSinkPin = class;
 TOWSourcePin = class;
 TOWStatePin = class;
 TOWStateDispatcher = class;
@@ -1170,7 +1170,7 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWEventSinkPin = class(TOWBasicSinkPin)
+TOWMultiSinkPin = class(TOWBasicSinkPin)
 protected
   FSourcePins         : TOWPinEntryList;
   FFormatConverters   : TOWFormatConverterList;
@@ -4036,12 +4036,12 @@ begin
 
       end
 
-    else if( Pins[ I ] is TOWEventSinkPin ) then
+    else if( Pins[ I ] is TOWMultiSinkPin ) then
       begin
-      if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+      if( TOWMultiSinkPin( Pins[ I ] ).DoWrite() ) then
         begin
         Writer.WriteIdent( 'Sources' );
-        TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+        TOWMultiSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
         end;
 
       end
@@ -6970,7 +6970,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWEventSinkPin.Create(AOwner: TComponent);
+constructor TOWMultiSinkPin.Create(AOwner: TComponent);
 begin
   inherited;
 //  FInDependOn := False;
@@ -6978,7 +6978,7 @@ begin
   FFormatConverters := TOWFormatConverterList.Create();
 end;
 //---------------------------------------------------------------------------
-constructor TOWEventSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+constructor TOWMultiSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
 begin
   inherited;
 //  FInDependOn := False;
@@ -6986,7 +6986,7 @@ begin
   FFormatConverters := TOWFormatConverterList.Create();
 end;
 //---------------------------------------------------------------------------
-destructor TOWEventSinkPin.Destroy();
+destructor TOWMultiSinkPin.Destroy();
 var
   ADestroyLock : IOWDestroyLockSection;
   AWriteLock : IOWLockSection;
@@ -7004,7 +7004,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetSourceCount() : Integer; // const;
+function TOWMultiSinkPin.GetSourceCount() : Integer; // const;
 var
   AReadLock : IOWLockSection;
 
@@ -7013,7 +7013,7 @@ begin
   Result := FSourcePins.Count;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetSource( Index : Integer ) : TOWBasicPin;
+function TOWMultiSinkPin.GetSource( Index : Integer ) : TOWBasicPin;
 var
   AReadLock : IOWLockSection;
 
@@ -7022,7 +7022,7 @@ begin
   Result := FSourcePins.Items[ Index ].RealPin;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetConverterCount() : Integer;
+function TOWMultiSinkPin.GetConverterCount() : Integer;
 var
   AReadLock : IOWLockSection;
 
@@ -7031,7 +7031,7 @@ begin
   Result := FFormatConverters.Count;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetConverter( Index : Integer ) : TOWFormatConverter;
+function TOWMultiSinkPin.GetConverter( Index : Integer ) : TOWFormatConverter;
 var
   AReadLock : IOWLockSection;
 
@@ -7040,12 +7040,12 @@ begin
   Result := FFormatConverters.Items[ Index ];
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetPinType() : TOWPinType;
+function TOWMultiSinkPin.GetPinType() : TOWPinType;
 begin
   Result := ptEventSink;
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.GetLinkStr( Item : Integer ) : String;
+function  TOWMultiSinkPin.GetLinkStr( Item : Integer ) : String;
 var
   AddRoot : Boolean;
   AReadLock : IOWLockSection;
@@ -7068,7 +7068,7 @@ begin
 }
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.TryLinkTo( Root : TComponent; SourceIdent : String; SourceName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
+function TOWMultiSinkPin.TryLinkTo( Root : TComponent; SourceIdent : String; SourceName : String; ReadIdentAfter : String; SaveForm : Boolean ) : Boolean;
 var
   Values          : TStringList;
   SourcePin       : TOWBasicPin;
@@ -7135,7 +7135,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetEditorString() : String;
+function TOWMultiSinkPin.GetEditorString() : String;
 var
   LinksCount : Integer;
   
@@ -7174,12 +7174,12 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
+function TOWMultiSinkPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
 begin
   Result := TryLinkTo( ARoot, AValue, AValue, '', False );
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.IsLinkedTo( PinName : String ) : Boolean;
+function TOWMultiSinkPin.IsLinkedTo( PinName : String ) : Boolean;
 var
   I     : Integer;
   AReadLock : IOWLockSection;
@@ -7202,17 +7202,17 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetConnectedPinCount() : Integer;
+function TOWMultiSinkPin.GetConnectedPinCount() : Integer;
 begin
   Result := SourceCount;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
+function TOWMultiSinkPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
 begin
   Result := Sources[ Index ];
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWMultiSinkPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
   if( OtherPin = Self ) then
     begin
@@ -7231,7 +7231,7 @@ begin
   Result := IntConnectAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWMultiSinkPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 begin
   if( OtherPin = NIL ) then
     Result := True
@@ -7241,7 +7241,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.IntConnect( ASourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin );
+procedure TOWMultiSinkPin.IntConnect( ASourcePin : TOWBasicPin; NotifyAfterPin : TOWBasicPin );
 var
   PEntry : POWPinEntry;
   AWriteLock : IOWLockSection;
@@ -7303,7 +7303,7 @@ begin
 //  SinkPins.Add( PEntry );
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function  TOWMultiSinkPin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   DataTypeID      : TGUID;
   AWriteLock      : IOWLockSection;
@@ -7399,7 +7399,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.Disconnect();
+procedure TOWMultiSinkPin.Disconnect();
 var
   ADestroyLock : IOWDestroyLockSection;
   AWriteLock  : IOWLockSection;
@@ -7417,7 +7417,7 @@ begin
   FSourcePins.Clear();
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.IntDisconnectFrom( OtherPin : TOWBasicPin );
+procedure TOWMultiSinkPin.IntDisconnectFrom( OtherPin : TOWBasicPin );
 var
   DesignFormClosing : Boolean;
 //  OldInDisconnect : Boolean;
@@ -7437,7 +7437,7 @@ begin
   OtherPin.CheckRemove();
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.DisconnectFrom( OtherPin : TOWBasicPin );
+procedure TOWMultiSinkPin.DisconnectFrom( OtherPin : TOWBasicPin );
 var
   ADestroyLock : IOWDestroyLockSection;
   AWriteLock  : IOWLockSection;
@@ -7455,7 +7455,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean );
+procedure TOWMultiSinkPin.IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean );
 var
   Index           : Integer;
   I               : Integer;
@@ -7513,7 +7513,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function  TOWMultiSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
   AReadLock : IOWLockSection;
   I         : Integer;
@@ -7539,7 +7539,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWMultiSinkPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
   AReadLock : IOWLockSection;
   I         : Integer;
@@ -7559,12 +7559,12 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.IsConnected() : Boolean;
+function TOWMultiSinkPin.IsConnected() : Boolean;
 begin
   Result := ( FSourcePins.Count > 0 ) or inherited IsConnected();
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
+function  TOWMultiSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -7580,7 +7580,7 @@ begin
   Result := inherited IsConnectedTo( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+function  TOWMultiSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -7606,9 +7606,9 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.Assign(Source: TPersistent);
+procedure TOWMultiSinkPin.Assign(Source: TPersistent);
 var
-  OtherPin : TOWEventSinkPin;
+  OtherPin : TOWMultiSinkPin;
   I        : Integer;
 
 begin
@@ -7617,7 +7617,7 @@ begin
 
   else
     begin
-    OtherPin := Source as TOWEventSinkPin;
+    OtherPin := Source as TOWMultiSinkPin;
     if( OtherPin <> NIL ) then
       begin
       for I := 0 to OtherPin.SourceCount - 1 do
@@ -7632,12 +7632,12 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWEventSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function  TOWMultiSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 begin
   Result := NotifyPin( NIL, Operation );
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWMultiSinkPin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
   I      : Integer;
   J      : Integer;
@@ -7763,7 +7763,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.ReorderChangedData();
+procedure TOWMultiSinkPin.ReorderChangedData();
 var
   PEntry1    : POWPinEntry;
   PEntry2    : POWPinEntry;
@@ -7804,7 +7804,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+procedure TOWMultiSinkPin.BackChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
 var
   AWriteLock : IOWLockSection;
   I : Integer;
@@ -7826,7 +7826,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
+procedure TOWMultiSinkPin.ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
 var
   I : Integer; 
   AWriteLock : IOWLockSection;
@@ -7842,7 +7842,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetUpStreamLinkName() : String;
+function TOWMultiSinkPin.GetUpStreamLinkName() : String;
 var
   AConverter      : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -7887,7 +7887,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.GetDownStreamLinkName() : String;
+function TOWMultiSinkPin.GetDownStreamLinkName() : String;
 var
   AConverter      : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -7935,7 +7935,7 @@ begin
    
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.DoWrite() : Boolean;
+function TOWMultiSinkPin.DoWrite() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -7944,19 +7944,19 @@ begin
   Result := ( SourceCount > 0 ) and not ( DoStateWrite() or DoStateConverterWrite() );
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.DoFormWrite() : Boolean;
+function TOWMultiSinkPin.DoFormWrite() : Boolean;
 begin
   Result := (( inherited DoFormWrite() ) or DoWrite() );
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.DefineProperties(Filer: TFiler);
+procedure TOWMultiSinkPin.DefineProperties(Filer: TFiler);
 begin
   inherited;
   Filer.DefineProperty( 'SourcePin', ReadConnectionsData, WriteConnectionsData, DoWrite());
 //  Filer.DefineProperty( 'StateConverter', ReadStateConverterConnectionsData, WriteStateConverterConnectionsData, DoStateConverterWrite());
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.ReadConnectionsData( Reader : TReader );
+procedure TOWMultiSinkPin.ReadConnectionsData( Reader : TReader );
 var
   ReadIdent       : String;
   ReadIdentAfter  : String;
@@ -8013,7 +8013,7 @@ begin
   AWriteLock := NIL;
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPin.WriteConnectionsData( Writer : TWriter );
+procedure TOWMultiSinkPin.WriteConnectionsData( Writer : TWriter );
 var
   I          : Integer;
   Ident      : String;
@@ -8072,7 +8072,7 @@ begin
   Writer.WriteListEnd();
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
+function TOWMultiSinkPin.WriteNoStateListEntry( Writer : TWriter ) : Boolean;
 begin
   Result := DoWrite(); 
   if( Result ) then
@@ -10700,12 +10700,12 @@ begin
 
         end
 
-      else if( Pins[ I ] is TOWEventSinkPin ) then
+      else if( Pins[ I ] is TOWMultiSinkPin ) then
         begin
-        if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+        if( TOWMultiSinkPin( Pins[ I ] ).DoWrite() ) then
           begin
           Writer.WriteIdent( 'Sources' );
-          TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+          TOWMultiSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
           end;
 
         end
@@ -10733,12 +10733,12 @@ begin
         end
       end
 
-    else if( Pins[ I ] is TOWEventSinkPin ) then
+    else if( Pins[ I ] is TOWMultiSinkPin ) then
       begin
-      if( TOWEventSinkPin( Pins[ I ] ).DoWrite() ) then
+      if( TOWMultiSinkPin( Pins[ I ] ).DoWrite() ) then
         begin
         Writer.WriteIdent( 'Sources' );
-        TOWEventSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
+        TOWMultiSinkPin( Pins[ I ] ).WriteConnectionsData( Writer );
         Continue;
         end
       end
@@ -12355,8 +12355,8 @@ begin
   if( OtherPin is TOWSourcePin ) then
     TOWSourcePin( OtherPin ).IntConnect( Self, NotifyAfterPin )
 
-  else if( OtherPin is TOWEventSinkPin ) then
-    TOWEventSinkPin( OtherPin ).IntConnect( Self, NotifyAfterPin )
+  else if( OtherPin is TOWMultiSinkPin ) then
+    TOWMultiSinkPin( OtherPin ).IntConnect( Self, NotifyAfterPin )
 
   else if( OtherPin is TOWSinkPin ) then
     begin

@@ -158,10 +158,10 @@ Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [HistoryLists\hlSearchPath]
 Count=6
-Item0=$(DELPHI)\OpenWire
-Item1=$(DELPHI)\Lib\Debug;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source\Vcl;$(DELPHI)\OpenWire
-Item2=$(DELPHI)\Source\ToolsAPI
-Item3=$(DELPHI)\OpenWire;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source
+Item0=$(DELPHI)\OpenWire;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source
+Item1=$(DELPHI)\OpenWire
+Item2=$(DELPHI)\Lib\Debug;$(DELPHI)\Source\ToolsAPI;$(DELPHI)\Source\Vcl;$(DELPHI)\OpenWire
+Item3=$(DELPHI)\Source\ToolsAPI
 Item4=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components;$(DELPHI)\OpenWire\OpenWireLabDemo
 Item5=$(DELPHI)\OpenWire;$(DELPHI)\Source;$(DELPHI)\Components
 [HistoryLists\hlOutputDirectorry]
