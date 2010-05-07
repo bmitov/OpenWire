@@ -1,4 +1,4 @@
-{*> Ver: V4.3.2 *********      History      ***************************\
+{*> Ver: V4.5 *********      History      ***************************\
 
 Beta V1.0b0  04/20/2001  Released
 Beta V1.0b1  04/30/2001  Upstream notification added.
@@ -90,7 +90,8 @@ V4.0         03/14/2009  Added Format Converters.
                          Added debug subscription support.
 V4.3         09/23/2009  Added Delphi 2010 and C++ Builder support.
 V4.3.1       10/10/2009  Improved pin list editor.
-V4.3.2       10/25/2009  Improved pin editors.
+V4.5         04/29/2010  TOWSinkPins added.
+                         Improved pin editors.
                          Fully Lazarus compatible under Windows.
 
 
@@ -601,7 +602,7 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWPinType = ( ptSource, ptSink, ptState, ptEventSink, ptDispatcher );
+TOWPinType = ( ptSource, ptSink, ptState, ptMultiSink, ptDispatcher );
 //---------------------------------------------------------------------------
 TOWBasicPin = class(TOWPinObject, IOWStream)
 protected
@@ -1592,7 +1593,7 @@ public
   property PinsOwner : Boolean read FPinsOwner write FPinsOwner;
   
 published
-  property Count : Integer read GetCount write SetCount;
+  property Count : Integer read GetCount write SetCount nodefault;
 
 end;
 //---------------------------------------------------------------------------
@@ -4734,7 +4735,7 @@ begin
 
   if( UseConverters ) then
     begin
-    if( OtherPin.GetPinType() in [ ptSink, ptEventSink ] ) then
+    if( OtherPin.GetPinType() in [ ptSink, ptMultiSink ] ) then
       begin 
       if( FDispatcher <> NIL ) then
         begin
@@ -7042,7 +7043,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPin.GetPinType() : TOWPinType;
 begin
-  Result := ptEventSink;
+  Result := ptMultiSink;
 end;
 //---------------------------------------------------------------------------
 function  TOWMultiSinkPin.GetLinkStr( Item : Integer ) : String;
@@ -10585,7 +10586,7 @@ begin
                 IdentName := Ident;
                 end;
 
-              ConnectPin( CurrentPinIndex, ptEventSink, ptSource, Ident, IdentName );
+              ConnectPin( CurrentPinIndex, ptMultiSink, ptSource, Ident, IdentName );
               end;
 
             Reader.ReadListEnd();
@@ -10645,7 +10646,7 @@ begin
               IdentName := Ident;
               end;
 
-            ConnectPin( CurrentPinIndex, ptEventSink, ptSource, Ident, IdentName );
+            ConnectPin( CurrentPinIndex, ptMultiSink, ptSource, Ident, IdentName );
             end;
 
           Reader.ReadListEnd();
