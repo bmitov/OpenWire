@@ -380,8 +380,6 @@ TOWDestroyLock = class;
 
 TOWSubmit = function ( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
 TOWGlobalSubmit = function ( Sender : TOWPin; Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-//TOWCreateTypeConverter = function () : TOWFormatConverter;
-//TOWPinNotifyEvent = procedure ( Sender : TOWPin ) of object;
 //---------------------------------------------------------------------------
 {$IFDEF OWCBUILDER} // BCB 6.0
 TOWSubmitLink = TNotifyEvent;
@@ -528,8 +526,11 @@ end;
 //---------------------------------------------------------------------------
 TOWDestroyLock = class( TInterfacedObject, IOWDestroyLock )
 protected
-  FLockCounter : LongInt;
-  FDestroying  : LongInt;
+  FLockCounter    : LongInt;
+  FDestroying     : LongInt;
+
+  FOwner          : TOWObject;
+  FUnlockSection  : IOWLockSection;
 
 protected
   procedure Unlock();
@@ -541,6 +542,9 @@ public
   function  DestroyLock() : IOWDestroyLockSection;
   function  DestroyUnlockLock() : IOWDestroyLockSection;
   function  Instance() : TOWDestroyLock;
+
+public
+  constructor Create( AOwner : TOWObject ); 
 
 end;
 //---------------------------------------------------------------------------
@@ -1709,6 +1713,15 @@ uses Dialogs, Forms
   ;
 
 type PGUID = ^TGUID;
+//---------------------------------------------------------------------------
+function OWInterlockedExchangeAdd( var Addend: Longint; Value: Longint): Longint;
+begin
+{$IFDEF fpc}
+  Result := InterlockedExchangeAdd( Addend, Value );
+{$ELSE}
+  Result := InterlockedExchangeAdd( @Addend, Value );
+{$ENDIF}
+end;
 //---------------------------------------------------------------------------
 function GOWIsStringValueType( AValue : TValueType ) : Boolean;
 begin
@@ -3168,16 +3181,19 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+constructor TOWDestroyLock.Create( AOwner : TOWObject );
+begin
+  inherited Create();
+  FOwner := AOwner;
+end;
+//---------------------------------------------------------------------------
 function TOWDestroyLock.Lock() : IOWDestroyLockSection;
 begin
   InterlockedIncrement( FLockCounter );
-{$IFDEF fpc}
-  if( InterlockedExchangeAdd( FDestroying, 0 ) <> 0 ) then
-{$ELSE}
-  if( InterlockedExchangeAdd( @FDestroying, 0 ) <> 0 ) then
-{$ENDIF}
+  if( OWInterlockedExchangeAdd( FDestroying, 0 ) <> 0 ) then
     begin
     InterlockedDecrement( FLockCounter );
+    Result := NIL;
     Exit;
     end;
 
@@ -3187,12 +3203,9 @@ end;
 function TOWDestroyLock.DestroyLock() : IOWDestroyLockSection;
 begin
   InterlockedIncrement( FDestroying );
-{$IFDEF fpc}
-  while( InterlockedExchangeAdd( FLockCounter, 0 ) <> 0 ) do
-{$ELSE}
-  while( InterlockedExchangeAdd( @FLockCounter, 0 ) <> 0 ) do
-{$ENDIF}
-  Sleep( 0 );
+  FUnlockSection := FOwner.UnlockAll();
+  while( OWInterlockedExchangeAdd( FLockCounter, 0 ) <> 0 ) do
+    Sleep( 0 );
 
   Result := TOWDestroyLockLockSection.Create( Self );   
 end;
@@ -3203,7 +3216,8 @@ var
    
 begin
   ACount := InterlockedExchange( FDestroying, 0 );
-  Result := TOWDestroyLockUnlockSection.Create( Self, ACount );   
+  Result := TOWDestroyLockUnlockSection.Create( Self, ACount );
+  FUnlockSection := FOwner.UnlockAll();
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.Instance() : TOWDestroyLock;
@@ -3219,15 +3233,12 @@ end;
 procedure TOWDestroyLock.DestroyUnlock();
 begin
   InterlockedDecrement( FDestroying );
+  FUnlockSection := NIL;
 end;
 //---------------------------------------------------------------------------
 procedure TOWDestroyLock.DestroyLockNum( ACount : LongInt );
 begin
-{$IFDEF fpc}
-  InterlockedExchangeAdd( FDestroying, ACount );
-{$ELSE}
-  InterlockedExchangeAdd( @FDestroying, ACount );
-{$ENDIF}
+  OWInterlockedExchangeAdd( FDestroying, ACount );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3273,6 +3284,7 @@ end;
 destructor TOWDestroyLockUnlockSection.Destroy();
 begin
   FLock.Instance().DestroyLockNum( FCount );
+  FLock.Instance().FUnlockSection := NIL;
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -3303,7 +3315,7 @@ constructor TOWBasicPin.Create();
 begin
   inherited;
 //  FDestroyLock := TOWDestroyLock.Create();
-  FDestroyLock := TOWDestroyLock.Create();
+  FDestroyLock := TOWDestroyLock.Create( Self );
   GlobalStorageSection.Enter();
   GOWPins.Add( Self );
   GlobalStorageSection.Leave();
@@ -5170,8 +5182,8 @@ begin
   if( FInDisconnect ) then
     Exit;
 
-  AWriteLock := WriteLock();
   ADestroyLock := FDestroyLock.DestroyLock();
+  AWriteLock := WriteLock();
   FInDisconnect := True;
 
   if( DesignFormClosing ) then
@@ -5205,8 +5217,8 @@ begin
 //      Dispose( PEntry );
       FSinkPins.Delete( Index );
 
-      ADestroyLock := NIL;
       AWriteLock := NIL;
+      ADestroyLock := NIL;
       OWNotifyChangePin( Self );
       OtherPin.CheckRemove();
       Exit;
@@ -8153,6 +8165,7 @@ end;
 function TOWSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
   ADestroyLock : IOWDestroyLockSection;
+  AReadLock1 : IOWLockSection;
   AReadLock : IOWLockSection;
   ASourcePin : TOWBasicPin;
   ASubmitFunction : TOWSubmit;
@@ -8161,7 +8174,15 @@ var
 
 begin
   Result := [];
+
+  AReadLock1 := FOwnerLock.ReadLock();
+  if( AReadLock1 = NIL ) then
+    Exit;
+
   AReadLock := ReadLock();
+  if( AReadLock = NIL ) then
+    Exit;
+    
   if( ( SourcePin <> NIL ) and ( Assigned(FSubmitFunction) ) ) then
     begin
     ASourcePin := SourcePin;
@@ -8187,7 +8208,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean );
 var
-  ADestroyLock : IOWDestroyLockSection;
+  ADestroyLock     : IOWDestroyLockSection;
   AWriteLock       : IOWLockSection;
   ALinkStorage     : String;
   ALinkStorageName : String;
