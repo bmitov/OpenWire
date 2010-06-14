@@ -530,7 +530,7 @@ protected
   FDestroying     : LongInt;
 
   FOwner          : TOWObject;
-  FUnlockSection  : IOWLockSection;
+//  FUnlockSection  : IOWLockSection;
 
 protected
   procedure Unlock();
@@ -3201,12 +3201,16 @@ begin
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.DestroyLock() : IOWDestroyLockSection;
+var
+  AUnlockSection  : IOWLockSection;
+  
 begin
   InterlockedIncrement( FDestroying );
-  FUnlockSection := FOwner.UnlockAll();
+  AUnlockSection := FOwner.UnlockAll();
   while( OWInterlockedExchangeAdd( FLockCounter, 0 ) <> 0 ) do
     Sleep( 0 );
 
+  AUnlockSection := NIL;
   Result := TOWDestroyLockLockSection.Create( Self );   
 end;
 //---------------------------------------------------------------------------
@@ -3217,7 +3221,7 @@ var
 begin
   ACount := InterlockedExchange( FDestroying, 0 );
   Result := TOWDestroyLockUnlockSection.Create( Self, ACount );
-  FUnlockSection := FOwner.UnlockAll();
+//  FUnlockSection := FOwner.UnlockAll();
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.Instance() : TOWDestroyLock;
@@ -3233,7 +3237,7 @@ end;
 procedure TOWDestroyLock.DestroyUnlock();
 begin
   InterlockedDecrement( FDestroying );
-  FUnlockSection := NIL;
+//  FUnlockSection := NIL;
 end;
 //---------------------------------------------------------------------------
 procedure TOWDestroyLock.DestroyLockNum( ACount : LongInt );
@@ -3284,7 +3288,7 @@ end;
 destructor TOWDestroyLockUnlockSection.Destroy();
 begin
   FLock.Instance().DestroyLockNum( FCount );
-  FLock.Instance().FUnlockSection := NIL;
+//  FLock.Instance().FUnlockSection := NIL;
   inherited;
 end;
 //---------------------------------------------------------------------------

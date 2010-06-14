@@ -160,7 +160,7 @@ const
 {$ENDIF}
 //---------------------------------------------------------------------------
 var
-  InOppening        : Boolean;
+  InOppening  : Boolean;
 //---------------------------------------------------------------------------
 function TOWEPinsList.GetItem( Index : Integer ) : TOWEPinEntry;
 begin
