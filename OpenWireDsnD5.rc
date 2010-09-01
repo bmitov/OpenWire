@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION 4,0,0,4
-PRODUCTVERSION 4,0,0,4
+FILEVERSION 4,0,0,8
+PRODUCTVERSION 4,0,0,8
 FILEFLAGSMASK 0x3FL
 FILEFLAGS 0x00L
 FILEOS 0x40004L
@@ -11,9 +11,9 @@ BEGIN
     BEGIN
          BLOCK "040904E4"
          BEGIN
-              VALUE "FileVersion", "4.0.0.4\0"
+              VALUE "FileVersion", "4.0.0.8\0"
               VALUE "ProductVersion", "1.0.0.0\0"
-              VALUE "CompileDate", "Monday, June 07, 2010 8:25 PM\0"
+              VALUE "CompileDate", "Wednesday, August 18, 2010 6:28 PM\0"
          END
     END
     BLOCK "VarFileInfo"

@@ -136,17 +136,20 @@ var GOWRefreshForm : TForm;
 //---------------------------------------------------------------------------
 implementation
 {$IFDEF FPC}
-  uses SysUtils, Math, OWAboutFormUnit, OWAfterPinSelectFormUnit;
+  uses SysUtils, Math;
   type TADesignerSelectionList = TPersistentSelectionList;
 
 {$ELSE}
   {$IFDEF D6}
-    uses SysUtils, OWDesignSelectionsList, ToolsAPI, ToolIntf, ExptIntf, OWAboutFormUnit, Math,
-    OWAfterPinSelectFormUnit;
+    uses
+    SysUtils, OWDesignSelectionsList,
+    {$IFNDEF __VSDESIGN__}
+      ToolsAPI, ToolIntf, ExptIntf,
+    {$ENDIF}
+    Math;
     type TADesignerSelectionList = TOWDesignerSelectionList;
   {$ELSE}
-    uses SysUtils, ToolsAPI, ToolIntf, ExptIntf, ActiveX, OWAboutFormUnit, Math,
-    OWAfterPinSelectFormUnit;
+    uses SysUtils, ToolsAPI, ToolIntf, ExptIntf, ActiveX, Math;
     type TADesignerSelectionList = TDesignerSelectionList;
   {$ENDIF}
 {$ENDIF}
@@ -159,8 +162,10 @@ const
   SEPARATOR = '.';
 {$ENDIF}
 //---------------------------------------------------------------------------
+{$IFNDEF __VSDESIGN__}
 var
   InOppening  : Boolean;
+{$ENDIF}
 //---------------------------------------------------------------------------
 function TOWEPinsList.GetItem( Index : Integer ) : TOWEPinEntry;
 begin
@@ -364,7 +369,9 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 initialization
+{$IFNDEF __VSDESIGN__}
   InOppening := False;
+{$ENDIF}
   GOWInRefresh := False;
 
 end.

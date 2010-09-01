@@ -24,6 +24,22 @@ uses Classes;
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER190} // Delphi 11.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER200} // Delphi 12.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER210} // Delphi 14.0
+{$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15.0
+{$DEFINE D6}
+{$ENDIF}
+
 type
   TOWExtCollectionItem = class(TCollectionItem)
   protected

@@ -75,26 +75,39 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     procedure Initialize(); override;
     function  AllEqual(): Boolean; virtual;
     function  AutoFill(): Boolean; virtual;
-    function  GetEditLimit(): Integer; virtual;
-    procedure GetProperties(Proc: TGetPropProc); virtual;
     function  GetPropInfo(): PPropInfo; virtual;
     function  GetPropType(): PTypeInfo; virtual;
     function  GetKind(): TTypeKind;
     function  GetIsDefault(): Boolean; virtual;
     procedure Revert(); virtual;
-    function  ValueAvailable(): Boolean; virtual;
     procedure Modified(); virtual;
 
     procedure SetPropEntry(Index: Integer; AInstance: TPersistent;
       APropInfo: PPropInfo); override;
-    function  GetName(): String; virtual;
 
   public
+  {$IFDEF __VSDESIGN__}
+    function  GetEditLimit(): Integer; override;
+    procedure GetProperties(Proc: TGetPropProc); override;
+    function  ValueAvailable(): Boolean; override;
+    function  GetName(): String; override;
+    function  GetAttributes(): TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure SetValue(const Value: String); override;
+    function  GetValue(): String; override;
+    procedure Edit(); override;
+  {$ELSE}
+    function  GetEditLimit(): Integer; virtual;
+    procedure GetProperties(Proc: TGetPropProc); virtual;
+    function  ValueAvailable(): Boolean; virtual;
+    function  GetName(): String; virtual;
+	
     function  GetAttributes(): TPropertyAttributes; virtual;
     procedure GetValues(Proc: TGetStrProc); virtual;
     procedure SetValue(const Value: String); virtual;
     function  GetValue(): String; virtual;
     procedure Edit(); virtual;
+  {$ENDIF}
 
   protected
     FDesigner       : IDesigner;

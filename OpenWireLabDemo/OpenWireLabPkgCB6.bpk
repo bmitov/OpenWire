@@ -12,7 +12,7 @@
     <RESDEPEN value="$(RESFILES)"/>
     <LIBFILES value=""/>
     <LIBRARIES value=""/>
-    <SPARELIBS value=""/>
+    <SPARELIBS value="rtl.lib"/>
     <PACKAGES value="rtl.bpi vcl.bpi OpenWirePkgCB6.bpi"/>
     <PATHCPP value=".;"/>
     <PATHPAS value=".;"/>

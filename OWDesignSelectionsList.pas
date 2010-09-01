@@ -68,7 +68,9 @@ type
     function Get(Index: Integer): TPersistent;
     function GetCount: Integer;
 {$IFDEF D9} // Delphi 9.0
+  {$IFNDEF __VSDESIGN__}
     function GetDesignObject( Index : Integer ) : IDesignObject;
+  {$ENDIF}
 {$ENDIF}
     { IComponentList }
 //    function GetComponentList: TOWDesignerSelectionList;
@@ -76,7 +78,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function Add(Item: TPersistent): Integer;
-    function Equals(List: TOWDesignerSelectionList): Boolean;
+    function ListEquals(List: TOWDesignerSelectionList): Boolean;
     property Count: Integer read GetCount;
     property Items[Index: Integer]: TPersistent read Get; default;
   end;
@@ -101,10 +103,12 @@ begin
 end;
 
 {$IFDEF D9} // Delphi 9.0
+  {$IFNDEF __VSDESIGN__}
 function TOWDesignerSelectionList.GetDesignObject( Index : Integer ) : IDesignObject;
 begin
   Result := IDesignObject( FList[Index] );
 end;
+  {$ENDIF}
 {$ENDIF}
 
 function TOWDesignerSelectionList.GetCount: Integer;
@@ -117,7 +121,7 @@ begin
   Result := FList.Add(Item);
 end;
 
-function TOWDesignerSelectionList.Equals(List: TOWDesignerSelectionList): Boolean;
+function TOWDesignerSelectionList.ListEquals(List: TOWDesignerSelectionList): Boolean;
 begin
   Result := False;
 end;
