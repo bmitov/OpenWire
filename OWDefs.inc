@@ -1,0 +1,38 @@
+{$IFDEF VER130} // Delphi 5.0
+  {$DEFINE D5Down}
+{$ELSE}
+  {$DEFINE D6}
+{$ENDIF}
+
+{$IFDEF VER140} // Delphi 6.0
+{$DEFINE OWCBUILDER}
+{$ENDIF}
+
+{$IFDEF VER150} // Delphi 7.0
+{$DEFINE D7}
+{$ENDIF}
+
+{$IFDEF VER170} // Delphi 9.0 (D2005)
+{$DEFINE D9}
+{$ENDIF}
+
+{$IFDEF VER180} // Delphi 10 (D2006)
+{$DEFINE D10}
+{$ENDIF}
+
+{$IFDEF VER190} // Delphi 11 (D2007)
+{$DEFINE D11}
+{$ENDIF}
+
+{$IFDEF VER200} // Delphi 12 (D2009)
+{$DEFINE D12}
+{$ENDIF}
+
+{$IFDEF VER210} // Delphi 14 (D2010)
+{$DEFINE D14}
+{$ENDIF}
+
+{$IFDEF VER220} // Delphi 15 (D2011)
+{$DEFINE D15}
+{$ENDIF}
+

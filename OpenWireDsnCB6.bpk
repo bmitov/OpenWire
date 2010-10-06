@@ -15,7 +15,7 @@
       OWAfterPinSelectFormUnit.dfm"/>
     <LIBFILES value=""/>
     <LIBRARIES value=""/>
-    <SPARELIBS value="rtl.lib"/>
+    <SPARELIBS value=""/>
     <PACKAGES value="rtl.bpi vcl.bpi designide.bpi OpenWirePkgCB6.bpi"/>
     <PATHCPP value=".;"/>
     <PATHPAS value=".;"/>
@@ -53,16 +53,16 @@
       <FILE FILENAME="OpenWireDsnCB6.cpp" FORMNAME="" UNITNAME="OpenWireDsnCB6" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OpenWireDsnCB6.res" FORMNAME="" UNITNAME="OpenWireDsnCB6.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OpenWirePinEditors.pas" FORMNAME="SourcePinForm" UNITNAME="Openwirepineditors" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\DotNet\rtl.bpi" FORMNAME="" UNITNAME="rtl" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\DotNet\vcl.bpi" FORMNAME="" UNITNAME="vcl" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\DotNet\designide.bpi" FORMNAME="" UNITNAME="designide" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="rtl.bpi" FORMNAME="" UNITNAME="rtl" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="vcl.bpi" FORMNAME="" UNITNAME="vcl" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="designide.bpi" FORMNAME="" UNITNAME="designide" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWClassProperty.pas" FORMNAME="" UNITNAME="OWClassProperty" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWDesignSelectionsList.pas" FORMNAME="" UNITNAME="OWDesignSelectionsList" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWStateEditors.pas" FORMNAME="OWStatePinForm" UNITNAME="OWStateEditors" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWAboutFormUnit.pas" FORMNAME="OWAboutForm" UNITNAME="OWAboutFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWExtCollectionEditor.pas" FORMNAME="" UNITNAME="OWExtCollectionEditor" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="OWAfterPinSelectFormUnit.pas" FORMNAME="OWAfterPinSelectForm" UNITNAME="OWAfterPinSelectFormUnit" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-      <FILE FILENAME="OpenWireExpert\DotNet\OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OpenWirePkgCB6.bpi" FORMNAME="" UNITNAME="OpenWirePkgCB6" CONTAINERID="BPITool" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

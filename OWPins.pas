@@ -1651,24 +1651,25 @@ function  OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : 
 function  Dispatchers( DesignTime : Boolean ) : TObjectList;
 //---------------------------------------------------------------------------
 type IOWPinNotifier = interface
-    procedure AddPin( APin : TOWBasicPin );
-    procedure RemovePin( APin : TOWBasicPin; DesignFormClosing : Boolean );
-    procedure ChangePin( APin : TOWBasicPin );
+  ['{EEFCD8A1-9AD8-4326-97BF-F537E5EAF366}']
+  procedure AddPin( APin : TOWBasicPin );
+  procedure RemovePin( APin : TOWBasicPin; DesignFormClosing : Boolean );
+  procedure ChangePin( APin : TOWBasicPin );
     
-    procedure Connected( AObject1 : TOWObject; AObject2 : TOWObject );
-    procedure Disconnected( AObject1 : TOWObject; AObject2 : TOWObject );
+  procedure Connected( AObject1 : TOWObject; AObject2 : TOWObject );
+  procedure Disconnected( AObject1 : TOWObject; AObject2 : TOWObject );
 
-    procedure AddPinList( APinList : TOWPinList );
-    procedure RemovePinList( APinList : TOWPinList );
-    procedure ChangePinList( APinList : TOWPinList );
+  procedure AddPinList( APinList : TOWPinList );
+  procedure RemovePinList( APinList : TOWPinList );
+  procedure ChangePinList( APinList : TOWPinList );
 
-    procedure PinListPinAdded( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
-    procedure PinListPinRemoved( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
-    procedure PinListPinsSwapped( APinList : TOWPinList; APin1 : TOWBasicPin; Index1 : Integer; APin2 : TOWBasicPin; Index2 : Integer ); 
+  procedure PinListPinAdded( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
+  procedure PinListPinRemoved( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
+  procedure PinListPinsSwapped( APinList : TOWPinList; APin1 : TOWBasicPin; Index1 : Integer; APin2 : TOWBasicPin; Index2 : Integer );
 
-    procedure AddDispatcher( ADispatcher : TOWStateDispatcher );
-    procedure RemoveDispatcher( ADispatcher : TOWStateDispatcher; DesignFormClosing : Boolean );
-    procedure ChangeDispatcher( ADispatcher : TOWStateDispatcher );
+  procedure AddDispatcher( ADispatcher : TOWStateDispatcher );
+  procedure RemoveDispatcher( ADispatcher : TOWStateDispatcher; DesignFormClosing : Boolean );
+  procedure ChangeDispatcher( ADispatcher : TOWStateDispatcher );
 
 end;
 
@@ -13231,4 +13232,5 @@ finalization
     end;
 //---------------------------------------------------------------------------
 end.
+
 

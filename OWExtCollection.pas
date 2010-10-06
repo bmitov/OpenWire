@@ -86,6 +86,7 @@ type
   end;
 //------------------------------------------------------------------------------
 type IOWCollectionNotifier = interface
+  ['{55437AD4-9F90-42AC-9146-5F93F8A325EF}']
   procedure ItemCreated( Collection : TCollection; Item : TCollectionItem );
   procedure ItemDestroyed( Collection : TCollection; Item : TCollectionItem );
   
