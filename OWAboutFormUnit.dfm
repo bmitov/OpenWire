@@ -23,7 +23,7 @@ object OWAboutForm: TOWAboutForm
     Top = 272
     Width = 157
     Height = 13
-    Caption = 'Copyright 1999-2010 Boian Mitov'
+    Caption = 'Copyright 1999-2011 Boian Mitov'
   end
   object OWLabel: TLabel
     Left = 120
@@ -2213,7 +2213,8 @@ object OWAboutForm: TOWAboutForm
     Top = 296
     Width = 75
     Height = 25
-    TabOrder = 1
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 1
   end
 end

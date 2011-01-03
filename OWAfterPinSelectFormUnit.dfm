@@ -1,9 +1,9 @@
 object OWAfterPinSelectForm: TOWAfterPinSelectForm
   Left = 100
   Top = 100
-  Width = 236
-  Height = 305
   Caption = 'Pin Selection Dialog'
+  ClientHeight = 267
+  ClientWidth = 220
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 200
@@ -20,7 +20,7 @@ object OWAfterPinSelectForm: TOWAfterPinSelectForm
     Left = 0
     Top = 0
     Width = 220
-    Height = 228
+    Height = 226
     Align = alClient
     ItemHeight = 13
     TabOrder = 0
@@ -28,7 +28,7 @@ object OWAfterPinSelectForm: TOWAfterPinSelectForm
   end
   object Panel1: TPanel
     Left = 0
-    Top = 228
+    Top = 226
     Width = 220
     Height = 41
     Align = alBottom

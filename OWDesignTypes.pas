@@ -120,9 +120,9 @@ procedure OWLinkAwaitsLinkingAllForms();
 procedure OWRequestDesignerRefresh();
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
 function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
-procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
 {$ENDIF}
+procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 //---------------------------------------------------------------------------
 const
 {$IFDEF fpc}
@@ -362,6 +362,10 @@ begin
     end;
 
 {$ENDIF}
+end;
+{$ELSE}
+procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
+begin
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------

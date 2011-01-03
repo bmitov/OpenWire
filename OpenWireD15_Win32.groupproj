@@ -15,6 +15,9 @@
 			<Projects Include="OpenWireExpert\OpenWireDrawExpertD15.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -31,46 +34,55 @@
 			<MSBuild Projects="OpenWirePkgD15.dproj"/>
 		</Target>
 		<Target Name="OpenWirePkgD15:Clean">
-			<MSBuild Targets="Clean" Projects="OpenWirePkgD15.dproj"/>
+			<MSBuild Projects="OpenWirePkgD15.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="OpenWirePkgD15:Make">
-			<MSBuild Targets="Make" Projects="OpenWirePkgD15.dproj"/>
+			<MSBuild Projects="OpenWirePkgD15.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="OpenWireDsnD15">
 			<MSBuild Projects="OpenWireDsnD15.dproj"/>
 		</Target>
 		<Target Name="OpenWireDsnD15:Clean">
-			<MSBuild Targets="Clean" Projects="OpenWireDsnD15.dproj"/>
+			<MSBuild Projects="OpenWireDsnD15.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="OpenWireDsnD15:Make">
-			<MSBuild Targets="Make" Projects="OpenWireDsnD15.dproj"/>
+			<MSBuild Projects="OpenWireDsnD15.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="OpenWireLabPkgD15">
 			<MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj"/>
 		</Target>
 		<Target Name="OpenWireLabPkgD15:Clean">
-			<MSBuild Targets="Clean" Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj"/>
+			<MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="OpenWireLabPkgD15:Make">
-			<MSBuild Targets="Make" Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj"/>
+			<MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="OpenWireDrawExpertD15">
 			<MSBuild Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj"/>
 		</Target>
 		<Target Name="OpenWireDrawExpertD15:Clean">
-			<MSBuild Targets="Clean" Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj"/>
+			<MSBuild Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj" Targets="Clean"/>
 		</Target>
 		<Target Name="OpenWireDrawExpertD15:Make">
-			<MSBuild Targets="Make" Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj"/>
+			<MSBuild Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="NETOpenWireEditorPkgD15">
+			<MSBuild Projects="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj"/>
+		</Target>
+		<Target Name="NETOpenWireEditorPkgD15:Clean">
+			<MSBuild Projects="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="NETOpenWireEditorPkgD15:Make">
+			<MSBuild Projects="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj" Targets="Make"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="OpenWirePkgD15;OpenWireDsnD15;OpenWireLabPkgD15;OpenWireDrawExpertD15"/>
+			<CallTarget Targets="OpenWirePkgD15;OpenWireDsnD15;OpenWireLabPkgD15;OpenWireDrawExpertD15;NETOpenWireEditorPkgD15"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="OpenWirePkgD15:Clean;OpenWireDsnD15:Clean;OpenWireLabPkgD15:Clean;OpenWireDrawExpertD15:Clean"/>
+			<CallTarget Targets="OpenWirePkgD15:Clean;OpenWireDsnD15:Clean;OpenWireLabPkgD15:Clean;OpenWireDrawExpertD15:Clean;NETOpenWireEditorPkgD15:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="OpenWirePkgD15:Make;OpenWireDsnD15:Make;OpenWireLabPkgD15:Make;OpenWireDrawExpertD15:Make"/>
+			<CallTarget Targets="OpenWirePkgD15:Make;OpenWireDsnD15:Make;OpenWireLabPkgD15:Make;OpenWireDrawExpertD15:Make;NETOpenWireEditorPkgD15:Make"/>
 		</Target>
-		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
 	</Project>

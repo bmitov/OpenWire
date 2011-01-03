@@ -207,7 +207,7 @@ begin
             tkWChar, tkLString, tkWString, tkVariant, tkArray,
             tkRecord, tkInterface, tkInt64, tkDynArray ];
 
-    GetComponentProperties( Components,  Types, FDesigner, Proc, NIL );
+    GetComponentProperties( Components, Types, FDesigner, Proc, NIL );
 
   finally
     Components.Free();

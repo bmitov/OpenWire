@@ -76,7 +76,11 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     function  AllEqual(): Boolean; virtual;
     function  AutoFill(): Boolean; virtual;
     function  GetPropInfo(): PPropInfo; virtual;
+  {$IFDEF __VSDESIGN__}
+    function  GetPropType(): PTypeInfo; override;
+  {$ELSE}
     function  GetPropType(): PTypeInfo; virtual;
+  {$ENDIF}
     function  GetKind(): TTypeKind;
     function  GetIsDefault(): Boolean; virtual;
     procedure Revert(); virtual;
@@ -101,7 +105,7 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     procedure GetProperties(Proc: TGetPropProc); virtual;
     function  ValueAvailable(): Boolean; virtual;
     function  GetName(): String; virtual;
-	
+
     function  GetAttributes(): TPropertyAttributes; virtual;
     procedure GetValues(Proc: TGetStrProc); virtual;
     procedure SetValue(const Value: String); virtual;
@@ -117,25 +121,25 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
 
   public
     property Designer : IDesigner read FDesigner;
-    
+
 end;
 {$ENDIF}
 {$ENDIF}
 
 type TOWComponentEditorEvent = procedure of object;
-
+//---------------------------------------------------------------------------
 type TOWComponentEditorItem = class
 private
   FMenuText     : String;
   FPropertyName : String;
   FFilter       : TTypeKinds;
   FCallback     : TOWComponentEditorEvent;
-  
+
 public
   constructor Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter : TTypeKinds; APropertyName : String );
-  
-end;
 
+end;
+//---------------------------------------------------------------------------
 type
   TOWComponentEditorItems = class
   private
@@ -158,7 +162,7 @@ type
     property Items[ Index : Integer ] : TOWComponentEditorItem read GetItem write SetItem; default;
 
   end;
-
+//---------------------------------------------------------------------------
 type
   TOWComponentEditor = class( TComponentEditor )
   protected

@@ -95,7 +95,7 @@ V4.5         04/29/2010  TOWSinkPins added.
                          Fully Lazarus compatible under Windows.
 
 
-Legal issues: Copyright (C) 2001-2010 by Boian Mitov
+Legal issues: Copyright (C) 2001-2011 by Boian Mitov
               mitov@mitov.com
               www.mitov.com
               www.openwire.org
@@ -179,6 +179,21 @@ public
 
 end;
 {$ENDIF}
+//---------------------------------------------------------------------------
+type IOWCriticalSectionLock = interface
+  ['{6DFB975B-32D5-4980-9D7D-9ECFB2779682}']
+
+end;
+//---------------------------------------------------------------------------
+type TOWCriticalSectionLock = class( TInterfacedObject, IOWCriticalSectionLock )
+private
+  FSection : TOWCriticalSection;
+
+public
+  constructor Create( ASection : TOWCriticalSection );
+  destructor  Destroy(); override;
+
+end;
 //---------------------------------------------------------------------------
 type TOWEvent = class
 protected
@@ -1206,6 +1221,12 @@ protected
   function  GetUpStreamLinkName() : String; override;
   function  GetDownStreamLinkName() : String; override;
 
+protected
+  procedure DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
+  procedure UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); override;
+  function  UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; override;
+  function  DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult; override;
+
 public
   function  IsLinkedTo( PinName : String ) : Boolean; override;
 
@@ -1955,8 +1976,8 @@ var
 begin
   if( NotifyList = NIL ) then
     Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
+
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).RemovePin( APin, DesignFormClosing );
 
@@ -1972,8 +1993,8 @@ var
 begin
   if( NotifyList = NIL ) then
     Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
+
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).ChangePin( APin );
 
@@ -2007,7 +2028,7 @@ begin
   if( NotifyList = NIL ) then
     Exit;
     
-  for I := 0 to NotifyList.Count - 1 do
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).Disconnected( AObject1, AObject2 );
 
@@ -2041,7 +2062,7 @@ begin
   if( NotifyList = NIL ) then
     Exit;
     
-  for I := 0 to NotifyList.Count - 1 do
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).RemoveDispatcher( ADispatcher, DesignFormClosing );
 
@@ -2092,7 +2113,7 @@ begin
   if( NotifyList = NIL ) then
     Exit;
     
-  for I := 0 to NotifyList.Count - 1 do
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).RemovePinList( APinList );
 
@@ -2143,7 +2164,7 @@ begin
   if( NotifyList = NIL ) then
     Exit;
     
-  for I := 0 to NotifyList.Count - 1 do
+  for I := NotifyList.Count - 1 downto 0 do
     try
       IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinRemoved( APinList, APin, Index );
 
@@ -7195,6 +7216,157 @@ end;
 function TOWMultiSinkPin.SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean;
 begin
   Result := TryLinkTo( ARoot, AValue, AValue, '', False );
+end;
+//---------------------------------------------------------------------------
+procedure TOWMultiSinkPin.DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+var
+  I           : Integer;
+  AReadLock   : IOWLockSection;
+  AProcessed  : Boolean;
+
+begin
+  AReadLock := ReadLock();
+  if( ForPin = Self ) then
+    begin
+    for I := 0 to FDataTypeDependants.Count - 1 do
+      TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+
+    Exit;
+    end;
+
+  AProcessed := False;
+  for I := 0 to SourceCount do
+    begin
+    if( Sources[ I ] is TOWSourcePin ) then
+      begin
+      TOWSourcePin( Sources[ I ] ).DownStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      AProcessed := True;
+      end;
+    end;
+
+  if( not AProcessed ) then
+    begin
+    if( not PossibleStreamTypes.Ordered ) then
+      OrderStreamTypes( PossibleStreamTypes );
+
+    DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    end;
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWMultiSinkPin.UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
+var
+  I           : Integer;
+  AReadLock   : IOWLockSection;
+  AProcessed  : Boolean;
+
+begin
+  AReadLock := ReadLock();
+  if( ForPin = Self ) then
+    begin
+    for I := 0 to FDataTypeDependants.Count - 1 do
+      TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+
+    Exit;
+    end;
+
+  if( HasToIgnoreUpstream() ) then
+    Exit;
+
+  AProcessed := False;
+  for I := 0 to SourceCount do
+    begin
+    if( Sources[ I ] is TOWSourcePin ) then
+      begin
+      TOWSourcePin( Sources[ I ] ).UpStreamBackRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+      AProcessed := True;
+      end;
+    end;
+
+  if( not AProcessed ) then
+    begin
+//    if( not PossibleStreamTypes.Ordered ) then
+//      OrderStreamTypes( PossibleStreamTypes );
+
+    UpStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes, ForPin );
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWMultiSinkPin.UpStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+var
+  I           : Integer;
+  AReadLock   : IOWLockSection;
+  AProcessed  : Boolean;
+
+begin
+  AReadLock := ReadLock();
+  Result := S_OK;
+
+  if( ForPin = Self ) then
+    begin
+    for I := 0 to FDataTypeDependants.Count - 1 do
+      begin
+      Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).UpStreamForthQueryPossybleInterface( IID, ForPin );
+      if( Result <> S_OK ) then
+        Break;
+
+      end;
+
+    Exit;
+    end;
+
+  AProcessed := False;
+  for I := 0 to SourceCount do
+    begin
+    if( Sources[ I ] is TOWSourcePin ) then
+      begin
+      Result := TOWSourcePin( Sources[ I ] ).UpStreamBackQueryPossybleInterface( IID, ForPin );
+      AProcessed := True;
+      end;
+    end;
+
+  if( not AProcessed ) then
+    Result := UpStreamForthQueryPossybleInterface( IID, ForPin );
+
+end;
+//---------------------------------------------------------------------------
+function TOWMultiSinkPin.DownStreamBackQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+var
+  I           : Integer;
+  AReadLock   : IOWLockSection;
+  AProcessed  : Boolean;
+
+begin
+  AReadLock := ReadLock();
+  Result := S_OK;
+
+  if( ForPin = Self ) then
+    begin
+    for I := 0 to FDataTypeDependants.Count - 1 do
+      begin
+      Result := TOWSourcePin( FDataTypeDependants.Items[ I ] ).DownStreamForthQueryPossybleInterface( IID, ForPin );
+      if( Result <> S_OK ) then
+        Break;
+
+      end;
+
+    Exit;
+    end;
+
+  AProcessed := False;
+  for I := 0 to SourceCount do
+    begin
+    if( Sources[ I ] is TOWSourcePin ) then
+      begin
+      Result := TOWSourcePin( Sources[ I ] ).DownStreamBackQueryPossybleInterface( IID, ForPin );
+      AProcessed := True;
+      end;
+    end;
+
+  if( not AProcessed ) then
+    Result := DownStreamForthQueryPossybleInterface( IID, ForPin );
+
 end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPin.IsLinkedTo( PinName : String ) : Boolean;
@@ -12976,6 +13148,25 @@ begin
 end;
 //---------------------------------------------------------------------------
 {$ENDIF}
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWCriticalSectionLock.Create( ASection : TOWCriticalSection );
+begin
+  inherited Create();
+  FSection := ASection;
+  FSection.Enter();
+end;
+//---------------------------------------------------------------------------
+destructor TOWCriticalSectionLock.Destroy();
+begin
+  FSection.Leave();
+  inherited;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 var
   GOWDBGNotifyList      : TInterfaceList;
