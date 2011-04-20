@@ -2213,8 +2213,7 @@ object OWAboutForm: TOWAboutForm
     Top = 296
     Width = 75
     Height = 25
-    Kind = bkOK
-    NumGlyphs = 2
     TabOrder = 1
+    Kind = bkOK
   end
 end

@@ -407,7 +407,7 @@ type
 
   public
     constructor Create(AOwner: TComponent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
 
 end;
 //---------------------------------------------------------------------------
@@ -460,9 +460,9 @@ type
     
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWFloatPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -525,9 +525,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWBoolPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     procedure SetValue( AValue : Boolean );
@@ -590,9 +590,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWCharPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     procedure SetValue( AValue : Char );
@@ -658,9 +658,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWStringPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     procedure SetValue( AValue : String );
@@ -729,9 +729,9 @@ type
     
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWIntegerPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -795,9 +795,9 @@ type
     
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWInt64PinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   protected
     function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -862,7 +862,7 @@ type
 
   public
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64 );
@@ -973,9 +973,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitReal( AValue : Real );
@@ -1046,9 +1046,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
@@ -1157,7 +1157,7 @@ type
 
   public
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     function FloatNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -1224,9 +1224,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWRealComplexPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitComplex( Value : TOWRealComplex );
@@ -1293,9 +1293,9 @@ type
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitDateTime( Value : TDateTime );
@@ -1367,7 +1367,7 @@ type
 
   public
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
@@ -1440,7 +1440,7 @@ type
 
   public
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     function RealNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
@@ -1468,7 +1468,7 @@ type
 
   public
     constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitValueRange( AValue : Integer; AMin : Integer; AMax : Integer );
@@ -1584,7 +1584,7 @@ begin
   AddType( IOWClockStream, ClockNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWClockSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+constructor TOWClockSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
@@ -1676,9 +1676,9 @@ begin
   AddType( IOWFloatStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent );
+constructor TOWFloatSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWFloatStream, Notification );
@@ -1690,9 +1690,9 @@ begin
   AddType( IOWFloatStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWFloatSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWFloatStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -1773,9 +1773,9 @@ begin
   AddType( IOWBoolStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent );
+constructor TOWBoolSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWBoolStream, Notification );
@@ -1787,9 +1787,9 @@ begin
   AddType( IOWBoolStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWBoolSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWBoolStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -1888,9 +1888,9 @@ begin
   AddType( IOWFloatStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWCharSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent );
+constructor TOWCharSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWFloatStream, Notification );
@@ -1902,9 +1902,9 @@ begin
   AddType( IOWCharStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWCharSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWCharSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWCharStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -2012,9 +2012,9 @@ begin
   AddType( IOWFloatStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent );
+constructor TOWStringSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
   AddType( IOWFloatStream, Notification );
 end;
@@ -2025,9 +2025,9 @@ begin
   AddType( IOWStringStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWStringSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWStringStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -2135,9 +2135,9 @@ begin
   AddType( IOWIntegerStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent );
+constructor TOWIntegerSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
   AddType( IOWIntegerStream, Notification );
 end;
@@ -2148,9 +2148,9 @@ begin
   AddType( IOWIntegerStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWIntegerSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWIntegerStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -2245,9 +2245,9 @@ begin
   AddType( IOWInt64Stream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent );
+constructor TOWInt64SourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
   AddType( IOWInt64Stream, Notification );
 end;
@@ -2258,9 +2258,9 @@ begin
   AddType( IOWInt64Stream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWInt64SourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWInt64Stream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -2357,9 +2357,9 @@ begin
   AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWRealSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+constructor TOWRealSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWFloatStream, Notification );
@@ -2373,9 +2373,9 @@ begin
   AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWRealSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWRealSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWFloatStream, Notification );
   AddType( IOWRealStream, Notification );
 end;
@@ -2528,9 +2528,9 @@ begin
   AddType( IOWRealRangedStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWRealRangedSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+constructor TOWRealRangedSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWFloatStream, Notification );
@@ -2546,9 +2546,9 @@ begin
   AddType( IOWRealRangedStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWRealRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWRealRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWFloatStream, Notification );
   AddType( IOWRealStream, Notification );
   AddType( IOWRealRangedStream, Notification );
@@ -2828,9 +2828,9 @@ begin
   AddType( IOWRealComplexStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent );
+constructor TOWComplexSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWRealComplexStream, Notification );
@@ -2842,9 +2842,9 @@ begin
   AddType( IOWRealComplexStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWComplexSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWRealComplexStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -3003,9 +3003,9 @@ begin
   AddType( IOWDateTimeStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+constructor TOWDateTimeSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
 
   AddType( IOWDateTimeStream, Notification );
@@ -3017,9 +3017,9 @@ begin
   AddType( IOWDateTimeStream, Notification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWDateTimeSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWDateTimeStream, Notification );
 end;
 //---------------------------------------------------------------------------
@@ -3181,9 +3181,9 @@ begin
   AddType( IOWDateTimeRangedStream, TimeRangedNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64TimeRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWInt64TimeRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWInt64Stream, IntNotification );
   AddType( IOWInt64RangedStream, IntRangedNotification );
   AddType( IOWDateTimeStream, TimeNotification );
@@ -3985,9 +3985,9 @@ begin
   AddType( IOWIntegerStream, IntegerNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWFloatIntSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWFloatIntSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWFloatStream, FloatNotification );
   AddType( IOWIntegerStream, IntegerNotification );
 end;
@@ -4605,7 +4605,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer );
@@ -4627,7 +4627,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToFloatFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer );
@@ -4649,7 +4649,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWFloatToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWFloatToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single );
@@ -4671,7 +4671,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64 );
@@ -4693,7 +4693,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToFloatFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64 );
@@ -4715,7 +4715,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToRealRangedFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; RangesFilled : Boolean );
@@ -4742,7 +4742,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToRealRangedFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL ) );
+  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; RangesFilled : Boolean );
@@ -4783,9 +4783,9 @@ begin
   AddType( IOWBoolStream,    BoolNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWStdComboSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWStdComboSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FNotifyOnChangeOnly := True;
   AddType( IOWRealStream,    RealNotification );
   AddType( IOWFloatStream,   FloatNotification );
@@ -4929,9 +4929,9 @@ begin
   AddType( IOWIntRangedStream, IntRangedNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWIntRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWIntRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWIntegerStream, IntNotification );
   AddType( IOWIntRangedStream, IntRangedNotification );
 end;
@@ -5285,9 +5285,9 @@ begin
   AddType( IOWInt64RangedStream, IntRangedNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64RangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWInt64RangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   AddType( IOWInt64Stream, IntNotification );
   AddType( IOWInt64RangedStream, IntRangedNotification );
 end;

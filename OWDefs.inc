@@ -36,3 +36,7 @@
 {$DEFINE D15}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16 (D2012)
+{$DEFINE D16}
+{$ENDIF}
+

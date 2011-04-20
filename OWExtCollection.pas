@@ -40,6 +40,10 @@ uses Classes;
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D6}
+{$ENDIF}
+
 type
   TOWExtCollectionItem = class(TCollectionItem)
   protected

@@ -43,6 +43,11 @@ unit OWDesignTypes;
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D6}
+{$DEFINE D9}
+{$ENDIF}
+
 interface
 
 uses

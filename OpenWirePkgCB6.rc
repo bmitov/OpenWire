@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION 4,5,0,25
-PRODUCTVERSION 4,5,0,25
+FILEVERSION 4,5,0,34
+PRODUCTVERSION 1,0,0,30
 FILEFLAGSMASK 0x3FL
 FILEFLAGS 0x00L
 FILEOS 0x40004L
@@ -12,7 +12,7 @@ BEGIN
          BLOCK "040904E4"
          BEGIN
               VALUE "CompanyName", "Boian Mitov\0"
-              VALUE "FileVersion", "4.5.0.25\0"
+              VALUE "FileVersion", "4.5.0.34\0"
               VALUE "ProductVersion", "1.0.0.30\0"
          END
     END

@@ -33,6 +33,10 @@ interface
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D6}
+{$ENDIF}
+
   uses
     SysUtils, Classes,
 {$IFDEF D6}
@@ -155,6 +159,11 @@ procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
 {$IFDEF VER220} // Delphi 15.0
 procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
   ACollection: TCollection; const PropertyName: String); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
+{$ENDIF}
+
+{$IFDEF VER230} // Delphi 16.0
+procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
+  ACollection: TCollection; const PropertyName: String); external 'designide160.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
 //------------------------------------------------------------------------------

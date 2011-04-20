@@ -38,6 +38,10 @@ unit OWStateEditors;
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D6}
+{$ENDIF}
+
 interface
 
 uses

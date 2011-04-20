@@ -47,6 +47,11 @@ interface
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D6}
+{$DEFINE D9}
+{$ENDIF}
+
 {$IFNDEF FPC}
 {$IFDEF D6}
 {$DEFINE I_PROP_EDITOR}
@@ -423,16 +428,21 @@ const
     {$ENDIF}
 
   {$ELSE} // Delphi 11 up
-    {$IFDEF VER220} // Delphi 15
+    {$IFDEF VER230} // Delphi 16
       {$R OpenWireResources2006.res}
 
-    {$ELSE} // Delphi 15
-      {$IFDEF VER210} // Delphi 14
+    {$ELSE} // Delphi 16
+      {$IFDEF VER220} // Delphi 15
         {$R OpenWireResources2006.res}
 
-      {$ELSE} // Delphi 14
-        {$R OpenWireResources2007.res}
+      {$ELSE} // Delphi 15
+        {$IFDEF VER210} // Delphi 14
+          {$R OpenWireResources2006.res}
 
+        {$ELSE} // Delphi 14
+          {$R OpenWireResources2007.res}
+
+        {$ENDIF}
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
@@ -532,7 +542,8 @@ begin
   iPos := Pos( '.', Str );
   Delete( Str, iPos, 10000 );
   if( FullPath ) then
-    Str := ARootComponent.Name + '.' + Str;
+    if( ARootComponent <> NIL ) then
+      Str := ARootComponent.Name + '.' + Str;
 
   Result := Str;
 end;

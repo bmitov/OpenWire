@@ -171,9 +171,7 @@
 			<VersionInfoKeys Name="ProductVersion">0.0.0.0</VersionInfoKeys>
 			<VersionInfoKeys Name="Comments"></VersionInfoKeys>
 			<VersionInfoKeys Name="CompileDate">Thursday, May 10, 2007 11:33 AM</VersionInfoKeys>
-		</VersionInfoKeys>  
-    
-    <Excluded_Packages>
+		</VersionInfoKeys>  <Excluded_Packages>
       <Excluded_Packages Name="C:\WINDOWS\System32\OpenWireDsnD10.bpl">File C:\WINDOWS\System32\OpenWireDsnD10.bpl not found</Excluded_Packages>
       <Excluded_Packages Name="C:\WINDOWS\System32\OpenWireLabPkgD10.bpl">File C:\WINDOWS\System32\OpenWireLabPkgD10.bpl not found</Excluded_Packages>
       <Excluded_Packages Name="C:\Documents and Settings\Boian\My Documents\Borland Studio Projects\Bpl\OpenWireDrawExpertD10.bpl">(untitled)</Excluded_Packages>

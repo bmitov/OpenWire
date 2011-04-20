@@ -625,16 +625,16 @@ TOWPinType = ( ptSource, ptSink, ptState, ptMultiSink, ptDispatcher );
 //---------------------------------------------------------------------------
 TOWBasicPin = class(TOWPinObject, IOWStream)
 protected
-  CurrentEditorPtr      : ^TOWBasicPin;
+  CurrentEditorPtr  : ^TOWBasicPin;
 
 protected
-  FOwnerPinList         : TOWPinList;   // If owned by pin list.
-  FCustomData           : TObject;
-  FLoadFormName         : String;
-  FDestroyLock          : IOWDestroyLock;
+  FOwnerPinList     : TOWPinList;   // If owned by pin list.
+  FCustomData       : TObject;
+  FLoadFormName     : String;
+  FDestroyLock      : IOWDestroyLock;
 
 protected // State support
-  FDispatcher           : TOWStateDispatcher;
+  FDispatcher       : TOWStateDispatcher;
 
 protected
   function  GetOwnerComponent() : TComponent; virtual;
@@ -726,11 +726,11 @@ protected
 
 protected
   function  RequestInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
-  function  _AddRef(): Integer; stdcall;
-  function  _Release(): Integer; stdcall;
+  function _AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function _Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
 public
-  function  QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
 public
   procedure AfterConstruction(); override;
@@ -846,9 +846,9 @@ protected
   FRefCount: Integer;
 
 protected
-  function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-  function _AddRef: Integer; stdcall;
-  function _Release: Integer; stdcall;
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function _AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function _Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
 protected
   function  GetCount() : Integer;
@@ -931,8 +931,6 @@ public
   function  Remove( Item: POWPinEntry ) : Integer;
   procedure Delete( Index: Integer );
   procedure Clear(); override;
-
-  procedure CopyFromList( AList : TOWPinEntryList );
 
 protected
   function  GetItem( Index : Integer ) : POWPinEntry;
@@ -1120,8 +1118,8 @@ public
   function  Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult; override;
 
 public
-  constructor Create(AOwner: TComponent);
-  constructor CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+  constructor Create( AOwner: TComponent );
+  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
   destructor  Destroy(); override;
 
 public
@@ -1735,6 +1733,7 @@ uses Dialogs, Forms
   ;
 
 type PGUID = ^TGUID;
+type TOWPinEntryListArray = array of TOWPinEntry;
 //---------------------------------------------------------------------------
 function OWInterlockedExchangeAdd( var Addend: Longint; Value: Longint): Longint;
 begin
@@ -2672,11 +2671,11 @@ begin
       FOwner.IntUnlock();
       Exit;
       end;
-      
+
 //  FCountReads := FOwner.FCountReads + FOwner.FCountStopReads;
 //  FCountWrites := FOwner.FCountWrites + FOwner.FCountStopWrites;
   FCountLocks := FOwner.FCountLocks + FOwner.FCountStopLocksOwner;
-  FCountOtherLocks := FOwner.FCountStopLocks; 
+  FCountOtherLocks := FOwner.FCountStopLocks;
 //  FCountLocks := FOwner.FCountLocks + FOwner.FCountStopLocksOwner;
 
 {
@@ -2713,11 +2712,13 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWSimpleUnlockSection.Destroy();
 var
-  AThread : Cardinal;
+  AThread     : Cardinal;
+//  AWriteLock  : IOWLockSection;
 
 begin
   AThread := GetCurrentThreadId();
   GOWDBGLog( FOwner, Self, owdbBeginUnlockDestroy, AThread );
+
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
   Dec( FOwner.FCountUnlocks );
@@ -3178,8 +3179,6 @@ end;
 //---------------------------------------------------------------------------
 function  TOWLock.UnlockAll() : IOWLockSection;
 begin
-//  Result := NIL;
-//  Exit;
   Result := TOWSimpleUnlockSection.Create( Self );
 end;
 //---------------------------------------------------------------------------
@@ -3410,7 +3409,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin.QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+function TOWBasicPin.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   if GetInterface(IID, Obj) then
     Result := S_OK
@@ -3425,12 +3424,12 @@ begin
   Result := QueryInterface( IID, Obj );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._AddRef: Integer; stdcall;
+function TOWBasicPin._AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   _AddRef := 1;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._Release: Integer; stdcall;
+function TOWBasicPin._Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   _Release := 1;
 end;
@@ -4831,12 +4830,12 @@ begin
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
 end;
 //---------------------------------------------------------------------------
-constructor TOWSourcePin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+constructor TOWSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
 var
   AWriteLock : IOWLockSection;
 
 begin
-  inherited;
+  inherited CreateLock( AOwner, AOwnerLock );
   AWriteLock := WriteLock();
   FInDependOn := False;
   FSinkPins  := TOWPinEntryList.Create();
@@ -4848,7 +4847,7 @@ end;
 destructor TOWSourcePin.Destroy();
 var
   ADestroyLock : IOWDestroyLockSection;
-  AWriteLock : IOWLockSection;
+  AWriteLock   : IOWLockSection;
 
 begin
   AWriteLock := WriteLock();
@@ -5255,47 +5254,40 @@ end;
 //---------------------------------------------------------------------------
 function TOWSourcePin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
-  I      : Integer;
-  J      : Integer;
-  State  : TOWNotifyState;
-  Status : TOWNotifyResult;
-  DataTypeID : TGUID;
-//  OperationIntf :  IOWNotifyOperation;
-  ALock : IOWLockSection;
-  ASinkPin   : TOWBasicPin;
-  ARealSinkPin   : TOWBasicPin;
-//  ASinkReadLock : IOWLockSection;
+  I             : Integer;
+  J             : Integer;
+  State         : TOWNotifyState;
+  Status        : TOWNotifyResult;
+  DataTypeID    : TGUID;
+  ALock         : IOWLockSection;
+  ASinkPin      : TOWBasicPin;
+  ARealSinkPin  : TOWBasicPin;
 
-  ASinksList    : TOWPinEntryList;
-  Entry : POWPinEntry;
-  AUnlock : IOWLockSection;
-  ADestroyLock : IOWDestroyLockSection;
+  ASinksList    : TOWPinEntryListArray;
+  ASinksCount   : Integer;
+  Entry         : POWPinEntry;
+  AUnlock       : IOWLockSection;
+  ADestroyLock  : IOWDestroyLockSection;
 
 begin
   ALock := ReadLock();
 
-  ASinksList := TOWPinEntryList.Create();
+  ASinksCount := FSinkPins.Count;
+  SetLength( ASinksList, ASinksCount );
 
-  ASinksList.CopyFromList( FSinkPins );
+  for I := 0 to ASinksCount - 1 do
+    ASinksList[ I ] := FSinkPins[ I ]^;
 
-  for I := ASinksList.Count - 1 downto 0 do
-    begin
-    if( ASinksList[ I ].ConnectionPin <> ASinksList[ I ].RealPin ) then
-      begin 
-      for J := I - 1 downto 0 do
-        begin
-        if( ASinksList[ I ].ConnectionPin = ASinksList[ J ].ConnectionPin ) then
-          begin
-          ASinksList.Delete( I );
-          Break;
-          end;
-        end;
-      end;
-    end;
-    
+  for I := ASinksCount - 1 downto 0 do
+    if( Assigned( ASinksList[ I ].SubmitFunction )) then
+      if( ASinksList[ I ].ConnectionPin <> ASinksList[ I ].RealPin ) then
+        for J := I - 1 downto 0 do
+          if( ASinksList[ I ].ConnectionPin = ASinksList[ J ].ConnectionPin ) then
+            ASinksList[ I ].SubmitFunction := NIL;
+
+
   try
   
-//  OperationIntf := Operation; 
     if( FInSending > 200 ) then
       begin
       ALock := NIL;
@@ -5304,19 +5296,17 @@ begin
       end;
 
     Inc( FInSending );
-  //  Result := [];
     Result := inherited Notify( Operation );
 
-  //  AWriteLock := NIL;
-    for I := 0 to ASinksList.Count - 1 do
+    for I := 0 to ASinksCount - 1 do
       begin
-      if( I < ASinksList.Count - 1 ) then
+      if( I < ASinksCount - 1 ) then
         State := []
 
       else
         State := [nsLastIteration];
 
-      Entry := ASinksList.Items[ I ];
+      Entry := @ASinksList[ I ];
       
       DataTypeID := Entry.ConnectedID;
       ASinkPin := Entry.ConnectionPin;
@@ -5325,34 +5315,23 @@ begin
         begin
         if( Assigned( Entry.SubmitFunction )) then
           begin
-//          ASinkReadLock := ASinkPin.ReadLock();
-    //    DataTypeID := GetSubmitID( I );
-    //    ASinkPin := GetSink( I );
-    //    ASinkWriteLock := ASinkPin.WriteLock();
             try
               ALock := NIL;
-//              AUnlock := NIL;
               ADestroyLock := FDestroyLock.Lock();
               if( ADestroyLock <> NIL ) then
                 begin
                 if( FOwnerLock <> NIL ) then
                   AUnlock := FOwnerLock.UnlockAll();
 
-                Status := TOWSubmit( Entry.SubmitFunction )( ASinkPin, @DataTypeID, Operation, State );
+                Status := Entry.SubmitFunction( ASinkPin, @DataTypeID, Operation, State );
                 AUnlock := NIL;
                 end;
-                
-              ALock := NIL;
+
             finally
-//              if( FOwnerLock <> NIL ) then
-//                AUnlock := FOwnerLock.UnlockAll();
-                
               ALock := ReadLock();
-//              ASinkReadLock := NIL;
+
             end;
           end;
-
-    //    Status := TOWSubmitFunction( GetSubmit( I ))( 0, GetSink( I ), Operation, Data, State );
 
         if( nrDataChanged in Status ) then
           begin
@@ -5366,15 +5345,11 @@ begin
       end;
 
   finally
-    ASinksList.Free();
-
     ALock := WriteLock();
     if( not FInDisconnect ) then
       ReorderChangedData();
 
     Dec( FInSending );
-    ALock := NIL;
-//    AUnlock := NIL;
   end;
 
 end;
@@ -6258,6 +6233,7 @@ begin
       begin
       if( FOwnerLock <> NIL ) then
         AUnlock := FOwnerLock.UnlockAll();
+//        AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
 
       ASubmitFunction( ASinkPin, @DataTypeID, TOWNotifyOperation.Create(), [ nsNewLink, nsLastIteration ] );
       AUnlock := NIL;
@@ -6269,7 +6245,7 @@ begin
 //  AUnlock := NIL;
 
 //  if( FOwnerLock <> NIL ) then
-//    AUnlock := FOwnerLock.UnlockAll();
+//    AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
     
   AWriteLock := WriteLock();
   OWNotifyChangePin( Self );
@@ -7829,47 +7805,38 @@ end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPin.NotifyPin( APin : TOWBasicPin; Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
-  I      : Integer;
-  J      : Integer;
-  State  : TOWNotifyState;
-  Status : TOWNotifyResult;
-  DataTypeID : TGUID;
-//  OperationIntf :  IOWNotifyOperation;
-  ALock : IOWLockSection;
-  ASourcePin   : TOWBasicPin;
-  ARealSourcePin   : TOWBasicPin;
-//  ASinkReadLock : IOWLockSection;
-
-  ASourcesList    : TOWPinEntryList;
-  Entry : POWPinEntry;
-  AUnlock : IOWLockSection;
-  ADestroyLock : IOWDestroyLockSection;
+  I               : Integer;
+  J               : Integer;
+  State           : TOWNotifyState;
+  Status          : TOWNotifyResult;
+  DataTypeID      : TGUID;
+  ALock           : IOWLockSection;
+  ASourcePin      : TOWBasicPin;
+  ARealSourcePin  : TOWBasicPin;
+  ASourcesList    : TOWPinEntryListArray;
+  ASourcesCount   : Integer;
+  Entry           : POWPinEntry;
+  AUnlock         : IOWLockSection;
+  ADestroyLock    : IOWDestroyLockSection;
 
 begin
   ALock := ReadLock();
 
-  ASourcesList := TOWPinEntryList.Create();
+  ASourcesCount := FSourcePins.Count;
+  SetLength( ASourcesList, ASourcesCount );
 
-  ASourcesList.CopyFromList( FSourcePins );
+  for I := 0 to ASourcesCount - 1 do
+    ASourcesList[ I ] := FSourcePins[ I ]^;
 
-  for I := ASourcesList.Count - 1 downto 0 do
-    begin
-    if( ASourcesList[ I ].ConnectionPin <> ASourcesList[ I ].RealPin ) then
-      begin 
-      for J := I - 1 downto 0 do
-        begin
-        if( ASourcesList[ I ].ConnectionPin = ASourcesList[ J ].ConnectionPin ) then
-          begin
-          ASourcesList.Delete( I );
-          Break;
-          end;
-        end;
-      end;
-    end;
-    
+  for I := ASourcesCount - 1 downto 0 do
+    if( Assigned( ASourcesList[ I ].SubmitFunction )) then
+      if( ASourcesList[ I ].ConnectionPin <> ASourcesList[ I ].RealPin ) then
+        for J := I - 1 downto 0 do
+          if( ASourcesList[ I ].ConnectionPin = ASourcesList[ J ].ConnectionPin ) then
+            ASourcesList[ I ].SubmitFunction := NIL;
+
   try
   
-//  OperationIntf := Operation; 
     if( FInSending > 200 ) then
       begin
       ALock := NIL;
@@ -7878,19 +7845,17 @@ begin
       end;
 
     Inc( FInSending );
-  //  Result := [];
     Result := inherited Notify( Operation );
 
-  //  AWriteLock := NIL;
-    for I := 0 to ASourcesList.Count - 1 do
+    for I := 0 to ASourcesCount - 1 do
       begin
-      if( I < ASourcesList.Count - 1 ) then
+      if( I < ASourcesCount - 1 ) then
         State := []
 
       else
         State := [nsLastIteration];
 
-      Entry := ASourcesList.Items[ I ];
+      Entry := @ASourcesList[ I ];
       
       DataTypeID := Entry.ConnectedID;
       ASourcePin := Entry.ConnectionPin;
@@ -7899,13 +7864,8 @@ begin
         begin
         if( Assigned( Entry.SubmitFunction )) then
           begin
-//          ASinkReadLock := ASinkPin.ReadLock();
-    //    DataTypeID := GetSubmitID( I );
-    //    ASinkPin := GetSink( I );
-    //    ASinkWriteLock := ASinkPin.WriteLock();
             try
               ALock := NIL;
-//              AUnlock := NIL;
               ADestroyLock := FDestroyLock.Lock();
               if( ADestroyLock <> NIL ) then
                 begin
@@ -7915,18 +7875,11 @@ begin
                 Status := TOWSubmit( Entry.SubmitFunction )( ASourcePin, @DataTypeID, Operation, State );
                 AUnlock := NIL;
                 end;
-                
-              ALock := NIL;
+
             finally
-//              if( FOwnerLock <> NIL ) then
-//                AUnlock := FOwnerLock.UnlockAll();
-                
               ALock := ReadLock();
-//              ASinkReadLock := NIL;
             end;
           end;
-
-    //    Status := TOWSubmitFunction( GetSubmit( I ))( 0, GetSink( I ), Operation, Data, State );
 
         if( nrDataChanged in Status ) then
           begin
@@ -7940,15 +7893,11 @@ begin
       end;
 
   finally
-    ASourcesList.Free();
-
     ALock := WriteLock();
     if( not FInDisconnect ) then
       ReorderChangedData();
 
     Dec( FInSending );
-    ALock := NIL;
-//    AUnlock := NIL;
   end;
 
 end;
@@ -12135,24 +12084,6 @@ begin
   inherited Clear();
 end;
 //---------------------------------------------------------------------------
-procedure TOWPinEntryList.CopyFromList( AList : TOWPinEntryList );
-var
-  I : Integer;
-  Entry : POWPinEntry;
-  
-begin
-  for I := 0 to AList.Count - 1 do
-    begin
-    Entry := Add();
-    Entry.RealPin := AList.Items[ I ].RealPin; 
-    Entry.ConnectionPin := AList.Items[ I ].ConnectionPin; 
-    Entry.ConnectedID := AList.Items[ I ].ConnectedID;
-    Entry.SubmitFunction := AList.Items[ I ].SubmitFunction; 
-    Entry.ModificationLevel := AList.Items[ I ].ModificationLevel; 
-    end;
-    
-end;
-//---------------------------------------------------------------------------
 function TOWPinEntryList.GetItem( Index : Integer ) : POWPinEntry;
 begin
   Result := POWPinEntry( inherited Items[ Index ] );
@@ -12318,7 +12249,7 @@ begin
   Result := inherited Count;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList.QueryInterface(const IID: TGUID; out Obj): HResult;
+function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   if GetInterface(IID, Obj) then
     Result := 0
@@ -12326,12 +12257,12 @@ begin
     Result := E_NOINTERFACE;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._AddRef: Integer;
+function TOWObjectList._AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   Result := InterlockedIncrement(FRefCount);
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._Release: Integer;
+function TOWObjectList._Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   Result := InterlockedDecrement(FRefCount);
   if Result = 0 then

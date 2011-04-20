@@ -32,6 +32,10 @@ unit OWClassProperty;
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER230} // Delphi 16.0
+{$DEFINE D9}
+{$ENDIF}
+
 interface
 uses
 {$IFDEF FPC}
@@ -78,6 +82,7 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     function  GetPropInfo(): PPropInfo; virtual;
   {$IFDEF __VSDESIGN__}
     function  GetPropType(): PTypeInfo; override;
+    function  GetOrdValue() : Longint; override;
   {$ELSE}
     function  GetPropType(): PTypeInfo; virtual;
   {$ENDIF}
@@ -246,88 +251,95 @@ function  TOWClassPropertyEditor.GetValue() : String;
 begin
   Result := '';
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetEditValue(out Value: String): Boolean;
 begin
   Value := GetValue();
   Result := True;
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.HasInstance(Instance: TPersistent): Boolean;
 begin
   Result := True;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.Activate();
 begin
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.Initialize();
 begin
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.AllEqual() : Boolean;
 begin
   Result := True;
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.AutoFill() : Boolean;
 begin
   Result := False;
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetEditLimit() : Integer;
 begin
   Result := 255;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.GetProperties(Proc: TGetPropProc);
 begin
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetPropInfo() : PPropInfo;
 begin
   Result := NIL;
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetPropType() : PTypeInfo;
 begin
   Result := typeinfo( TPersistent );
 end;
-
+//---------------------------------------------------------------------------
+{$IFDEF __VSDESIGN__}
+function TOWClassPropertyEditor.GetOrdValue() : Longint;
+begin
+  Result := 0;
+end;
+{$ENDIF}
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetKind() : TTypeKind;
 begin
   Result := GetPropType.Kind;
 end;
-
+//---------------------------------------------------------------------------
 function  TOWClassPropertyEditor.GetIsDefault() : Boolean;
 begin
   Result := False;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.SetPropEntry(Index: Integer; AInstance: TPersistent;
       APropInfo: PPropInfo);
 begin
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.Revert();
 begin
 end;
-
+//---------------------------------------------------------------------------
 function TOWClassPropertyEditor.ValueAvailable() : Boolean;
 begin
   Result := True;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.Edit();
 begin
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWClassPropertyEditor.Modified();
 begin
   if( FDesigner <> NIL ) then
     FDesigner.Modified();
-    
+
 end;
 {$ENDIF}
 {$ENDIF}
