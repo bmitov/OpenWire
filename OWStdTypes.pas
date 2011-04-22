@@ -1586,7 +1586,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWClockSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
   AddType( IOWClockStream, ClockNotification );
 end;

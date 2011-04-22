@@ -145,6 +145,14 @@ TODO :
 
 {$I OWDefs.inc}
 
+{$IFDEF VER130}
+  {$DEFINE INTERFACE_USE_STDCALL }
+{$ELSE}
+  {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}
+    {$DEFINE INTERFACE_USE_STDCALL }
+  {$IFEND}
+{$ENDIF}
+
 unit OWPins;
 
 interface
@@ -466,6 +474,7 @@ IOWLock = interface
   function  WriteLock() : IOWLockSection;
   function  StopLock()  : IOWLockSection;
   function  UnlockAll() : IOWLockSection;
+  function  UnlockAllLockInOrder( AFirstLock : IOWLock ) : IOWLockSection;
   function  Instance()  : TOWLock;
 
 end;
@@ -518,6 +527,7 @@ public
   function  WriteLock() : IOWLockSection;
   function  StopLock() : IOWLockSection;
   function  UnlockAll() : IOWLockSection;
+  function  UnlockAllLockInOrder( AFirstLock : IOWLock ) : IOWLockSection;
 
 public
   constructor Create();
@@ -726,11 +736,11 @@ protected
 
 protected
   function  RequestInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
-  function _AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
-  function _Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function _AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};  
+  function _Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 public
-  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 public
   procedure AfterConstruction(); override;
@@ -846,9 +856,9 @@ protected
   FRefCount: Integer;
 
 protected
-  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
-  function _AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
-  function _Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 protected
   function  GetCount() : Integer;
@@ -991,6 +1001,7 @@ end;
 //---------------------------------------------------------------------------
 TOWSourcePin = class(TOWStreamPin)
 protected
+  FInputOwnerLock       : IOWLock; // The input side lock of the component taht owns the pin.
   FSinkPins             : TOWPinEntryList;
   FFormatConverters     : TOWFormatConverterList;
   FFunctionSources      : TOWFunctionSinkPinList;
@@ -1119,7 +1130,7 @@ public
 
 public
   constructor Create( AOwner: TComponent );
-  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
   destructor  Destroy(); override;
 
 public
@@ -1925,9 +1936,10 @@ type
 //    FCountWrites  : Integer;
     FCountLocks       : Integer;
     FCountOtherLocks  : Integer;
+    FFirstLockIntf    : IOWLock;
 
   public
-    constructor Create( AOwner : IOWLock );
+    constructor Create( AOwner : IOWLock; AFirstLock : IOWLock );
     destructor  Destroy(); override;
 
   end;
@@ -2648,13 +2660,15 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSimpleUnlockSection.Create( AOwner : IOWLock );
+constructor TOWSimpleUnlockSection.Create( AOwner : IOWLock; AFirstLock : IOWLock );
 var
   AThread : Cardinal;
 
 begin
   AOwner.Instance().IntLock();
   inherited Create( AOwner );
+
+  FFirstLockIntf := AFirstLock;
 
   AThread := GetCurrentThreadId();
   GOWDBGLog( FOwner, Self, owdbBeginUnlockCreate, AThread );
@@ -2710,14 +2724,16 @@ begin
   FOwner.IntUnlock();
 end;
 //---------------------------------------------------------------------------
-destructor  TOWSimpleUnlockSection.Destroy();
+destructor TOWSimpleUnlockSection.Destroy();
 var
   AThread     : Cardinal;
-//  AWriteLock  : IOWLockSection;
+  AWriteLock  : IOWLockSection;
 
 begin
   AThread := GetCurrentThreadId();
   GOWDBGLog( FOwner, Self, owdbBeginUnlockDestroy, AThread );
+  if( FFirstLockIntf <> NIL ) then
+    AWriteLock := FFirstLockIntf.WriteLock();
 
 {$IFDEF __LOCKS_DBG__}
   FOwner.IntLock();
@@ -2774,7 +2790,7 @@ function  TOWObject.UnlockAll() : IOWLockSection;
 begin
 //  Result := NIL;
 //  Exit;
-  Result := TOWSimpleUnlockSection.Create( FIntLock );
+  Result := TOWSimpleUnlockSection.Create( FIntLock, NIL );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3177,9 +3193,14 @@ begin
   FIntLockSection.Leave();
 end;
 //---------------------------------------------------------------------------
+function  TOWLock.UnlockAllLockInOrder( AFirstLock : IOWLock ) : IOWLockSection;
+begin
+  Result := TOWSimpleUnlockSection.Create( Self, AFirstLock );
+end;
+//---------------------------------------------------------------------------
 function  TOWLock.UnlockAll() : IOWLockSection;
 begin
-  Result := TOWSimpleUnlockSection.Create( Self );
+  Result := TOWSimpleUnlockSection.Create( Self, NIL );
 end;
 //---------------------------------------------------------------------------
 function  TOWLock.StopLock() : IOWLockSection;
@@ -3381,10 +3402,10 @@ end;
 procedure TOWBasicPin.BeforeDestruction();
 var
   DesignFormClosing : Boolean;
-  AStopLock  : IOWLockSection;
-  AWriteLock : IOWLockSection;
-  ADestroyLock : IOWDestroyLockSection;
-  I          : Integer;
+  AStopLock         : IOWLockSection;
+  AWriteLock        : IOWLockSection;
+  ADestroyLock      : IOWDestroyLockSection;
+  I                 : Integer;
 
 begin
 //  Log( 'DELETE : ' + IntToHex( Integer( Self ), 8 ) + ' - ' + GetFullName( True ) );
@@ -3409,7 +3430,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWBasicPin.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   if GetInterface(IID, Obj) then
     Result := S_OK
@@ -3424,12 +3445,12 @@ begin
   Result := QueryInterface( IID, Obj );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWBasicPin._AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   _AddRef := 1;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWBasicPin._Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   _Release := 1;
 end;
@@ -4830,12 +4851,13 @@ begin
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
 end;
 //---------------------------------------------------------------------------
-constructor TOWSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
+constructor TOWSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 var
   AWriteLock : IOWLockSection;
 
 begin
   inherited CreateLock( AOwner, AOwnerLock );
+  FInputOwnerLock := AInputOwnerLock;
   AWriteLock := WriteLock();
   FInDependOn := False;
   FSinkPins  := TOWPinEntryList.Create();
@@ -5321,7 +5343,7 @@ begin
               if( ADestroyLock <> NIL ) then
                 begin
                 if( FOwnerLock <> NIL ) then
-                  AUnlock := FOwnerLock.UnlockAll();
+                  AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
 
                 Status := Entry.SubmitFunction( ASinkPin, @DataTypeID, Operation, State );
                 AUnlock := NIL;
@@ -6232,8 +6254,7 @@ begin
     if( Assigned( ASubmitFunction ) ) then
       begin
       if( FOwnerLock <> NIL ) then
-        AUnlock := FOwnerLock.UnlockAll();
-//        AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
+        AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
 
       ASubmitFunction( ASinkPin, @DataTypeID, TOWNotifyOperation.Create(), [ nsNewLink, nsLastIteration ] );
       AUnlock := NIL;
@@ -12249,7 +12270,7 @@ begin
   Result := inherited Count;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   if GetInterface(IID, Obj) then
     Result := 0
@@ -12257,12 +12278,12 @@ begin
     Result := E_NOINTERFACE;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._AddRef(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWObjectList._AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   Result := InterlockedIncrement(FRefCount);
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._Release(): Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+function TOWObjectList._Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   Result := InterlockedDecrement(FRefCount);
   if Result = 0 then

@@ -1,5 +1,5 @@
 1 VERSIONINFO
-FILEVERSION 4,5,0,34
+FILEVERSION 4,5,0,37
 PRODUCTVERSION 0,0,0,0
 FILEFLAGSMASK 0x3FL
 FILEFLAGS 0x00L
@@ -11,9 +11,9 @@ BEGIN
     BEGIN
          BLOCK "040904E4"
          BEGIN
-              VALUE "FileVersion", "4.5.0.34\0"
+              VALUE "FileVersion", "4.5.0.37\0"
               VALUE "ProductVersion", "0.0.0.0\0"
-              VALUE "CompileDate", "Tuesday, March 08, 2011 12:27 PM\0"
+              VALUE "CompileDate", "Friday, April 22, 2011 12:03 AM\0"
          END
     END
     BLOCK "VarFileInfo"
