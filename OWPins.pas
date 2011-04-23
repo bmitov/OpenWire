@@ -148,7 +148,7 @@ TODO :
 {$IFDEF VER130}
   {$DEFINE INTERFACE_USE_STDCALL }
 {$ELSE}
-  {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}
+  {$IF (defined(WINDOWS) OR defined(WIN32) OR defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}
     {$DEFINE INTERFACE_USE_STDCALL }
   {$IFEND}
 {$ENDIF}
@@ -736,11 +736,11 @@ protected
 
 protected
   function  RequestInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
-  function _AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};  
-  function _Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 public
-  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 public
   procedure AfterConstruction(); override;
@@ -856,9 +856,9 @@ protected
   FRefCount: Integer;
 
 protected
-  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
-  function _AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
-  function _Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 protected
   function  GetCount() : Integer;
@@ -2383,7 +2383,7 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-function  OWGetAllLinked() : Boolean;
+function OWGetAllLinked() : Boolean;
 begin
   GlobalStorageSection.Enter();
   Result := ( GOWUnloadedPins.Count = 0 );
@@ -2774,19 +2774,19 @@ begin
 end;
 }
 //---------------------------------------------------------------------------
-function  TOWObject.ReadLock()  : IOWLockSection;
+function TOWObject.ReadLock()  : IOWLockSection;
 begin
   Result := TOWSimpleReadLockSection.Create( FIntLock );
 //  Result := FLock.ReadLock();
 end;
 //---------------------------------------------------------------------------
-function  TOWObject.WriteLock() : IOWLockSection;
+function TOWObject.WriteLock() : IOWLockSection;
 begin
   Result := TOWSimpleWriteLockSection.Create( FIntLock );
 //  Result := FLock.WriteLock();
 end;
 //---------------------------------------------------------------------------
-function  TOWObject.UnlockAll() : IOWLockSection;
+function TOWObject.UnlockAll() : IOWLockSection;
 begin
 //  Result := NIL;
 //  Exit;
@@ -2878,12 +2878,12 @@ begin
   FIntLockSection.Leave();
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.BeginRead( TimeOut : Cardinal ) : Boolean; stdcall;
+function TOWLock.BeginRead( TimeOut : Cardinal ) : Boolean; stdcall;
 begin
   Result := BeginWrite( TimeOut );
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.BeginWrite( TimeOut : Cardinal ) : Boolean; stdcall;
+function TOWLock.BeginWrite( TimeOut : Cardinal ) : Boolean; stdcall;
 var
   Res     : Boolean;
   AThread : Cardinal;
@@ -3155,7 +3155,7 @@ begin
   FIntLockSection.Leave();
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.ReadLock() : IOWLockSection;
+function TOWLock.ReadLock() : IOWLockSection;
 var
   ASection : TOWSimpleReadLockSection;
 
@@ -3174,7 +3174,7 @@ begin
   FIntLockSection.Leave();
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.WriteLock() : IOWLockSection;
+function TOWLock.WriteLock() : IOWLockSection;
 var
   ASection : TOWSimpleWriteLockSection;
 
@@ -3193,22 +3193,22 @@ begin
   FIntLockSection.Leave();
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.UnlockAllLockInOrder( AFirstLock : IOWLock ) : IOWLockSection;
+function TOWLock.UnlockAllLockInOrder( AFirstLock : IOWLock ) : IOWLockSection;
 begin
   Result := TOWSimpleUnlockSection.Create( Self, AFirstLock );
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.UnlockAll() : IOWLockSection;
+function TOWLock.UnlockAll() : IOWLockSection;
 begin
   Result := TOWSimpleUnlockSection.Create( Self, NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.StopLock() : IOWLockSection;
+function TOWLock.StopLock() : IOWLockSection;
 begin
   Result := TOWSimpleStopLockSection.Create( Self );
 end;
 //---------------------------------------------------------------------------
-function  TOWLock.Instance() : TOWLock;
+function TOWLock.Instance() : TOWLock;
 begin
   Result := Self;
 end;
@@ -3256,7 +3256,7 @@ begin
   Result := TOWDestroyLockLockSection.Create( Self );   
 end;
 //---------------------------------------------------------------------------
-function  TOWDestroyLock.DestroyUnlockLock() : IOWDestroyLockSection;
+function TOWDestroyLock.DestroyUnlockLock() : IOWDestroyLockSection;
 var
   ACount : LongInt;
    
@@ -3349,7 +3349,7 @@ procedure TOWPinObject.SetNotifyAfterByName( APin : TOWPin; AfterPinName : Strin
 begin
 end;
 //---------------------------------------------------------------------------
-function  TOWPinObject.GetAfterPinDisplayName( APin : TOWPin ) : String;
+function TOWPinObject.GetAfterPinDisplayName( APin : TOWPin ) : String;
 begin
   Result := '';
 end;
@@ -3430,7 +3430,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWBasicPin.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   if GetInterface(IID, Obj) then
     Result := S_OK
@@ -3445,12 +3445,12 @@ begin
   Result := QueryInterface( IID, Obj );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWBasicPin._AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   _AddRef := 1;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin._Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWBasicPin._Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   _Release := 1;
 end;
@@ -3504,7 +3504,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
+function TOWBasicPin.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
 begin
   if( FDispatcher <> NIL ) then
     Result := FDispatcher.GetConnectedAfterForPin( OtherPin )
@@ -3514,27 +3514,27 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetIsRealPin() : Boolean;
+function TOWBasicPin.GetIsRealPin() : Boolean;
 begin
   Result := ( Self is TOWPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := DependsOn( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWBasicPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
 begin
   Result := OWNULLID;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetOwnerComponent() : TComponent;
+function TOWBasicPin.GetOwnerComponent() : TComponent;
 begin
   Result := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.RootInDestroying() : Boolean;
+function TOWBasicPin.RootInDestroying() : Boolean;
 begin
   Result := False;
 end;
@@ -3562,7 +3562,7 @@ begin
      
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsLinkedTo( PinName : String ) : Boolean;
+function TOWBasicPin.IsLinkedTo( PinName : String ) : Boolean;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -3582,12 +3582,12 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean;
+function TOWBasicPin.ConnectToState( ADispatcher : TOWStateDispatcher ) : Boolean;
 begin
   Result := ConnectToStateAfter( ADispatcher, NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   AWriteLock : IOWLockSection;
 
@@ -3616,13 +3616,13 @@ begin
   OWNotifyConnected( Self, ADispatcher );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CanConnectToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
+function TOWBasicPin.CanConnectToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
-  
+
 begin
-  Result := CanConnectToStateInt( ADispatcher, AConverter, AConverterClass, True ); 
+  Result := CanConnectToStateInt( ADispatcher, AConverter, AConverterClass, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWBasicPin.IntStateDisconnect();
@@ -3683,12 +3683,12 @@ procedure TOWBasicPin.UpdateStateValue();
 begin
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsConnected() : Boolean;
+function TOWBasicPin.IsConnected() : Boolean;
 begin
   Result := IsStateConnected();
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CanConnectTo( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean;
+function TOWBasicPin.CanConnectTo( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -3697,7 +3697,7 @@ begin
   Result := CanConnectToInt( OtherPin, AConverter, AConverterClass, UseConverters );  
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsStateConnected() : Boolean;
+function TOWBasicPin.IsStateConnected() : Boolean;
 begin
   Result := ( FDispatcher <> NIL );
 end;
@@ -3712,7 +3712,7 @@ begin
   Result := IsConnectedByStateToAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsConnectedToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
+function TOWBasicPin.IsConnectedToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -3722,7 +3722,7 @@ begin
   Result := ( ADispatcher = FDispatcher );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.IsConnectedByStateTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.IsConnectedByStateTo( OtherPin : TOWBasicPin ) : Boolean;
 var
   AReadLock       : IOWLockSection;
   I               : Integer;
@@ -3778,17 +3778,17 @@ begin
   Result := 0;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
+function TOWBasicPin.GetConnectedPin( Index : Integer ) : TOWBasicPin;
 begin
   Result := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetConnectedAfterPin( Index : Integer ) : TOWBasicPin;
+function TOWBasicPin.GetConnectedAfterPin( Index : Integer ) : TOWBasicPin;
 begin
   Result := GetConnectedAfterForPin( GetConnectedPin( Index ));
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetDispatcherCount() : Integer;
+function TOWBasicPin.GetDispatcherCount() : Integer;
 begin
   if( FDispatcher <> NIL ) then 
     Result := 1
@@ -3798,22 +3798,22 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.GetDispatcher( Index : Integer ) : TOWStateDispatcher; 
+function TOWBasicPin.GetDispatcher( Index : Integer ) : TOWStateDispatcher;
 begin
   Result := FDispatcher;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.ConnectByState( OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.ConnectByState( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := ConnectByStateAfter( OtherPin, NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.Connect( OtherPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.Connect( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := ConnectAfter( OtherPin, NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWBasicPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 begin
   if( OtherPin = Self ) then
     begin
@@ -3824,7 +3824,7 @@ begin
   Result := ConnectByStateAfter( OtherPin, NotifyAfterPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWBasicPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 begin
   if( NotifyAfterPin = NIL ) then
     begin
@@ -3882,12 +3882,12 @@ begin
   OWNotifyChangePin( Self );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWBasicPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 begin
   Result := [];
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.DoStateWrite() : Boolean;
+function TOWBasicPin.DoStateWrite() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -3897,12 +3897,12 @@ begin
   Result := ( FDispatcher <> NIL ) and not DoStateConverterWrite();
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.DoStateConverterWrite() : Boolean;
+function TOWBasicPin.DoStateConverterWrite() : Boolean;
 begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.DoFormWrite() : Boolean;
+function TOWBasicPin.DoFormWrite() : Boolean;
 begin
   Result := DoStateWrite();
 end;
@@ -4215,12 +4215,12 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CreateDispatcher( Owner : TComponent ) : TOWStateDispatcher;
+function TOWBasicPin.CreateDispatcher( Owner : TComponent ) : TOWStateDispatcher;
 begin
   Result := TOWStateDispatcher.Create( Owner );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicPin.CreateNamedDispatcher( Name : String; DesignTime : Boolean ) : TOWStateDispatcher;
+function TOWBasicPin.CreateNamedDispatcher( Name : String; DesignTime : Boolean ) : TOWStateDispatcher;
 begin
   Result := TOWStateDispatcher.CreateNamed( Name, DesignTime );
 end;
@@ -4277,7 +4277,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.RootInDestroying() : Boolean;
+function TOWPin.RootInDestroying() : Boolean;
 var
   AWriteLock : IOWLockSection;
   
@@ -4292,7 +4292,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.OwnerInLoading() : Boolean;
+function TOWPin.OwnerInLoading() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -4307,7 +4307,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.OwnerInDesigning() : Boolean;
+function TOWPin.OwnerInDesigning() : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -4322,7 +4322,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetName() : String;
+function TOWPin.GetName() : String;
 var
   AReadLock : IOWLockSection;
 
@@ -4333,22 +4333,22 @@ begin
   Delete( Result, 1, Pos( '.', Result ) );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetOwnerComponent() : TComponent;
+function TOWPin.GetOwnerComponent() : TComponent;
 begin
   Result := FOwner;
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetFullName( IncludeRootForm : Boolean ) : String;
+function TOWPin.GetFullName( IncludeRootForm : Boolean ) : String;
 begin
   Result := OWValueToString( Self, '.', IncludeRootForm, False );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetFullIdentName( IncludeRootForm : Boolean ) : String;
+function TOWPin.GetFullIdentName( IncludeRootForm : Boolean ) : String;
 begin
   Result := OWValueToString( Self, '.', IncludeRootForm, True );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetSaveName() : String;
+function TOWPin.GetSaveName() : String;
 var
   AReadLock : IOWLockSection;
   
@@ -4382,25 +4382,25 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.ReadLock()  : IOWLockSection;
+function TOWPin.ReadLock()  : IOWLockSection;
 begin
   Result := TOWSimpleReadLockSection.Create( FIntLock, FOwnerLock );
 //  if( Result <> NIL ) then
 //    if( FIntLock.Instance().FPairLock <> NIL ) then
 //      FIntLock.Instance().FPairUnlock := FIntLock.Instance().FPairLock.UnlockAll();
-      
+
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.WriteLock() : IOWLockSection;
+function TOWPin.WriteLock() : IOWLockSection;
 begin
   Result := TOWSimpleWriteLockSection.Create( FIntLock, FOwnerLock );
 //  if( Result <> NIL ) then
 //    if( FIntLock.Instance().FPairLock <> NIL ) then
 //      FIntLock.Instance().FPairUnlock := FIntLock.Instance().FPairLock.UnlockAll();
-      
+
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
+function TOWPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
 var
   I      : Integer;
   Status : TOWNotifyResult;
@@ -4465,12 +4465,12 @@ begin
 ////  ReorderChangedData(); { TODO: Reorder changed data }
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 begin
   Result := NotifyDispatcher( Operation, [], NIL );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetStateSubmitID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWPin.GetStateSubmitID( const OtherPin : TOWBasicPin ) : TGUID;
 var
   AConverter      : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -4524,7 +4524,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWStreamPin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWStreamPin.DownStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 begin
   Result := S_OK;
 end;
@@ -4549,7 +4549,7 @@ begin
   AList.Add( Self )
 end;
 //---------------------------------------------------------------------------
-function  TOWStreamPin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
+function TOWStreamPin.UpStreamQueryPossybleInterface( const IID: TGUID ) : HResult;
 begin
   Result := S_OK;
 //  Result := DownStreamQueryPossybleInterface( IID );
@@ -4635,17 +4635,17 @@ begin
   StreamType.ClearTypes();
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWPin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
 begin
   Result := GetStateSubmitID( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetConnectionName( const OtherPin : TOWBasicPin ) : String;
+function TOWPin.GetConnectionName( const OtherPin : TOWBasicPin ) : String;
 begin
   Result := GetLinkNameID( GetConnectionID( OtherPin ));
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetPrimaryConnectionID() : TGUID;
+function TOWPin.GetPrimaryConnectionID() : TGUID;
 var
   AReadLock : IOWLockSection;
 
@@ -4659,7 +4659,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.DefaultNotifyDispatcher( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+function TOWPin.DefaultNotifyDispatcher( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   I : Integer;
   DataTypeGUID : PGUID;
@@ -4692,7 +4692,7 @@ begin
   Result := [];
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetSubmitFunctionID( const IID : TGUID ) : TOWSubmit;
+function TOWPin.GetSubmitFunctionID( const IID : TGUID ) : TOWSubmit;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -4717,7 +4717,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.GetLinkNameID( const IID : TGUID ) : String;
+function TOWPin.GetLinkNameID( const IID : TGUID ) : String;
 begin
   Result := '';
   if( not IsEqualGUID( IID, OWNULLID )) then
@@ -4725,7 +4725,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock       : IOWLockSection;
 
@@ -4751,7 +4751,7 @@ begin
 //  Result := IsCompatible( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
   AConverter : TOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
@@ -5288,10 +5288,19 @@ var
   ASinksList    : TOWPinEntryListArray;
   ASinksCount   : Integer;
   Entry         : POWPinEntry;
+  AInUnlock       : IOWLockSection;
   AUnlock       : IOWLockSection;
   ADestroyLock  : IOWDestroyLockSection;
 
 begin
+  if( FOwnerLock <> NIL ) then
+    begin
+    if( FInputOwnerLock <> NIL ) then
+      AInUnlock := FInputOwnerLock.UnlockAll();
+
+    AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
+    end;
+
   ALock := ReadLock();
 
   ASinksCount := FSinkPins.Count;
@@ -5342,11 +5351,11 @@ begin
               ADestroyLock := FDestroyLock.Lock();
               if( ADestroyLock <> NIL ) then
                 begin
-                if( FOwnerLock <> NIL ) then
-                  AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
+//                if( FOwnerLock <> NIL ) then
+//                  AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
 
                 Status := Entry.SubmitFunction( ASinkPin, @DataTypeID, Operation, State );
-                AUnlock := NIL;
+//                AUnlock := NIL;
                 end;
 
             finally
@@ -5367,6 +5376,8 @@ begin
       end;
 
   finally
+    AUnlock := NIL;
+    AInUnlock := NIL;
     ALock := WriteLock();
     if( not FInDisconnect ) then
       ReorderChangedData();
@@ -6725,7 +6736,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicSinkPin.HasToIgnoreUpstream() : Boolean;
+function TOWBasicSinkPin.HasToIgnoreUpstream() : Boolean;
 var
   AReadLock : IOWLockSection;
   
@@ -6805,7 +6816,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicSinkPin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWBasicSinkPin.UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I          : Integer;
   EntryFound : Boolean;
@@ -6843,7 +6854,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicSinkPin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
+function TOWBasicSinkPin.DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 var
   I : Integer;
   Unknown : IUnknown;
@@ -6906,7 +6917,7 @@ begin
   FDataTypeDependants.Remove( DataTypeDependancePin );
 end;
 //---------------------------------------------------------------------------
-function  TOWBasicSinkPin.UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
+function TOWBasicSinkPin.UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
 var
   PossibleStreamTypes   : TOWPinTypeRestricted;
   I                     : Integer;
@@ -7081,7 +7092,7 @@ begin
   Result := ptMultiSink;
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.GetLinkStr( Item : Integer ) : String;
+function TOWMultiSinkPin.GetLinkStr( Item : Integer ) : String;
 var
   AddRoot : Boolean;
   AReadLock : IOWLockSection;
@@ -7490,7 +7501,7 @@ begin
 //  SinkPins.Add( PEntry );
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWMultiSinkPin.IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   DataTypeID      : TGUID;
   AWriteLock      : IOWLockSection;
@@ -7700,7 +7711,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWMultiSinkPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 var
   AReadLock : IOWLockSection;
   I         : Integer;
@@ -7751,7 +7762,7 @@ begin
   Result := ( FSourcePins.Count > 0 ) or inherited IsConnected();
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
+function TOWMultiSinkPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean; //const;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -7767,7 +7778,7 @@ begin
   Result := inherited IsConnectedTo( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWMultiSinkPin.IsConnectedByConverterTo( OtherPin : TOWBasicPin ) : Boolean;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -7819,7 +7830,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWMultiSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
+function TOWMultiSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 begin
   Result := NotifyPin( NIL, Operation );
 end;
@@ -9706,7 +9717,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function  OWGetClassPropertyNameForPropertyObjectPrefix( APrefix : String; AClass : TObject; TypeName : String; PinObject : TObject; ALevel : Integer; APropertyStack : TList ) : String;
+function OWGetClassPropertyNameForPropertyObjectPrefix( APrefix : String; AClass : TObject; TypeName : String; PinObject : TObject; ALevel : Integer; APropertyStack : TList ) : String;
 var
   PropList              : PPropList;
   ClassTypeInfo         : PTypeInfo;
@@ -9805,7 +9816,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject ) : String;
+function OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject ) : String;
 var
   APropertyStack : TList;
 
@@ -9815,7 +9826,7 @@ begin
   APropertyStack.Free();
 end;
 //---------------------------------------------------------------------------
-function  OWGetClassPropertiesOfTypeNamePrefix( APrefix : String; AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean; ALevel : Integer; APropertyStack : TList ) : Boolean;
+function OWGetClassPropertiesOfTypeNamePrefix( APrefix : String; AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean; ALevel : Integer; APropertyStack : TList ) : Boolean;
 var
   PropList              : PPropList;
   ClassTypeInfo         : PTypeInfo;
@@ -9911,7 +9922,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
+function OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
 var
   APropertyStack : TList;
 
@@ -10041,7 +10052,7 @@ begin
 end;
 }
 
-function  OWGetPinsValueList( List : TStrings; StreamPin : TOWPin; Link : String; ValueFilters : TOWPinValueFilters ) : Boolean;
+function OWGetPinsValueList( List : TStrings; StreamPin : TOWPin; Link : String; ValueFilters : TOWPinValueFilters ) : Boolean;
 var
   MainComponent : TComponent;
 //  Forms : TOWModulesColection;
@@ -10203,12 +10214,12 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.ReadLock()  : IOWLockSection;
+function TOWPinList.ReadLock()  : IOWLockSection;
 begin
   Result := TOWSimpleReadLockSection.Create( FIntLock, FOwnerLock );
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.WriteLock() : IOWLockSection;
+function TOWPinList.WriteLock() : IOWLockSection;
 begin
   Result := TOWSimpleWriteLockSection.Create( FIntLock, FOwnerLock );
 end;
@@ -10370,7 +10381,7 @@ begin
       
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.GetStoredName( Item : Integer ) : String;
+function TOWPinList.GetStoredName( Item : Integer ) : String;
 var
   AReadLock : IOWLockSection;
 
@@ -10379,7 +10390,7 @@ begin
   Result := FPinsList.Strings[ Item ];
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.GetListName() : String;
+function TOWPinList.GetListName() : String;
 begin
   Result := {FOwner.Name + '.' +} OWGetClassPropertyNameForPropertyObject( FOwner, 'TOWPinList', Self )
 end;
@@ -10435,7 +10446,7 @@ begin
   OWNotifyChangePinList( Self );
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.IndexOf( Item : TOWBasicPin ) : Integer;
+function TOWPinList.IndexOf( Item : TOWBasicPin ) : Integer;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -10929,7 +10940,7 @@ begin
   Writer.WriteListEnd();
 end;
 //---------------------------------------------------------------------------
-function  TOWPinList.DoWrite() : Boolean;
+function TOWPinList.DoWrite() : Boolean;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -11212,7 +11223,7 @@ begin
   AWriteLock := NIL;
 end;
 //---------------------------------------------------------------------------
-function  TOWPinListOwner.DoWrite() : Boolean;
+function TOWPinListOwner.DoWrite() : Boolean;
 begin
   Result := True;
 end;
@@ -11249,7 +11260,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.TryLinkTo( Root : TComponent; SinkName : String ) : Boolean;
+function TOWStatePin.TryLinkTo( Root : TComponent; SinkName : String ) : Boolean;
 var
   Values           : TStringList;
   OtherPin         : TOWPin;
@@ -11306,7 +11317,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWStatePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
 //  StatePin : TOWStatePin;
   AConverter : TOWFormatConverter;
@@ -11356,7 +11367,7 @@ begin
 }
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
+function TOWStatePin.GetConnectionID( const OtherPin : TOWBasicPin ) : TGUID;
 var
   AReadLock : IOWLockSection;
 
@@ -11370,22 +11381,22 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWStatePin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := DirectDependsOn( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWStatePin.DirectDependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := IsConnectedTo( OtherPin );
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetPinType() : TOWPinType;
+function TOWStatePin.GetPinType() : TOWPinType;
 begin
   Result := ptState;
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetLinkStr( StatePin : TOWPin ) : String;
+function TOWStatePin.GetLinkStr( StatePin : TOWPin ) : String;
 var
   AddRoot   : Boolean;
   AReadLock : IOWLockSection;
@@ -11405,7 +11416,7 @@ begin
 }
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetEditorString() : String;
+function TOWStatePin.GetEditorString() : String;
 begin
   if( FDispatcher = NIL ) then
     begin
@@ -11483,7 +11494,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetPinCount() : Integer;
+function TOWStatePin.GetPinCount() : Integer;
 var
   AReadLock : IOWLockSection;
 
@@ -11496,7 +11507,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWStatePin.GetPin( Index : Integer ) : TOWBasicPin;
+function TOWStatePin.GetPin( Index : Integer ) : TOWBasicPin;
 var
   AReadLock : IOWLockSection;
 
@@ -11721,7 +11732,7 @@ begin
   Result := FPins.Items[ Index ].RealPin;
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.GetConnectionPin( Index : Integer ) : TOWBasicPin;
+function TOWStateDispatcher.GetConnectionPin( Index : Integer ) : TOWBasicPin;
 var
   AReadLock : IOWLockSection;
 
@@ -11730,7 +11741,7 @@ begin
   Result := FPins.Items[ Index ].DConnectionPin;
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.GetAfterPin( Index : Integer ) : TOWBasicPin;
+function TOWStateDispatcher.GetAfterPin( Index : Integer ) : TOWBasicPin;
 var
   AReadLock : IOWLockSection;
 
@@ -11739,7 +11750,7 @@ begin
   Result := FPins.Items[ Index ].AfterPin;
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
+function TOWStateDispatcher.GetConnectedAfterForPin( OtherPin : TOWBasicPin ) : TOWBasicPin;
 var
   I         : Integer;
 
@@ -11813,7 +11824,7 @@ begin
 //  OWNotifyChangeDispatcher( Self );
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWStateDispatcher.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
   I         : Integer;
@@ -11892,7 +11903,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.IsConnectedTo( APin : TOWBasicPin ) : Boolean;
+function TOWStateDispatcher.IsConnectedTo( APin : TOWBasicPin ) : Boolean;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -11944,7 +11955,7 @@ begin
   Inc( FCountSaved );
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.IsFormSaved( AOwnerComponent : TComponent ) : Boolean;
+function TOWStateDispatcher.IsFormSaved( AOwnerComponent : TComponent ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -11971,7 +11982,7 @@ begin
   Result := '';
 end;
 //---------------------------------------------------------------------------
-function  TOWStateDispatcher.ConnectedToForm( OwnerComponent : TComponent ) : Boolean;
+function TOWStateDispatcher.ConnectedToForm( OwnerComponent : TComponent ) : Boolean;
 var
   I : Integer;
   AWriteLock : IOWLockSection;
@@ -12076,13 +12087,13 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function  TOWPinEntryList.Add() : POWPinEntry;
+function TOWPinEntryList.Add() : POWPinEntry;
 begin
   New( Result );
   inherited Add( Result );
 end;
 //---------------------------------------------------------------------------
-function  TOWPinEntryList.Remove( Item: POWPinEntry ) : Integer;
+function TOWPinEntryList.Remove( Item: POWPinEntry ) : Integer;
 begin
   Dispose( Item ); 
   Result := inherited Remove( Item );
@@ -12260,7 +12271,7 @@ begin
   inherited Items[ Index ] := Value; 
 end;
 //---------------------------------------------------------------------------
-function  TOWObjectList.GetItem( Index : Integer ) : TOWObject;
+function TOWObjectList.GetItem( Index : Integer ) : TOWObject;
 begin
   Result := TOWObject( inherited Items[ Index ] );
 end;
@@ -12270,7 +12281,7 @@ begin
   Result := inherited Count;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   if GetInterface(IID, Obj) then
     Result := 0
@@ -12278,12 +12289,12 @@ begin
     Result := E_NOINTERFACE;
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._AddRef(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWObjectList._AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   Result := InterlockedIncrement(FRefCount);
 end;
 //---------------------------------------------------------------------------
-function TOWObjectList._Release(): Integer; {$ifdef INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+function TOWObjectList._Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 begin
   Result := InterlockedDecrement(FRefCount);
   if Result = 0 then
@@ -12303,7 +12314,7 @@ begin
   inherited Items[ Index ] := Value;
 end;
 //---------------------------------------------------------------------------
-function  TOWObjectListList.GetItem( Index : Integer ) : TOWObjectList;
+function TOWObjectListList.GetItem( Index : Integer ) : TOWObjectList;
 begin
   Result := TOWObjectList( inherited Items[ Index ] );
 end;
@@ -12348,12 +12359,12 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
+function TOWUnloadedPin.DependsOn( const OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.OwnerInDesigning() : Boolean;
+function TOWUnloadedPin.OwnerInDesigning() : Boolean;
 begin
   Result := False;
   if( GIgnoreDesignMode ) then
@@ -12376,32 +12387,32 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
+function TOWUnloadedPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
 begin
   Result := OWNULLID;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
+function TOWUnloadedPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
 begin
   Result := [];
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWUnloadedPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 begin
   Result := True;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
+function TOWUnloadedPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 begin
   Result := True;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.IsConnected() : Boolean;
+function TOWUnloadedPin.IsConnected() : Boolean;
 begin
   Result := ( FConnectedPins.Count > 0 );  
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean;
+function TOWUnloadedPin.IsConnectedTo( OtherPin : TOWBasicPin ) : Boolean;
 begin
   Result := ( FConnectedPins.GetItemByPin( OtherPin ) <> NIL );
 end;
@@ -12476,12 +12487,12 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.GetPinType() : TOWPinType;
+function TOWUnloadedPin.GetPinType() : TOWPinType;
 begin
   Result := FType;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
+function TOWUnloadedPin.ConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   APinEntry : POWPinEntry;
 
@@ -12526,7 +12537,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.GetFullName( IncludeRootForm : Boolean ) : String;
+function TOWUnloadedPin.GetFullName( IncludeRootForm : Boolean ) : String;
 var
   Position : Integer;
 
@@ -12545,7 +12556,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.GetFullIdentName( IncludeRootForm : Boolean ) : String;
+function TOWUnloadedPin.GetFullIdentName( IncludeRootForm : Boolean ) : String;
 var
   Position : Integer;
 
@@ -12585,12 +12596,12 @@ begin
   GOWUnloadedPins.Remove( Self );
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.GetRoot() : TComponent;
+function TOWUnloadedPin.GetRoot() : TComponent;
 begin
   Result := NIL; //FRoot;
 end;
 //---------------------------------------------------------------------------
-function  TOWUnloadedPin.GetName() : String;
+function TOWUnloadedPin.GetName() : String;
 var
   APos : Integer;
   
@@ -12777,7 +12788,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function  Dispatchers( DesignTime : Boolean ) : TObjectList;
+function Dispatchers( DesignTime : Boolean ) : TObjectList;
 begin
   if( DesignTime ) then
     Result := DesignDispatchers
@@ -12838,7 +12849,7 @@ begin
 {$ENDIF}
 end;
 //---------------------------------------------------------------------------
-function  TOWEvent.WaitFor( Timeout : DWORD = INFINITE ) : Boolean; stdcall;
+function TOWEvent.WaitFor( Timeout : DWORD = INFINITE ) : Boolean; stdcall;
 begin
 {$IFDEF fpc}
   Result := ( TWaitResult( BasicEventWaitFor( Timeout, FHandle )) = wrSignaled );
