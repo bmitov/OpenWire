@@ -163,7 +163,7 @@ LCLIntf, LCLType, SyncObjs,
 {$ELSE}
 windows,
 {$ENDIF}
-typinfo, SysUtils, Contnrs;
+typinfo, SysUtils, Contnrs, Graphics;
 
 var  PinsNeedRefresh : Boolean;
 
@@ -386,6 +386,8 @@ TOWPinListOwner = class;
 TOWFormatConverter = class;
 TOWFormatConverterClass = class of TOWFormatConverter;
 TOWDestroyLock = class;
+//---------------------------------------------------------------------------
+IOWFormatConverter = interface;
 //---------------------------------------------------------------------------
 {$IFDEF OWCBUILDER} // BCB 6.0
   PDataTypeID = Pointer; // Fixes C++ Builder 6 linker problem.
@@ -653,7 +655,7 @@ protected
   procedure IntConnect( SinkPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); virtual;
   procedure CheckRemove(); virtual;
   procedure ApplyFormName( var Ident : String );
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual; abstract;
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual; abstract;
 
 protected
   function  GetPinType() : TOWPinType; virtual; abstract;
@@ -711,7 +713,7 @@ protected
   function  GetDispatcherCount() : Integer; virtual;
   function  GetDispatcher( Index : Integer ) : TOWStateDispatcher; virtual;
   procedure SetInEditor( Value : Boolean ); virtual;
-  function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual;
+  function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual;
   procedure IntStateDisconnect(); virtual;
   function  GetEditorString() : String; virtual;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; virtual;
@@ -730,7 +732,7 @@ protected
 
 protected
   function  OwnerInDesigning() : Boolean; virtual; abstract;
-  function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; virtual; abstract;
+  function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; virtual; abstract;
   function  NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult; virtual; abstract;
   procedure UpdateStateValue(); virtual;
 
@@ -786,7 +788,7 @@ protected
   procedure DefineProperties(Filer: TFiler); override;
 
 protected // State support
-  function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; override;
+  function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; override;
 
 protected
   procedure AddType( ID : TGUID );  overload;
@@ -810,7 +812,7 @@ protected
   function  GetSubmitFunctionID( const IID : TGUID ) : TOWSubmit;
   function  GetLinkNameID( const IID : TGUID ) : String;
   procedure CheckVirtualList(); override;
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
 
 protected
   function  GetStateSubmitID( const OtherPin : TOWBasicPin ) : TGUID;   virtual;
@@ -900,14 +902,31 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWFormatConverter = class(TComponent)
+IOWFormatConverter = interface
+  ['{F8E1AE7F-ABD3-4BC0-984D-2CC34D2D83CB}']
+  function GetInstance() : TOWFormatConverter;
+
+end;
+//---------------------------------------------------------------------------
+TOWFormatConverter = class( TComponent, IOWFormatConverter )
+protected
+  FLock      : IOWLock;
+  FRefCount  : Integer;
+
 protected
   FInputPin  : TOWSinkPin;
   FOutputPin : TOWSourcePin;
 
 protected
   function SourceOperationEvent( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-  
+
+protected
+  function GetInstance() : TOWFormatConverter;
+
+protected
+  function _AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+  function _Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+
 public
   property InputPin  : TOWSinkPin   read FInputPin;
   property OutputPin : TOWSourcePin read FOutputPin;
@@ -933,6 +952,13 @@ TOWPinEntry = record
   ModificationLevel     : Integer; // Indicates how often this pin is source of data modification.
 end;
 
+//---------------------------------------------------------------------------
+TOWNotifyPinEntry = record
+  Entry     : TOWPinEntry;
+  Converter : IOWFormatConverter; // Used only to keep the converter alive during Notify
+end;
+//---------------------------------------------------------------------------
+
 POWPinEntry = ^TOWPinEntry;
 //---------------------------------------------------------------------------
 TOWPinEntryList = class( TList )
@@ -953,12 +979,12 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWFormatConverterList = class( TObjectList )
+TOWFormatConverterList = class( TInterfaceList )
 protected
-  function  GetItem( Index : Integer ) : TOWFormatConverter;
+  function  GetItem( Index : Integer ) : IOWFormatConverter;
 
 public
-  property Items[ Index : Integer ] : TOWFormatConverter read GetItem; default;
+  property Items[ Index : Integer ] : IOWFormatConverter read GetItem; default;
 
 end;
 //---------------------------------------------------------------------------
@@ -1031,7 +1057,7 @@ protected
   function  GetSink( Index : Integer ) : TOWBasicPin;           virtual;
 
   function  GetConverterCount() : Integer;
-  function  GetConverter( Index : Integer ) : TOWFormatConverter;
+  function  GetConverter( Index : Integer ) : IOWFormatConverter;
   
 //  procedure SinkChangedData( Index : Integer );
   procedure ReorderChangedData();
@@ -1058,7 +1084,7 @@ protected
   function  DownStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
   function  UpStreamForthQueryPossybleInterface( const IID: TGUID; ForPin : TOWPin ) : HResult;
 
-  function  DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
+  function  DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
   
   procedure ChangeConnectionType( PinIndex : Integer; const IID : TGUID );
 //  procedure ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
@@ -1093,7 +1119,7 @@ protected
   function  IsConnectedToPinName( OtherPinName : String ) : Boolean;
   procedure DisconnectFromPinName( OtherPinName : String );
   function  IntConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean; virtual;
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   procedure IntDisconnectFrom( OtherPin : TOWBasicPin );
 
 protected
@@ -1138,7 +1164,7 @@ public
   property Sinks[ Index : Integer  ] : TOWBasicPin read GetSink; default;
 
   property ConverterCount : Integer read GetConverterCount;
-  property Converters[ Index : Integer  ] : TOWFormatConverter read GetConverter;
+  property Converters[ Index : Integer  ] : IOWFormatConverter read GetConverter;
 
   // Describes the functions sources for the output within the component.
   property FunctionSources : TOWFunctionSinkPinList read FFunctionSources;
@@ -1168,7 +1194,7 @@ protected
   procedure ForthChainReconnect( const DownIID: TGUID; const UpIID: TGUID ); virtual; abstract;
   function  UpStreamFindConnectionID( const OtherPin : TOWSourcePin; PreferedID : TGUID ) : TGUID;
   procedure ChainReconnect( const DownIID: TGUID; const UpIID: TGUID );
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   function  CheckUpStreamInterfaces( const OtherPin : TOWSourcePin; UseConverters : Boolean ) : Boolean; virtual;
 
   function  HasToIgnoreUpstream() : Boolean;
@@ -1210,7 +1236,7 @@ protected
   function  GetSource( Index : Integer ) : TOWBasicPin; virtual;
 
   function  GetConverterCount() : Integer;
-  function  GetConverter( Index : Integer ) : TOWFormatConverter;
+  function  GetConverter( Index : Integer ) : IOWFormatConverter;
 
   function  GetPinType() : TOWPinType; override;
 
@@ -1286,7 +1312,7 @@ public
   property Sources[ Index : Integer  ] : TOWBasicPin read GetSource; default;
 
   property ConverterCount : Integer read GetConverterCount;
-  property Converters[ Index : Integer  ] : TOWFormatConverter read GetConverter;
+  property Converters[ Index : Integer  ] : IOWFormatConverter read GetConverter;
 
 end;
 //---------------------------------------------------------------------------
@@ -1337,7 +1363,7 @@ protected
 protected
   procedure SetSourcePin( SourcePin : TOWBasicPin );
   function  GetSourcePin() : TOWBasicPin; virtual;
-  function  GetFormatConverter() : TOWFormatConverter;
+  function  GetFormatConverter() : IOWFormatConverter;
 
   function  GetUpStreamLinkName() : String; override;
   function  GetDownStreamLinkName() : String; override;
@@ -1358,7 +1384,7 @@ protected
 
   procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
   function  IsConnectedToPinName( OtherPinName : String ) : Boolean;
-  function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   procedure IntStateDisconnect(); override;
   function  GetEditorString() : String; override;
   function  SetEditorString( ARoot : TComponent; const AValue: string ) : Boolean; override;
@@ -1401,7 +1427,7 @@ public
 
 public
   property SourcePin            : TOWBasicPin read GetSourcePin write SetSourcePin;
-  property FormatConverter      : TOWFormatConverter read GetFormatConverter;
+  property FormatConverter      : IOWFormatConverter read GetFormatConverter;
 
   property DownStreamID         : TGUID read GetDownStreamID;
   property UpStreamID           : TGUID read GetUpStreamID;
@@ -1411,7 +1437,7 @@ end;
 TOWStatePin = class(TOWPin)
 protected
   procedure UpdateStateValue(); override;
-  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+  function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
   
 public
   constructor Create(AOwner: TComponent);
@@ -1475,7 +1501,7 @@ protected
   FCountSaved           : Integer;
 
 public
-//  procedure AfterConstruction(); override;
+  procedure AfterConstruction(); override;
   procedure BeforeDestruction(); override;
 
 public
@@ -1662,6 +1688,7 @@ end;
 type TOWPinValueFilters = set of ( pvoFullList, pvoSaveValue, pvoExcludeDirectDependency );
 //---------------------------------------------------------------------------
 procedure OWRegisterStream( ID : TGUID; Name : String );
+procedure OWRegisterStreamWithColorThickness( ID : TGUID; Name : String; Color : TColor; Thickness : Single );
 procedure OWRegisterDefaultHandler( ID : TGUID; SendFunction : TOWGlobalSubmit );
 procedure OWRegisterTypeConverter( InputID : TGUID; OutputID : TGUID; AConverterClass : TOWFormatConverterClass );
 function  OWGetConverter( InputID : TGUID; OutputID : TGUID ) : TOWFormatConverterClass;   
@@ -1672,6 +1699,7 @@ function  OWGetPinsValueListSingle( List : TStrings; OwnerComponent : TComponent
 function  OWGetPinsValueListSingleRoot( List : TStrings; OwnerComponent : TComponent;  APin : TOWPin; Link : String; RootName : String; ValueFilters : TOWPinValueFilters ) : Boolean;
 function  OWGetMainOwnerComponent( Component : TComponent ) : TComponent;
 function  OWGetStreamTypeFromID( ID : TGUID ) : String;
+function  OWGetStreamThicknessColorFromID( ID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
 procedure OWReportAwaitsLinking();
 function  OWGetAllLinked() : Boolean;
 function  OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
@@ -1745,6 +1773,7 @@ uses Dialogs, Forms
 
 type PGUID = ^TGUID;
 type TOWPinEntryListArray = array of TOWPinEntry;
+type TOWPinEntryListNotifyArray = array of TOWNotifyPinEntry;
 //---------------------------------------------------------------------------
 function OWInterlockedExchangeAdd( var Addend: Longint; Value: Longint): Longint;
 begin
@@ -1812,7 +1841,7 @@ type
 
   protected
     function  OwnerInDesigning() : Boolean; override;
-    function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; override;
+    function  FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID; override;
     function  NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult; override;
     procedure PinDeletedNotify( ADeletedPin : TOWBasicPin ); override;
     procedure IntDisconnect( OtherPin : TOWBasicPin; DesignFormClosing : Boolean ); override;
@@ -1821,7 +1850,7 @@ type
     procedure CheckRemove(); override;
     procedure PinReplacedNotify( AOldPin : TOWBasicPin; ANewPin : TOWBasicPin ); override;
     procedure SetInEditor( Value : Boolean ); override;
-    function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
+    function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; override;
 
   public
     function  GetRoot() : TComponent; override;
@@ -1842,6 +1871,9 @@ type
   TOWStreamTypeEntry = record
     ID            : TGUID;
     Name          : String;
+    HasColor      : Boolean;
+    Color         : TColor;
+    Thickness     : Single;
     SendFunction  : TOWGlobalSubmit;
   end;
 //---------------------------------------------------------------------------
@@ -1852,17 +1884,17 @@ type
   end;
 //---------------------------------------------------------------------------
 var
-  GOWPins                     : TOWInternalPinList;
-  GOWUnloadedPins             : TOWBasicPinList;
+  GOWPins         : TOWInternalPinList;
+  GOWUnloadedPins : TOWBasicPinList;
 
-  StreamTypes                 : array of TOWStreamTypeEntry;
-  ConverterTypes              : array of TOWTypeConverterEntry;
+  StreamTypes     : array of TOWStreamTypeEntry;
+  ConverterTypes  : array of TOWTypeConverterEntry;
 
-  NotifyList                  : TInterfaceList;
-  gOWOperationID              : LongInt;
+  NotifyList      : TInterfaceList;
+  gOWOperationID  : LongInt;
 
 var
-  Loaded : Boolean;
+  Loaded          : Boolean;
 
 var
   __OWCountLockObjects : Integer = 0;
@@ -2220,23 +2252,29 @@ begin
   SetLength( StreamTypes, Result + 1 );
   StreamTypes[ Result ].ID := ID;
   StreamTypes[ Result ].Name := '';
+  StreamTypes[ Result ].HasColor := False;
   StreamTypes[ Result ].SendFunction := NIL;
 end;
 //---------------------------------------------------------------------------
 procedure OWRegisterStream( ID : TGUID; Name : String );
 var
   EntryIndex : Integer;
-//  Entry : TOWStreamTypeEntry;
 
 begin
   EntryIndex := _OWGetEntryIndex( ID );
   StreamTypes[ EntryIndex ].Name := Name;
-{
-  Entry.ID := ID;
-  Entry.Name := Name;
-  SetLength( StreamTypes, Length( StreamTypes ) + 1 );
-  StreamTypes[ Length( StreamTypes ) - 1 ] := Entry;
-}
+end;
+//---------------------------------------------------------------------------
+procedure OWRegisterStreamWithColorThickness( ID : TGUID; Name : String; Color : TColor; Thickness : Single );
+var
+  EntryIndex : Integer;
+
+begin
+  EntryIndex := _OWGetEntryIndex( ID );
+  StreamTypes[ EntryIndex ].Name := Name;
+  StreamTypes[ EntryIndex ].HasColor := True;
+  StreamTypes[ EntryIndex ].Color := Color;
+  StreamTypes[ EntryIndex ].Thickness := Thickness;
 end;
 //---------------------------------------------------------------------------
 procedure OWRegisterDefaultHandler( ID : TGUID; SendFunction : TOWGlobalSubmit );
@@ -2336,25 +2374,31 @@ begin
     if( IsEqualGUID( StreamTypes[ i ].ID, ID ))then
       begin
       Result := StreamTypes[ I ].Name;
-      if( Result = '' ) then
-        Break;
-        
       Exit;
       end;
 
   Result := OWGetStreamGUIDFromID( ID );
-(*
-  Result := '{' + IntToHex( ID.D1, 8 ) + '-' + IntToHex( ID.D2, 4 ) + '-' + IntToHex( ID.D3, 4 ) + '-';
-  for I := 0 to 1 do
-    Result := Result + IntToHex( ID.D4[ I ], 2 );
+end;
+//---------------------------------------------------------------------------
+function OWGetStreamThicknessColorFromID( ID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
+var
+  I : Integer;
 
-  Result := Result + '-';
-  for I := 2 to 7 do
-    Result := Result + IntToHex( ID.D4[ I ], 2 );
+begin
+  for I := 0 to Length( StreamTypes ) - 1 do
+    if( IsEqualGUID( StreamTypes[ i ].ID, ID ))then
+      begin
+      Result := StreamTypes[ I ].HasColor;
+      if( Result ) then
+        begin
+        Color := StreamTypes[ I ].Color;
+        Thickness := StreamTypes[ I ].Thickness;
+        end;
 
-  Result := Result + '}';
-//  Result := 'Unregistered stream';
-*)
+      Exit;
+      end;
+
+  Result := False;
 end;
 //---------------------------------------------------------------------------
 function OWGetMainOwnerComponent( Component : TComponent ) : TComponent;
@@ -3614,11 +3658,12 @@ begin
   UpdateStateValue();
 
   OWNotifyConnected( Self, ADispatcher );
+  OWNotifyChangePin( Self );
 end;
 //---------------------------------------------------------------------------
 function TOWBasicPin.CanConnectToState( const ADispatcher : TOWStateDispatcher ) : Boolean;
 var
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
 
 begin
@@ -3654,7 +3699,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWBasicPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   I         : Integer;
   AReadLock : IOWLockSection;
@@ -3690,7 +3735,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWBasicPin.CanConnectTo( const OtherPin : TOWBasicPin; UseConverters : Boolean = True ) : Boolean;
 var
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   
 begin
@@ -3924,6 +3969,7 @@ begin
 
   FDispatcher := TOWStateDispatcher.GetByNameCreate( Self, IdentName, OwnerInDesigning() );
   FDispatcher.AddPin( Self, Self );
+  OWNotifyConnected( Self, FDispatcher );
   UpdateStateValue();
 end;
 //---------------------------------------------------------------------------
@@ -4126,9 +4172,9 @@ end;
 //---------------------------------------------------------------------------
 function TOWBasicPin.ConnectByStateAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
-  AConverter : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
-  AWriteLock : IOWLockSection;
+  AWriteLock      : IOWLockSection;
 
 begin
   Result := False;
@@ -4149,11 +4195,11 @@ begin
         FDispatcher.FFormatConverters.Add( AConverter );
         end;
         
-      AConverter.FOutputPin.ConnectAfter( OtherPin, NotifyAfterPin );
-      AConverter.FInputPin.FDispatcher := FDispatcher;
-      FDispatcher.AddPin( AConverter.FInputPin, OtherPin );
+      AConverter.GetInstance().FOutputPin.ConnectAfter( OtherPin, NotifyAfterPin );
+      AConverter.GetInstance().FInputPin.FDispatcher := FDispatcher;
+      FDispatcher.AddPin( AConverter.GetInstance().FInputPin, OtherPin );
 //      PEntry.ConnectionPin := AConverter.FInputPin;
-      AConverter.FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
+      AConverter.GetInstance().FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
       TOWSinkPin( OtherPin ).FRealSourcePin := Self;
       TOWSinkPin( OtherPin ).FIntRealSourcePin := Self;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
@@ -4187,11 +4233,11 @@ begin
 
     if( AConverter <> NIL ) then
       begin
-      AConverter.FOutputPin.ConnectAfter( OtherPin, NotifyAfterPin );
-      AConverter.FInputPin.FDispatcher := FDispatcher;
-      FDispatcher.AddPin( AConverter.FInputPin, OtherPin );
+      AConverter.GetInstance().FOutputPin.ConnectAfter( OtherPin, NotifyAfterPin );
+      AConverter.GetInstance().FInputPin.FDispatcher := FDispatcher;
+      FDispatcher.AddPin( AConverter.GetInstance().FInputPin, OtherPin );
 //      PEntry.ConnectionPin := AConverter.FInputPin;
-      AConverter.FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
+      AConverter.GetInstance().FInputPin.FConnectionSourcePin := Self; // AConverter.FOutputPin;
       TOWSinkPin( OtherPin ).FRealSourcePin := Self;
       TOWSinkPin( OtherPin ).FIntRealSourcePin := Self;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
@@ -4204,7 +4250,7 @@ begin
       FDispatcher.AddPin( OtherPin, OtherPin );
       end;
 
-    OWNotifyAddDispatcher( FDispatcher );
+//    OWNotifyAddDispatcher( FDispatcher );
     UpdateStateValue();
     OWNotifyConnected( OtherPin, FDispatcher );
     OWNotifyConnected( Self, FDispatcher );
@@ -4382,7 +4428,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWPin.ReadLock()  : IOWLockSection;
+function TOWPin.ReadLock() : IOWLockSection;
 begin
   Result := TOWSimpleReadLockSection.Create( FIntLock, FOwnerLock );
 //  if( Result <> NIL ) then
@@ -4402,14 +4448,15 @@ end;
 //---------------------------------------------------------------------------
 function TOWPin.NotifyDispatcher( Operation : IOWNotifyOperation; State : TOWNotifyState; APinToNotify : TOWPin ) : TOWNotifyResult;
 var
-  I      : Integer;
-  Status : TOWNotifyResult;
-  DataTypeID : TGUID;
+  I               : Integer;
+  Status          : TOWNotifyResult;
+  DataTypeID      : TGUID;
   ASubmitFunction : TOWSubmit;
-  ADispatcher : TOWStateDispatcher;
-  APin        : TOWBasicPin;
-  AReadLock : IOWLockSection;
-  ADestroyLock : IOWDestroyLockSection;
+  ADispatcher     : TOWStateDispatcher;
+  APin            : TOWBasicPin;
+  AReadLock       : IOWLockSection;
+  ADestroyLock    : IOWDestroyLockSection;
+  AConverter      : IOWFormatConverter;
 
 begin
   AReadLock := ReadLock();
@@ -4447,7 +4494,10 @@ begin
       AReadLock := ADispatcher.ReadLock(); 
       DataTypeID := GetStateSubmitID( ADispatcher.ConnectionPins[ I ] );
       ASubmitFunction := GetSubmitFunctionID( DataTypeID );
-      APin := ADispatcher.ConnectionPins[ I ]; 
+      APin := ADispatcher.ConnectionPins[ I ];
+      if( APin.GetOwnerComponent() is TOWFormatConverter ) then
+        APin.GetOwnerComponent().GetInterface( IOWFormatConverter, AConverter ); // Hold the converter while the notification is sent
+
       AReadLock := NIL;
 //      AUnlock := NIL;
       ADestroyLock := FDestroyLock.Lock();
@@ -4472,7 +4522,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWPin.GetStateSubmitID( const OtherPin : TOWBasicPin ) : TGUID;
 var
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   
 begin
@@ -4725,9 +4775,9 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
-  AReadLock       : IOWLockSection;
+  AReadLock : IOWLockSection;
 
 begin
   AReadLock := ReadLock();
@@ -4753,7 +4803,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   StatePin : TOWStatePin;
   AReadLock : IOWLockSection;
@@ -4772,7 +4822,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
+function TOWPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
 var
   Unknown       : IUnknown;
   I             : Integer;
@@ -4799,12 +4849,12 @@ begin
         begin
         for I := FDispatcher.FFormatConverters.Count - 1 downto 0 do
           begin
-          AId := FDispatcher.FFormatConverters[ I ].FOutputPin.DownStreamFindConnectionID( OtherPin, False, False, AConverter, AConverterClass );
+          AId := FDispatcher.FFormatConverters[ I ].GetInstance().FOutputPin.DownStreamFindConnectionID( OtherPin, False, False, AConverter, AConverterClass );
           if( not IsEqualGUID( AId, OWNULLID )) then
             begin
             if( OtherPin.RequestInterface( AId, Unknown ) = S_OK ) then
               begin
-              AConverter := FDispatcher.FFormatConverters[ I ];
+              AConverter := FDispatcher.FFormatConverters[ I ].GetInstance();
               Result := AId;
               Exit;
               end;
@@ -5181,7 +5231,7 @@ var
   PEntry : POWPinEntry;
   AWriteLock : IOWLockSection;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
 
 begin
   AWriteLock := WriteLock();
@@ -5202,9 +5252,9 @@ begin
 
   if( AConverter <> NIL ) then
     begin
-    PEntry.ConnectionPin := AConverter.FInputPin;
-    AConverter.FOutputPin.ConnectAfter( SinkPin, NotifyAfterPin );
-    TOWSinkPin( SinkPin ).FConnectionSourcePin := AConverter.FOutputPin;
+    PEntry.ConnectionPin := AConverter.GetInstance().FInputPin;
+    AConverter.GetInstance().FOutputPin.ConnectAfter( SinkPin, NotifyAfterPin );
+    TOWSinkPin( SinkPin ).FConnectionSourcePin := AConverter.GetInstance().FOutputPin;
     end
 
   else
@@ -5253,8 +5303,8 @@ begin
         begin
         for I := FFormatConverters.Count - 1 downto 0 do
           begin
-          FFormatConverters[ I ].FOutputPin.IntDisconnect( OtherPin, False );
-          if( not FFormatConverters[ I ].FOutputPin.IsConnected() ) then
+          FFormatConverters[ I ].GetInstance().FOutputPin.IntDisconnect( OtherPin, False );
+          if( not FFormatConverters[ I ].GetInstance().FOutputPin.IsConnected() ) then
             begin
             FFormatConverters.Delete( I );
             end;
@@ -5285,10 +5335,10 @@ var
   ASinkPin      : TOWBasicPin;
   ARealSinkPin  : TOWBasicPin;
 
-  ASinksList    : TOWPinEntryListArray;
+  ASinksList    : TOWPinEntryListNotifyArray;
   ASinksCount   : Integer;
   Entry         : POWPinEntry;
-  AInUnlock       : IOWLockSection;
+  AInUnlock     : IOWLockSection;
   AUnlock       : IOWLockSection;
   ADestroyLock  : IOWDestroyLockSection;
 
@@ -5307,14 +5357,19 @@ begin
   SetLength( ASinksList, ASinksCount );
 
   for I := 0 to ASinksCount - 1 do
-    ASinksList[ I ] := FSinkPins[ I ]^;
+    begin
+    ASinksList[ I ].Entry := FSinkPins[ I ]^;
+    if( FSinkPins[ I ].ConnectionPin.GetOwnerComponent() is TOWFormatConverter ) then
+      FSinkPins[ I ].ConnectionPin.GetOwnerComponent().GetInterface( IOWFormatConverter, ASinksList[ I ].Converter ); // Hold the converter in existance while we iterate.
+
+    end;
 
   for I := ASinksCount - 1 downto 0 do
-    if( Assigned( ASinksList[ I ].SubmitFunction )) then
-      if( ASinksList[ I ].ConnectionPin <> ASinksList[ I ].RealPin ) then
+    if( Assigned( ASinksList[ I ].Entry.SubmitFunction )) then
+      if( ASinksList[ I ].Entry.ConnectionPin <> ASinksList[ I ].Entry.RealPin ) then
         for J := I - 1 downto 0 do
-          if( ASinksList[ I ].ConnectionPin = ASinksList[ J ].ConnectionPin ) then
-            ASinksList[ I ].SubmitFunction := NIL;
+          if( ASinksList[ I ].Entry.ConnectionPin = ASinksList[ J ].Entry.ConnectionPin ) then
+            ASinksList[ I ].Entry.SubmitFunction := NIL;
 
 
   try
@@ -5337,7 +5392,7 @@ begin
       else
         State := [nsLastIteration];
 
-      Entry := @ASinksList[ I ];
+      Entry := @ASinksList[ I ].Entry;
       
       DataTypeID := Entry.ConnectedID;
       ASinkPin := Entry.ConnectionPin;
@@ -5376,8 +5431,8 @@ begin
       end;
 
   finally
-    AUnlock := NIL;
     AInUnlock := NIL;
+    AUnlock := NIL;
     ALock := WriteLock();
     if( not FInDisconnect ) then
       ReorderChangedData();
@@ -5419,7 +5474,7 @@ begin
   Result := FFormatConverters.Count;
 end;
 //---------------------------------------------------------------------------
-function TOWSourcePin.GetConverter( Index : Integer ) : TOWFormatConverter;
+function TOWSourcePin.GetConverter( Index : Integer ) : IOWFormatConverter;
 var
   AReadLock : IOWLockSection;
 
@@ -5769,7 +5824,7 @@ var
   PinEntry : POWPinEntry;
   AWriteLock : IOWLockSection;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
 
 begin
   AWriteLock := WriteLock();
@@ -5822,7 +5877,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWSourcePin.DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
+function TOWSourcePin.DownStreamFindConnectionID( const OtherPin : TOWBasicPin; UseConverters : Boolean; RequestConverters : Boolean; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass ) : TGUID;
 var
   PossibleStreamTypes   : TOWPinTypeRestricted;
   I                     : Integer;
@@ -5858,13 +5913,13 @@ begin
       for I := FFormatConverters.Count - 1 downto 0 do
         begin
 //        AId := DownStreamFindConnectionID( FFormatConverters[ I ].FInputPin, False, False, AConverter, AConverterClass );
-        AId := FFormatConverters[ I ].FOutputPin.DownStreamFindConnectionID( OtherPin, False, False, AConverter, AConverterClass );
+        AId := FFormatConverters[ I ].GetInstance().FOutputPin.DownStreamFindConnectionID( OtherPin, False, False, AConverter, AConverterClass );
   //      Result := FFormatConverters[ I ].FInputPin.DownStreamFindConnectionID( OtherPin, False, AConverter, AConverterClass ); //  FOutputPin.DownStreamFindConnectionID( OtherPin, False, AConverter, AConverterClass );
         if( not IsEqualGUID( AId, OWNULLID )) then
           begin
           if( OtherPin.RequestInterface( AId, Unknown ) = S_OK ) then
             begin
-            Result := DownStreamFindConnectionID( FFormatConverters[ I ].FInputPin, False, False, AConverter, AConverterClass );
+            Result := DownStreamFindConnectionID( FFormatConverters[ I ].GetInstance().FInputPin, False, False, AConverter, AConverterClass );
             AConverter := FFormatConverters[ I ];
             PossibleStreamTypes.Free();
             Exit;
@@ -6239,7 +6294,7 @@ var
   ASelfUnlockLock : IOWLockSection;
   ASubmitFunction : TOWSubmit;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AUnlock : IOWLockSection;
   ADestroyLock : IOWDestroyLockSection;
 
@@ -6288,7 +6343,7 @@ function TOWSourcePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters 
 var
   SinkPin : TOWBasicSinkPin;
   StatePin : TOWStatePin;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   AReadLock : IOWLockSection;
 
@@ -6315,7 +6370,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWSourcePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWSourcePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -6573,7 +6628,7 @@ begin
     begin
     for I := FFormatConverters.Count - 1 downto 0 do
       begin
-      if( FFormatConverters[ I ].OutputPin.IsConnectedTo( OtherPin )) then
+      if( FFormatConverters[ I ].GetInstance().OutputPin.IsConnectedTo( OtherPin )) then
         begin
         Result := True;
         Exit;
@@ -6586,7 +6641,7 @@ end;
 function TOWSourcePin.CheckDownStreamInterfaces( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   
 begin
   Result := not IsEqualGUID( DownStreamFindConnectionID( OtherPin, UseConverters, True, AConverter, AConverterClass ), OWNULLID );
@@ -6703,7 +6758,7 @@ function TOWBasicSinkPin.IsCompatible( const OtherPin : TOWBasicPin; UseConverte
 var
   SourcePin       : TOWSourcePin;
   StatePin        : TOWStatePin;
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   AReadLock       : IOWLockSection;
 
@@ -6966,7 +7021,7 @@ begin
   BackChainReconnect( DownIID, UpIID );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicSinkPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWBasicSinkPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -7002,7 +7057,7 @@ function TOWBasicSinkPin.CheckUpStreamInterfaces( const OtherPin : TOWSourcePin;
 var
   AReadLock : IOWLockSection;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   
 begin
   AReadLock := ReadLock();
@@ -7078,7 +7133,7 @@ begin
   Result := FFormatConverters.Count;
 end;
 //---------------------------------------------------------------------------
-function TOWMultiSinkPin.GetConverter( Index : Integer ) : TOWFormatConverter;
+function TOWMultiSinkPin.GetConverter( Index : Integer ) : IOWFormatConverter;
 var
   AReadLock : IOWLockSection;
 
@@ -7444,7 +7499,7 @@ var
   PEntry : POWPinEntry;
   AWriteLock : IOWLockSection;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   DataTypeID : TGUID;
   ADownStreamID   : TGUID;
 
@@ -7507,7 +7562,7 @@ var
   AWriteLock      : IOWLockSection;
   ASourcePin      : TOWBasicPin;
   AConverterClass : TOWFormatConverterClass;
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   ADownStreamID   : TGUID;
   ARealSourcePin  : TOWBasicPin;
   I               : Integer;
@@ -7692,8 +7747,8 @@ begin
         begin
         for I := FFormatConverters.Count - 1 downto 0 do
           begin
-          FFormatConverters[ I ].FOutputPin.IntDisconnect( OtherPin, False );
-          if( not FFormatConverters[ I ].FOutputPin.IsConnected() ) then
+          FFormatConverters[ I ].GetInstance().FOutputPin.IntDisconnect( OtherPin, False );
+          if( not FFormatConverters[ I ].GetInstance().FOutputPin.IsConnected() ) then
             FFormatConverters.Delete( I );
             
           end;
@@ -7794,7 +7849,7 @@ begin
     begin
     for I := FFormatConverters.Count - 1 downto 0 do
       begin
-      if( FFormatConverters[ I ].OutputPin.IsConnectedTo( OtherPin )) then
+      if( FFormatConverters[ I ].GetInstance().OutputPin.IsConnectedTo( OtherPin )) then
         begin
         Result := True;
         Exit;
@@ -7845,7 +7900,7 @@ var
   ALock           : IOWLockSection;
   ASourcePin      : TOWBasicPin;
   ARealSourcePin  : TOWBasicPin;
-  ASourcesList    : TOWPinEntryListArray;
+  ASourcesList    : TOWPinEntryListNotifyArray;
   ASourcesCount   : Integer;
   Entry           : POWPinEntry;
   AUnlock         : IOWLockSection;
@@ -7858,14 +7913,19 @@ begin
   SetLength( ASourcesList, ASourcesCount );
 
   for I := 0 to ASourcesCount - 1 do
-    ASourcesList[ I ] := FSourcePins[ I ]^;
+    begin
+    ASourcesList[ I ].Entry := FSourcePins[ I ]^;
+    if( FSourcePins[ I ].ConnectionPin.GetOwnerComponent() is TOWFormatConverter ) then
+      FSourcePins[ I ].ConnectionPin.GetOwnerComponent().GetInterface( IOWFormatConverter, ASourcesList[ I ].Converter ); // Hold the converter in existance while we iterate.
+
+    end;
 
   for I := ASourcesCount - 1 downto 0 do
-    if( Assigned( ASourcesList[ I ].SubmitFunction )) then
-      if( ASourcesList[ I ].ConnectionPin <> ASourcesList[ I ].RealPin ) then
+    if( Assigned( ASourcesList[ I ].Entry.SubmitFunction )) then
+      if( ASourcesList[ I ].Entry.ConnectionPin <> ASourcesList[ I ].Entry.RealPin ) then
         for J := I - 1 downto 0 do
-          if( ASourcesList[ I ].ConnectionPin = ASourcesList[ J ].ConnectionPin ) then
-            ASourcesList[ I ].SubmitFunction := NIL;
+          if( ASourcesList[ I ].Entry.ConnectionPin = ASourcesList[ J ].Entry.ConnectionPin ) then
+            ASourcesList[ I ].Entry.SubmitFunction := NIL;
 
   try
   
@@ -7887,7 +7947,7 @@ begin
       else
         State := [nsLastIteration];
 
-      Entry := @ASourcesList[ I ];
+      Entry := @ASourcesList[ I ].Entry;
       
       DataTypeID := Entry.ConnectedID;
       ASourcePin := Entry.ConnectionPin;
@@ -8015,7 +8075,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPin.GetUpStreamLinkName() : String;
 var
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   AReadLock       : IOWLockSection;
   I               : Integer;
@@ -8060,7 +8120,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPin.GetDownStreamLinkName() : String;
 var
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   DownStreamID    : TGUID;
   I               : Integer;
@@ -8322,20 +8382,25 @@ end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult;
 var
-  ADestroyLock : IOWDestroyLockSection;
-  AReadLock1 : IOWLockSection;
-  AReadLock : IOWLockSection;
-  ASourcePin : TOWBasicPin;
+  ADestroyLock    : IOWDestroyLockSection;
+  AReadLock1      : IOWLockSection;
+  AReadLock       : IOWLockSection;
+  ASourcePin      : TOWBasicPin;
   ASubmitFunction : TOWSubmit;
   AConnectedID    : TGUID;
-  AUnlock : IOWLockSection;
+  AUnlock         : IOWLockSection;
+  AConverter      : IOWFormatConverter;
 
 begin
   Result := [];
 
-  AReadLock1 := FOwnerLock.ReadLock();
-  if( AReadLock1 = NIL ) then
-    Exit;
+  if( FOwnerLock <> NIL ) then
+    begin
+    AReadLock1 := FOwnerLock.ReadLock();
+    if( AReadLock1 = NIL ) then
+       Exit;
+
+    end;
 
   AReadLock := ReadLock();
   if( AReadLock = NIL ) then
@@ -8346,6 +8411,9 @@ begin
     ASourcePin := SourcePin;
     ASubmitFunction := FSubmitFunction;
     AConnectedID := FConnectedID;
+    if( SourcePin.GetOwnerComponent() is TOWFormatConverter ) then
+      SourcePin.GetOwnerComponent().GetInterface( IOWFormatConverter, AConverter ); // Hold the converter while the notification is sent
+
     AReadLock := NIL;
     ADestroyLock := FDestroyLock.Lock();
     if( ADestroyLock <> NIL ) then
@@ -8420,7 +8488,7 @@ var
   AWriteLock : IOWLockSection;
   ASourcePin : TOWBasicPin;
   AConverterClass : TOWFormatConverterClass;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   ADownStreamID : TGUID;
 
 begin
@@ -8543,7 +8611,7 @@ begin
         TOWSourcePin( ASourcePin ).NewConnection( Self );
 
 //      FSourcePin.NewConnection( Self, FSourcePin.GetSubmitFunctionID( DataTypeID ));
-        ADownStreamID := TOWSourcePin( ASourcePin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass ); 
+        ADownStreamID := TOWSourcePin( ASourcePin ).DownStreamFindConnectionID( Self, True, False, AConverter, AConverterClass );
         AWriteLock := NIL;
         AWriteLock := WriteLock();
         ChainReconnect( ADownStreamID, FConnectedID );
@@ -8703,7 +8771,7 @@ end;
 function TOWSinkPin.ConnectToStateAfter( ADispatcher : TOWStateDispatcher; NotifyAfterPin : TOWBasicPin ) : Boolean;
 var
   I : Integer;
-//  AConverter : TOWFormatConverter;
+//  AConverter : IOWFormatConverter;
 //  AConverterClass : TOWFormatConverterClass;
   AWriteLock : IOWLockSection;
 
@@ -8768,7 +8836,7 @@ begin
   OWNotifyConnected( Self, ADispatcher );
 end;
 //---------------------------------------------------------------------------
-function TOWSinkPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWSinkPin.CanConnectToStateInt( const ADispatcher : TOWStateDispatcher; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   I : Integer;
   AReadLock : IOWLockSection;
@@ -9152,7 +9220,7 @@ begin
   Result := FIntRealSourcePin;
 end;
 //---------------------------------------------------------------------------
-function TOWSinkPin.GetFormatConverter() : TOWFormatConverter;
+function TOWSinkPin.GetFormatConverter() : IOWFormatConverter;
 var
   AReadLock : IOWLockSection;
   
@@ -9163,13 +9231,13 @@ begin
   
   if( FRealSourcePin <> FConnectionSourcePin ) then
     if( FConnectionSourcePin <> NIL ) then 
-      Result := TOWFormatConverter( FConnectionSourcePin.Owner );;
+      FConnectionSourcePin.Owner.GetInterface( IOWFormatConverter, Result );
 
 end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.GetUpStreamLinkName() : String;
 var
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   AReadLock : IOWLockSection;
   
@@ -9203,7 +9271,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.GetDownStreamLinkName() : String;
 var
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   DownStreamID    : TGUID;
   AReadLock       : IOWLockSection;
@@ -9255,7 +9323,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWSinkPin.GetDownStreamID() : TGUID;
 var
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   I               : Integer;
   AReadLock : IOWLockSection;
@@ -9317,7 +9385,7 @@ var
   AGuidFrom     : TGUID;
   AGuidTo       : TGUID;
   AConverterClass : TOWFormatConverterClass;
-  AConverter      : TOWFormatConverter;
+  AConverter      : IOWFormatConverter;
 
 begin
   AWriteLock := WriteLock();
@@ -9383,11 +9451,11 @@ begin
 }
     AConverterClass := OWGetConverter( AGuidFrom, AGuidTo );
     AConverter := AConverterClass.Create();
-    AConverter.FOutputPin.ConnectAfter( Self, NIL );
+    AConverter.GetInstance().FOutputPin.ConnectAfter( Self, NIL );
     FDispatcher := TOWStateDispatcher.GetByNameCreate( Self, ReadDispName, OwnerInDesigning() );
 
-      AConverter.FInputPin.FDispatcher := FDispatcher;
-      FDispatcher.AddPin( AConverter.FInputPin, Self );
+      AConverter.GetInstance().FInputPin.FDispatcher := FDispatcher;
+      FDispatcher.AddPin( AConverter.GetInstance().FInputPin, Self );
       FDispatcher.FFormatConverters.Add( AConverter ); 
 //      PEntry.ConnectionPin := AConverter.FInputPin;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := Self; // AConverter.FOutputPin;
@@ -9413,7 +9481,7 @@ var
   IsSaved       : Boolean;
   ExternalLink  : Boolean;
   AReadLock     : IOWLockSection;
-  AConverter    : TOWFormatConverter;
+  AConverter    : IOWFormatConverter;
   AGuidFrom     : TGUID;
   AGuidTo       : TGUID;
 
@@ -9480,9 +9548,9 @@ begin
   if( not IsSaved ) then
     Writer.WriteString( FDispatcher.FName );
 
-  AConverter := TOWFormatConverter( FConnectionSourcePin.Owner );
-  AGuidFrom := AConverter.InputPin.GetDownStreamID(); // FConnectedID;
-  AGuidTo := AConverter.OutputPin.GetPrimaryConnectionID();
+  AConverter := FConnectionSourcePin.Owner as TOWFormatConverter;
+  AGuidFrom := AConverter.GetInstance().InputPin.GetDownStreamID(); // FConnectedID;
+  AGuidTo := AConverter.GetInstance().OutputPin.GetPrimaryConnectionID();
   Writer.WriteString( OWGetStreamGUIDFromID( AGuidFrom ) );
   Writer.WriteString( OWGetStreamGUIDFromID( AGuidTo ) );
 //  AGuid := GetPrimaryConnectionID(); // FConnectionSourcePin.;
@@ -11320,7 +11388,7 @@ end;
 function TOWStatePin.IsCompatible( const OtherPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 var
 //  StatePin : TOWStatePin;
-  AConverter : TOWFormatConverter;
+  AConverter : IOWFormatConverter;
   AConverterClass : TOWFormatConverterClass;
   AReadLock : IOWLockSection;
 
@@ -11468,7 +11536,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function TOWStatePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWStatePin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 var
   AReadLock : IOWLockSection;
 
@@ -11654,13 +11722,11 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-{
 procedure TOWStateDispatcher.AfterConstruction();
 begin
   inherited;
   OWNotifyAddDispatcher( Self );
 end;
-}
 //---------------------------------------------------------------------------
 procedure TOWStateDispatcher.BeforeDestruction();
 //var
@@ -12141,9 +12207,9 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function TOWFormatConverterList.GetItem( Index : Integer ) : TOWFormatConverter;
+function TOWFormatConverterList.GetItem( Index : Integer ) : IOWFormatConverter;
 begin
-  Result := TOWFormatConverter( inherited Items[ Index ] );
+  Result := ( inherited Items[ Index ] ) as IOWFormatConverter;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -12285,8 +12351,10 @@ function TOWObjectList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}co
 begin
   if GetInterface(IID, Obj) then
     Result := 0
+
   else
     Result := E_NOINTERFACE;
+
 end;
 //---------------------------------------------------------------------------
 function TOWObjectList._AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
@@ -12298,7 +12366,8 @@ function TOWObjectList._Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdca
 begin
   Result := InterlockedDecrement(FRefCount);
   if Result = 0 then
-    Destroy;
+    Destroy();
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -12387,7 +12456,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function TOWUnloadedPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
+function TOWUnloadedPin.FindConnectionID( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : TGUID;
 begin
   Result := OWNULLID;
 end;
@@ -12397,7 +12466,7 @@ begin
   Result := [];
 end;
 //---------------------------------------------------------------------------
-function TOWUnloadedPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : TOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
+function TOWUnloadedPin.CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean;
 begin
   Result := True;
 end;
@@ -12724,20 +12793,29 @@ end;
 constructor TOWFormatConverter.Create();
 begin
   inherited Create( NIL );
+  FLock := TOWLock.Create();
 end;
 //---------------------------------------------------------------------------
 constructor TOWFormatConverter.CreateEx( AInputPin : TOWSinkPin; AOutputPin : TOWSourcePin );
 begin
   inherited Create( NIL );
+  FLock := TOWLock.Create();
   FInputPin := AInputPin;
   FOutputPin := AOutputPin;
   FOutputPin.FunctionSources.Add( FInputPin );
 end;
 //---------------------------------------------------------------------------
-destructor  TOWFormatConverter.Destroy();
+destructor TOWFormatConverter.Destroy();
+var
+  ALock : IOWLockSection;
+
 begin
+  ALock := FLock.StopLock();
+  FInputPin.Disconnect();
+  FOutputPin.Disconnect();
   FInputPin.Free();
   FOutputPin.Free();
+  ALock := NIL;
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -12746,6 +12824,24 @@ begin
   Result := FInputPin.Notify( Operation );
 end;
 //------------------------------------------------------------------------------
+function TOWFormatConverter.GetInstance() : TOWFormatConverter;
+begin
+  Result := Self;
+end;
+//------------------------------------------------------------------------------
+function TOWFormatConverter._AddRef(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+begin
+  Result := InterlockedIncrement(FRefCount);
+end;
+//---------------------------------------------------------------------------
+function TOWFormatConverter._Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
+begin
+  Result := InterlockedDecrement(FRefCount);
+  if Result = 0 then
+    Destroy();
+
+end;
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

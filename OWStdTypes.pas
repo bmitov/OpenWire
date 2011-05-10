@@ -130,40 +130,35 @@ type TOWPinNotificationEvent = function(Handler : IOWDataStream; DataTypeID : PD
 type TOWClockPinNotificationEvent = function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
 
 type
+  TOWPumpType = ( ptNone, ptSlave, ptMaster, ptHardware );
+//---------------------------------------------------------------------------
   TOWClockOperation = class( TOWNotifyOperation )
   end;
-
-type
+//---------------------------------------------------------------------------
   TOWClockQueryOperation = class( TOWNotifyOperation )
   end;
-
-type
+//---------------------------------------------------------------------------
   TOWClockNeededOperation = class( TOWNotifyOperation )
   public
     Enabled : Boolean;
 
   public
     constructor Create( AEnabled : Boolean );
-    
-  end;
 
-type
+  end;
+//---------------------------------------------------------------------------
   TOWSuppliedOperation = class( TOWClockOperation )
   end;
-
-type
+//---------------------------------------------------------------------------
   TOWMasterPumpOperation = class( TOWNotifyOperation )
   public
     Pump         : TObject;
 
   public
     constructor Create( APump : TObject );
-    
-  end;
 
-type TOWPumpType = ( ptNone, ptSlave, ptMaster, ptHardware );
+  end;
 //---------------------------------------------------------------------------
-type
   TOWPumpRequestOperation = class( TOWNotifyOperation )
   public
     Pump         : TObject;
@@ -178,21 +173,18 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWStartPumpOperation = class( TOWNotifyOperation )
   public
     Pump         : TObject;
-    
+
   public
     constructor Create( APump : TObject );
-    
+
   end;
 //---------------------------------------------------------------------------
-type
   TOWStartOperation = class( TOWNotifyOperation )
   end;
 //---------------------------------------------------------------------------
-type
   TOWStartRateOperation = class( TOWStartOperation )
   public
     Rate : Single;
@@ -200,26 +192,20 @@ type
   public
     constructor Create( ARate : Single );
 
-  end; 
+  end;
 //---------------------------------------------------------------------------
-type
   TOWStopOperation = class( TOWNotifyOperation )
   end;
 //---------------------------------------------------------------------------
-type
   TOWEndStopOperation = class( TOWStopOperation )
   end;
 //---------------------------------------------------------------------------
-type
   TOWSuppliedMulticastOperation = class( TOWSuppliedOperation )
   end;
-
 //---------------------------------------------------------------------------
-type
   TOWQueryStreamOperation = class( TOWNotifyOperation )
   end;
 //---------------------------------------------------------------------------
-type
   TOWIgnoreStreamOperation = class( TOWNotifyOperation )
   end;
 //---------------------------------------------------------------------------
@@ -229,7 +215,6 @@ type
   TOWFlushStreamOperation = class( TOWNotifyOperation )
   end;
 //---------------------------------------------------------------------------
-type
   TOWSuppliedSingleOperation = class( TOWSuppliedOperation )
   public
     Value : Single;
@@ -391,7 +376,6 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWClockSourcePin = class( TOWSourcePin, IOWClockStream )
   protected
     FPinNotificationEvent : TOWClockPinNotificationEvent;
@@ -411,7 +395,6 @@ type
 
 end;
 //---------------------------------------------------------------------------
-type
   TOWClockSinkPin = class( TOWSinkPin, IOWClockStream )
   protected
     FOnPinNotificationEvent : TOWClockPinNotificationEvent;
@@ -429,7 +412,6 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWClockMultiSinkPin = class( TOWMultiSinkPin, IOWClockStream )
   protected
     FOnPinNotificationEvent : TOWClockPinNotificationEvent;
@@ -447,7 +429,6 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWFloatSourcePin = class( TOWClockSourcePin )
   public
     FPinNotificationEvent : TOWFloatPinNotificationEvent;
@@ -1569,7 +1550,8 @@ type
 //---------------------------------------------------------------------------
 implementation
 
-uses SysUtils;
+uses
+  SysUtils, Graphics;
 //---------------------------------------------------------------------------
 function IncMilliSecond(const AValue: TDateTime;
   const ANumberOfMilliSeconds: Int64): TDateTime;
@@ -4605,7 +4587,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer );
@@ -4627,7 +4609,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToFloatFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer );
@@ -4649,7 +4631,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWFloatToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWFloatToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single );
@@ -4671,7 +4653,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToRealFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64 );
@@ -4693,7 +4675,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToFloatFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64 );
@@ -4715,7 +4697,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWIntToRealRangedFormatConverter.Create();
 begin
-  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWIntToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; RangesFilled : Boolean );
@@ -4742,7 +4724,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWInt64ToRealRangedFormatConverter.Create();
 begin
-  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, NIL, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, NIL, NIL ) );
+  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent ), TOWRealRangedSourcePin.CreateLock( Self, FLock, NIL ) );
 end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; RangesFilled : Boolean );
@@ -5887,26 +5869,26 @@ end;
 //---------------------------------------------------------------------------
 initialization
   OWRegisterStream( IOWClockStream,       'Clock' );
-  OWRegisterStream( IOWIntegerStream,     '32 bit Integer single' );
-  OWRegisterStream( IOWInt64Stream,       '64 bit Integer single' );
-  OWRegisterStream( IOWFloatStream,       'Float single' );
-  OWRegisterStream( IOWRealStream,        'Real single' );
-  OWRegisterStream( IOWRealComplexStream, 'Real Complex single' );
-  OWRegisterStream( IOWBoolStream,        'Boolean single' );
-  OWRegisterStream( IOWCharStream,        'Character single' );
-  OWRegisterStream( IOWStringStream,      'Sting' );
-  OWRegisterStream( IOWIntRangedStream,   'Ranged 32 bit Integer single' );
-  OWRegisterStream( IOWInt64RangedStream, 'Ranged 64 bit Integer single' );
-  OWRegisterStream( IOWRealRangedStream,  'Ranged Real single' );
+  OWRegisterStreamWithColorThickness( IOWIntegerStream,     '32 bit Integer', clFuchsia, 1 );
+  OWRegisterStreamWithColorThickness( IOWInt64Stream,       '64 bit Integer', clFuchsia, 1 );
+  OWRegisterStreamWithColorThickness( IOWFloatStream,       'Float', clRed, 1 );
+  OWRegisterStreamWithColorThickness( IOWRealStream,        'Real', clRed, 1 );
+  OWRegisterStreamWithColorThickness( IOWRealComplexStream, 'Real Complex', clAqua, 1 );
+  OWRegisterStreamWithColorThickness( IOWBoolStream,        'Boolean', clBlue, 1 );
+  OWRegisterStreamWithColorThickness( IOWCharStream,        'Character', clTeal, 1 );
+  OWRegisterStreamWithColorThickness( IOWStringStream,      'Sting', clTeal, 2 );
+  OWRegisterStreamWithColorThickness( IOWIntRangedStream,   'Ranged 32 bit Integer', clFuchsia, 1 );
+  OWRegisterStreamWithColorThickness( IOWInt64RangedStream, 'Ranged 64 bit Integer', clFuchsia, 1 );
+  OWRegisterStreamWithColorThickness( IOWRealRangedStream,  'Ranged Real', clRed, 1 );
   OWRegisterStream( IOWDateTimeStream,    'Date/Time' );
   
   OWRegisterDefaultHandler( IOWDataStream, OWDefaultDataNotificationHandler );
 
-  OWRegisterTypeConverter( IOWIntegerStream, IOWFloatStream, TOWIntToFloatFormatConverter );
-  OWRegisterTypeConverter( IOWIntegerStream, IOWRealStream,  TOWIntToRealFormatConverter );
-  OWRegisterTypeConverter( IOWInt64Stream,   IOWFloatStream, TOWInt64ToFloatFormatConverter );
-  OWRegisterTypeConverter( IOWInt64Stream,   IOWRealStream,  TOWInt64ToRealFormatConverter );
-  OWRegisterTypeConverter( IOWFloatStream,   IOWRealStream,  TOWFloatToRealFormatConverter );
-  OWRegisterTypeConverter( IOWIntRangedStream, IOWRealRangedStream,  TOWIntToRealRangedFormatConverter );
-  OWRegisterTypeConverter( IOWInt64RangedStream, IOWRealRangedStream,  TOWInt64ToRealRangedFormatConverter );
+  OWRegisterTypeConverter( IOWIntegerStream,      IOWFloatStream,       TOWIntToFloatFormatConverter );
+  OWRegisterTypeConverter( IOWIntegerStream,      IOWRealStream,        TOWIntToRealFormatConverter );
+  OWRegisterTypeConverter( IOWInt64Stream,        IOWFloatStream,       TOWInt64ToFloatFormatConverter );
+  OWRegisterTypeConverter( IOWInt64Stream,        IOWRealStream,        TOWInt64ToRealFormatConverter );
+  OWRegisterTypeConverter( IOWFloatStream,        IOWRealStream,        TOWFloatToRealFormatConverter );
+  OWRegisterTypeConverter( IOWIntRangedStream,    IOWRealRangedStream,  TOWIntToRealRangedFormatConverter );
+  OWRegisterTypeConverter( IOWInt64RangedStream,  IOWRealRangedStream,  TOWInt64ToRealRangedFormatConverter );
 end.

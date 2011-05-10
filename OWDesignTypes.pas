@@ -299,7 +299,9 @@ begin
 
   PinsNeedRefresh := True;
 
-  PostMessage( GOWRefreshForm.Handle, OWM_UPDATE, 0, 0 );
+  if( GOWRefreshForm <> NIL ) then
+    PostMessage( GOWRefreshForm.Handle, OWM_UPDATE, 0, 0 );
+
 end;
 //---------------------------------------------------------------------------
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
@@ -361,7 +363,8 @@ begin
   if( Assigned( Designer)) then
     begin
     GOWInRefresh := True;
-    PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_INSPECTOR,
+    if( GOWRefreshForm <> NIL ) then
+      PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_INSPECTOR,
                 Integer( Designer ), 0 );
 
     end;
