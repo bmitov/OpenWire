@@ -1981,18 +1981,26 @@ type
 //---------------------------------------------------------------------------
 procedure OWAddPinNotifier( ANotifyItem : IOWPinNotifier );
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  NotifyList.Add( ANotifyItem );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
+
+    NotifyList.Add( ANotifyItem );
+  except
+    end;
+
 end;
 //---------------------------------------------------------------------------
 procedure OWRemovePinNotifier( ANotifyItem : IOWPinNotifier );
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  NotifyList.Remove( ANotifyItem );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
+
+    NotifyList.Remove( ANotifyItem );
+  except
+    end;
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddPin( APin : TOWBasicPin );
@@ -2000,14 +2008,18 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).AddPin( APin );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).AddPin( APin );
+
+      except;
+        end;
+
+  except
     end;
 
 end;
@@ -2017,14 +2029,18 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).RemovePin( APin, DesignFormClosing );
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).RemovePin( APin, DesignFormClosing );
 
-    except;
+      except;
+        end;
+
+  except;
     end;
 
 end;
@@ -2034,16 +2050,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).ChangePin( APin );
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).ChangePin( APin );
 
-    except;
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyConnected( AObject1 : TOWObject; AObject2 : TOWObject );
@@ -2051,16 +2071,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).Connected( AObject1, AObject2 );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).Connected( AObject1, AObject2 );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyDisconnected( AObject1 : TOWObject; AObject2 : TOWObject );
@@ -2068,16 +2092,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).Disconnected( AObject1, AObject2 );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).Disconnected( AObject1, AObject2 );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddDispatcher( ADispatcher : TOWStateDispatcher );
@@ -2085,14 +2113,18 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).AddDispatcher( ADispatcher );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).AddDispatcher( ADispatcher );
+
+      except;
+        end;
+
+  except;
     end;
 
 end;
@@ -2102,14 +2134,18 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).RemoveDispatcher( ADispatcher, DesignFormClosing );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).RemoveDispatcher( ADispatcher, DesignFormClosing );
+
+      except;
+        end;
+
+  except;
     end;
 
 end;
@@ -2119,16 +2155,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).ChangeDispatcher( ADispatcher );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).ChangeDispatcher( ADispatcher );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddPinList( APinList : TOWPinList );
@@ -2136,16 +2176,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).AddPinList( APinList );
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).AddPinList( APinList );
 
-    except;
+      except;
+        end;
+
+  except;
     end;
-  
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyRemovePinList( APinList : TOWPinList );
@@ -2153,14 +2197,18 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).RemovePinList( APinList );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).RemovePinList( APinList );
+
+      except;
+        end;
+
+  except;
     end;
 
 end;
@@ -2170,16 +2218,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).ChangePinList( APinList );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).ChangePinList( APinList );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinAdded( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
@@ -2187,16 +2239,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinAdded( APinList, APin, Index );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinAdded( APinList, APin, Index );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinRemoved( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
@@ -2204,16 +2260,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
-    
-  for I := NotifyList.Count - 1 downto 0 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinRemoved( APinList, APin, Index );
+  try
+    if( NotifyList = NIL ) then
+      Exit;
 
-    except;
+    for I := NotifyList.Count - 1 downto 0 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinRemoved( APinList, APin, Index );
+
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinsSwapped( APinList : TOWPinList; APin1 : TOWBasicPin; Index1 : Integer; APin2 : TOWBasicPin; Index2 : Integer );
@@ -2221,16 +2281,20 @@ var
   I : Integer;
 
 begin
-  if( NotifyList = NIL ) then
-    Exit;
+  try
+    if( NotifyList = NIL ) then
+      Exit;
     
-  for I := 0 to NotifyList.Count - 1 do
-    try
-      IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinsSwapped( APinList, APin1, Index1, APin2, Index2 );
+    for I := 0 to NotifyList.Count - 1 do
+      try
+        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinsSwapped( APinList, APin1, Index1, APin2, Index2 );
 
-    except;
+      except;
+        end;
+
+  except;
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 function _OWGetEntryIndex( ID : TGUID ) : Integer;
@@ -8516,11 +8580,12 @@ begin
 
     end;
 
-  if( OtherPin = FConnectionSourcePin ) then
-    begin
-    Result := True;
-    Exit
-    end;
+  if( OtherPin <> NIL ) then
+    if( OtherPin = FConnectionSourcePin ) then
+      begin
+      Result := True;
+      Exit
+      end;
     
   if( OtherPin = NIL ) then
     begin
@@ -8677,10 +8742,10 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.Disconnect();
 var
-  ADestroyLock : IOWDestroyLockSection;
-  ASourceDestroyLock : IOWDestroyLockSection;
-  AWriteLock : IOWLockSection;
-  ASourceWriteLock : IOWLockSection;
+  ADestroyLock        : IOWDestroyLockSection;
+  ASourceDestroyLock  : IOWDestroyLockSection;
+  AWriteLock          : IOWLockSection;
+  ASourceWriteLock    : IOWLockSection;
 
 begin
   if( FRealSourcePin <> NIL ) then

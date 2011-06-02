@@ -52,18 +52,24 @@ object OWPinEditorForm: TOWPinEditorForm
         Top = 4
         Width = 75
         Height = 25
-        TabOrder = 0
+        DoubleBuffered = True
         Kind = bkOK
         Margin = 9
+        NumGlyphs = 2
+        ParentDoubleBuffered = False
+        TabOrder = 0
       end
       object CancelButton: TBitBtn
         Left = 6
         Top = 36
         Width = 75
         Height = 25
-        TabOrder = 1
+        DoubleBuffered = True
         Kind = bkCancel
         Margin = 8
+        NumGlyphs = 2
+        ParentDoubleBuffered = False
+        TabOrder = 1
       end
     end
     object AboutPanel: TPanel
@@ -249,8 +255,7 @@ object OWPinEditorForm: TOWPinEditorForm
       Width = 75
       Height = 25
       Caption = '&Link to all'
-      TabOrder = 4
-      OnClick = LinkAllButtonClick
+      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000000000000000000000000
@@ -261,6 +266,9 @@ object OWPinEditorForm: TOWPinEditorForm
         CCF0B0FF08888880FF0BBB008888888800BBBB088888888880BBBB0888888888
         80BB000888888888800088888888888888888888888888888888}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 4
+      OnClick = LinkAllButtonClick
     end
     object UnlinkAllButton: TBitBtn
       Left = 6
@@ -268,8 +276,7 @@ object OWPinEditorForm: TOWPinEditorForm
       Width = 75
       Height = 25
       Caption = '&Unlink all'
-      TabOrder = 5
-      OnClick = UnlinkAllButtonClick
+      DoubleBuffered = True
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000C40E0000C40E00000000000000000000C0C0C0C0C0C0
@@ -298,6 +305,9 @@ object OWPinEditorForm: TOWPinEditorForm
         FF0000800000FFC0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0
         C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 5
+      OnClick = UnlinkAllButtonClick
     end
     object RestoreButton: TBitBtn
       Left = 6
@@ -305,8 +315,7 @@ object OWPinEditorForm: TOWPinEditorForm
       Width = 75
       Height = 25
       Caption = '&Restore'
-      TabOrder = 3
-      OnClick = RestoreButtonClick
+      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000010000000000000000000
@@ -317,6 +326,9 @@ object OWPinEditorForm: TOWPinEditorForm
         0020770A00000000A22070AAAAAAAAAA2A200AAAAAAAAAAAA20770AAAAAAAAAA
         0077770A00000000877777700777777777777777077777777777}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 3
+      OnClick = RestoreButtonClick
     end
     object AfterPinButton: TBitBtn
       Left = 6
@@ -324,8 +336,7 @@ object OWPinEditorForm: TOWPinEditorForm
       Width = 75
       Height = 25
       Caption = 'After Pin'
-      TabOrder = 6
-      OnClick = AfterPinButtonClick
+      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000000000000000000000000
@@ -336,6 +347,9 @@ object OWPinEditorForm: TOWPinEditorForm
         8888B0FF088888888000BB00888CC88880BBBB08888CC88800BBBB0888888880
         FF0B0008888CC8CCCCF08888888CC8CCCCF0888888888880FF0B}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 6
+      OnClick = AfterPinButtonClick
     end
   end
   object Panel3: TPanel
@@ -399,6 +413,9 @@ object OWPinEditorForm: TOWPinEditorForm
       BevelOuter = bvNone
       Caption = 'Panel4'
       TabOrder = 1
+      DesignSize = (
+        578
+        29)
       object Label1: TLabel
         Left = 6
         Top = 8
@@ -409,11 +426,10 @@ object OWPinEditorForm: TOWPinEditorForm
       object FormsComboBox: TComboBox
         Left = 37
         Top = 4
-        Width = 549
+        Width = 535
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 13
         TabOrder = 0
         OnChange = FormsComboBoxChange
       end
@@ -455,7 +471,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 16
     Top = 64
     Bitmap = {
-      494C010107000800FC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010107000800880310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000000000FF000000FF0000000000000000000000
@@ -731,7 +747,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 56
     Top = 64
     Bitmap = {
-      494C010106000700FC0010001000FFFFFF000510FFFFFFFFFFFFFFFF424D7600
+      494C010106000700880310001000FFFFFF000510FFFFFFFFFFFFFFFF424D7600
       0000000000007600000028000000400000002000000001000400000000000004
       0000000000000000000000000000000000000000000000008000008000000080
       8000800000008000800080800000C0C0C000808080000000FF0000FF000000FF
@@ -784,7 +800,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 96
     Top = 64
     Bitmap = {
-      494C010104000500FC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500880310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -12,10 +12,16 @@
 			<Projects Include="OpenWireLabDemo\OpenWireLabPkgD15.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="Editor\OpenWireEditorDsnD15.dproj">
+				<Dependencies/>
+			</Projects>
 			<Projects Include="OpenWireExpert\OpenWireDrawExpertD15.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="Editor\FindPathDebugVisualizer\PathFinderDebugPackage.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -57,6 +63,15 @@
 		<Target Name="OpenWireLabPkgD15:Make">
 			<MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD15.dproj" Targets="Make"/>
 		</Target>
+		<Target Name="OpenWireEditorDsnD15">
+			<MSBuild Projects="Editor\OpenWireEditorDsnD15.dproj"/>
+		</Target>
+		<Target Name="OpenWireEditorDsnD15:Clean">
+			<MSBuild Projects="Editor\OpenWireEditorDsnD15.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="OpenWireEditorDsnD15:Make">
+			<MSBuild Projects="Editor\OpenWireEditorDsnD15.dproj" Targets="Make"/>
+		</Target>
 		<Target Name="OpenWireDrawExpertD15">
 			<MSBuild Projects="OpenWireExpert\OpenWireDrawExpertD15.dproj"/>
 		</Target>
@@ -75,14 +90,23 @@
 		<Target Name="NETOpenWireEditorPkgD15:Make">
 			<MSBuild Projects="OpenWireExpert\DotNet\NETOpenWireEditorPkgD15.dproj" Targets="Make"/>
 		</Target>
+		<Target Name="PathFinderDebugPackage">
+			<MSBuild Projects="Editor\FindPathDebugVisualizer\PathFinderDebugPackage.dproj"/>
+		</Target>
+		<Target Name="PathFinderDebugPackage:Clean">
+			<MSBuild Projects="Editor\FindPathDebugVisualizer\PathFinderDebugPackage.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="PathFinderDebugPackage:Make">
+			<MSBuild Projects="Editor\FindPathDebugVisualizer\PathFinderDebugPackage.dproj" Targets="Make"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="OpenWirePkgD15;OpenWireDsnD15;OpenWireLabPkgD15;OpenWireDrawExpertD15;NETOpenWireEditorPkgD15"/>
+			<CallTarget Targets="OpenWirePkgD15;OpenWireDsnD15;OpenWireLabPkgD15;OpenWireEditorDsnD15;OpenWireDrawExpertD15;NETOpenWireEditorPkgD15;PathFinderDebugPackage"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="OpenWirePkgD15:Clean;OpenWireDsnD15:Clean;OpenWireLabPkgD15:Clean;OpenWireDrawExpertD15:Clean;NETOpenWireEditorPkgD15:Clean"/>
+			<CallTarget Targets="OpenWirePkgD15:Clean;OpenWireDsnD15:Clean;OpenWireLabPkgD15:Clean;OpenWireEditorDsnD15:Clean;OpenWireDrawExpertD15:Clean;NETOpenWireEditorPkgD15:Clean;PathFinderDebugPackage:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="OpenWirePkgD15:Make;OpenWireDsnD15:Make;OpenWireLabPkgD15:Make;OpenWireDrawExpertD15:Make;NETOpenWireEditorPkgD15:Make"/>
+			<CallTarget Targets="OpenWirePkgD15:Make;OpenWireDsnD15:Make;OpenWireLabPkgD15:Make;OpenWireEditorDsnD15:Make;OpenWireDrawExpertD15:Make;NETOpenWireEditorPkgD15:Make;PathFinderDebugPackage:Make"/>
 		</Target>
 		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
 	</Project>

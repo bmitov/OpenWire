@@ -40,18 +40,24 @@ object OWStatePinForm: TOWStatePinForm
         Top = 4
         Width = 75
         Height = 25
-        TabOrder = 0
+        DoubleBuffered = True
         Kind = bkOK
         Margin = 9
+        NumGlyphs = 2
+        ParentDoubleBuffered = False
+        TabOrder = 0
       end
       object CancelButton: TBitBtn
         Left = 6
         Top = 36
         Width = 75
         Height = 25
-        TabOrder = 1
+        DoubleBuffered = True
         Kind = bkCancel
         Margin = 8
+        NumGlyphs = 2
+        ParentDoubleBuffered = False
+        TabOrder = 1
       end
     end
     object AboutPanel: TPanel
@@ -237,8 +243,7 @@ object OWStatePinForm: TOWStatePinForm
       Width = 75
       Height = 25
       Caption = '&Restore'
-      TabOrder = 2
-      OnClick = RestoreButtonClick
+      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000010000000000000000000
@@ -249,6 +254,9 @@ object OWStatePinForm: TOWStatePinForm
         0020770A00000000A22070AAAAAAAAAA2A200AAAAAAAAAAAA20770AAAAAAAAAA
         0077770A00000000877777700777777777777777077777777777}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 2
+      OnClick = RestoreButtonClick
     end
     object RenameButton: TBitBtn
       Left = 6
@@ -257,7 +265,7 @@ object OWStatePinForm: TOWStatePinForm
       Height = 25
       Action = RenameAction
       Caption = 'Re&name'
-      TabOrder = 3
+      DoubleBuffered = True
       Glyph.Data = {
         36040000424D3604000000000000360000002800000010000000100000000100
         2000000000000004000000000000000000000000000000000000FF00FF000000
@@ -294,6 +302,8 @@ object OWStatePinForm: TOWStatePinForm
         FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
         FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
       Margin = 3
+      ParentDoubleBuffered = False
+      TabOrder = 3
     end
   end
   object Panel3: TPanel
@@ -313,6 +323,9 @@ object OWStatePinForm: TOWStatePinForm
       BevelOuter = bvNone
       Caption = 'Panel4'
       TabOrder = 0
+      DesignSize = (
+        461
+        29)
       object Label1: TLabel
         Left = 6
         Top = 8
@@ -323,11 +336,10 @@ object OWStatePinForm: TOWStatePinForm
       object FormsComboBox: TComboBox
         Left = 37
         Top = 4
-        Width = 432
+        Width = 420
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 13
         TabOrder = 0
         OnChange = FormsComboBoxChange
       end
@@ -390,10 +402,10 @@ object OWStatePinForm: TOWStatePinForm
     end
   end
   object ImageList1: TImageList
-    Left = 16
+    Left = 24
     Top = 64
     Bitmap = {
-      494C010104000500480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000500E40210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -668,7 +680,7 @@ object OWStatePinForm: TOWStatePinForm
     Left = 96
     Top = 64
     Bitmap = {
-      494C010117001800480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010117001800E40210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1471,7 +1483,7 @@ object OWStatePinForm: TOWStatePinForm
     Images = ActionImageList
     OnUpdate = ActionList1Update
     Left = 24
-    Top = 104
+    Top = 120
     object RenameAction: TAction
       Caption = 'Re&name'
       ImageIndex = 0
@@ -1480,10 +1492,10 @@ object OWStatePinForm: TOWStatePinForm
     end
   end
   object ActionImageList: TImageList
-    Left = 160
-    Top = 72
+    Left = 176
+    Top = 64
     Bitmap = {
-      494C010101000200480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000200E40210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000848484008484
       8400000000008484840084848400848484008484840084848400000000008484
@@ -1623,10 +1635,10 @@ object OWStatePinForm: TOWStatePinForm
       000000000000}
   end
   object StatesImageList: TImageList
-    Left = 104
-    Top = 144
+    Left = 96
+    Top = 120
     Bitmap = {
-      494C01010A000B00480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010A000B00E40210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

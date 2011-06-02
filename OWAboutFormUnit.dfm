@@ -49,7 +49,6 @@ object OWAboutForm: TOWAboutForm
     BevelInner = bvLowered
     BevelOuter = bvNone
     BorderWidth = 10
-    Caption = 'Panel1'
     Color = 15780517
     TabOrder = 0
     object Panel3: TPanel
@@ -58,7 +57,6 @@ object OWAboutForm: TOWAboutForm
       Width = 302
       Height = 227
       Align = alClient
-      Caption = 'Panel2'
       Color = 15780517
       TabOrder = 0
       object Image1: TImage
@@ -2213,7 +2211,10 @@ object OWAboutForm: TOWAboutForm
     Top = 296
     Width = 75
     Height = 25
-    TabOrder = 1
+    DoubleBuffered = True
     Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 1
   end
 end

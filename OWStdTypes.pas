@@ -200,6 +200,9 @@ type
   TOWEndStopOperation = class( TOWStopOperation )
   end;
 //---------------------------------------------------------------------------
+  TOWFileEndNoStopOperation = class( TOWNotifyOperation )
+  end;
+//---------------------------------------------------------------------------
   TOWSuppliedMulticastOperation = class( TOWSuppliedOperation )
   end;
 //---------------------------------------------------------------------------

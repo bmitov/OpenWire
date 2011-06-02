@@ -589,7 +589,6 @@ begin
           Node.ImageIndex := siLinkMinus;
           Node.SelectedIndex := Node.ImageIndex;
           end;
-
         end;
       end;
 
