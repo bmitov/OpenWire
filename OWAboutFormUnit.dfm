@@ -2211,10 +2211,8 @@ object OWAboutForm: TOWAboutForm
     Top = 296
     Width = 75
     Height = 25
-    DoubleBuffered = True
     Kind = bkOK
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 1
   end
 end

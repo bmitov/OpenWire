@@ -980,7 +980,6 @@ end;
   public
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
-  protected
   public
     constructor Create( AOwner: TComponent; AOnDataChange : TOWRealChangeEvent; ACustomData : TObject = NIL );
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; ACustomData : TObject = NIL );

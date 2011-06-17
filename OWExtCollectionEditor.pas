@@ -103,7 +103,12 @@ procedure Register;
 //------------------------------------------------------------------------------
 implementation
 
-uses OWDesignSelectionsList, OWDesignTypes;
+uses
+  OWDesignSelectionsList, OWDesignTypes
+{$IFDEF VER230} // Delphi 16.0
+  , ColnEdit
+  {$ENDIF}
+  ;
 
 {$IFDEF VER130} // Delphi 5.0
   {$IFDEF OWCBUILDER}
@@ -161,10 +166,6 @@ procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
   ACollection: TCollection; const PropertyName: String); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
 {$ENDIF}
 
-{$IFDEF VER230} // Delphi 16.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide160.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
-{$ENDIF}
 
 //------------------------------------------------------------------------------
 type TOWExposedExtCollectionItem = class( TOWExtCollectionItem )

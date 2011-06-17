@@ -40,11 +40,9 @@ object OWStatePinForm: TOWStatePinForm
         Top = 4
         Width = 75
         Height = 25
-        DoubleBuffered = True
         Kind = bkOK
         Margin = 9
         NumGlyphs = 2
-        ParentDoubleBuffered = False
         TabOrder = 0
       end
       object CancelButton: TBitBtn
@@ -52,11 +50,9 @@ object OWStatePinForm: TOWStatePinForm
         Top = 36
         Width = 75
         Height = 25
-        DoubleBuffered = True
         Kind = bkCancel
         Margin = 8
         NumGlyphs = 2
-        ParentDoubleBuffered = False
         TabOrder = 1
       end
     end
@@ -243,7 +239,6 @@ object OWStatePinForm: TOWStatePinForm
       Width = 75
       Height = 25
       Caption = '&Restore'
-      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000010000000000000000000
@@ -254,7 +249,6 @@ object OWStatePinForm: TOWStatePinForm
         0020770A00000000A22070AAAAAAAAAA2A200AAAAAAAAAAAA20770AAAAAAAAAA
         0077770A00000000877777700777777777777777077777777777}
       Margin = 3
-      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = RestoreButtonClick
     end
@@ -265,7 +259,6 @@ object OWStatePinForm: TOWStatePinForm
       Height = 25
       Action = RenameAction
       Caption = 'Re&name'
-      DoubleBuffered = True
       Glyph.Data = {
         36040000424D3604000000000000360000002800000010000000100000000100
         2000000000000004000000000000000000000000000000000000FF00FF000000
@@ -302,7 +295,6 @@ object OWStatePinForm: TOWStatePinForm
         FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
         FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
       Margin = 3
-      ParentDoubleBuffered = False
       TabOrder = 3
     end
   end
@@ -323,9 +315,6 @@ object OWStatePinForm: TOWStatePinForm
       BevelOuter = bvNone
       Caption = 'Panel4'
       TabOrder = 0
-      DesignSize = (
-        461
-        29)
       object Label1: TLabel
         Left = 6
         Top = 8

@@ -157,13 +157,14 @@ unit OWPins;
 
 interface
 
-uses classes,
+uses
+  classes,
 {$IFDEF fpc}
-LCLIntf, LCLType, SyncObjs,
+  LCLIntf, LCLType, SyncObjs,
 {$ELSE}
-windows,
+  windows,
 {$ENDIF}
-typinfo, SysUtils, Contnrs, Graphics;
+  typinfo, SysUtils, Contnrs, Graphics;
 
 var  PinsNeedRefresh : Boolean;
 
@@ -273,17 +274,23 @@ public
 end;
 //---------------------------------------------------------------------------
 type
+  TOWNotifyOperation = class;
+//---------------------------------------------------------------------------
   IOWStream = interface
     ['{2BFF1BE1-1698-4CFA-A427-9E0801C5B357}']
   end;
 
 //---------------------------------------------------------------------------
-TOWNotifyState  = set of ( nsNewLink, nsLastIteration );
-TOWNotifyResult = set of ( nrDataChanged );
+  TOWNotifyState  = set of ( nsNewLink, nsLastIteration );
+  TOWNotifyResult = set of ( nrDataChanged );
 //---------------------------------------------------------------------------
+  IOWOwnedComponent = interface
+    ['{26204375-2E95-4CDE-9D24-95E73E0390A1}']
+    function GetOwnerProperty() : TPersistent;
+    function GetIndex() : Integer;
 
-type
-  TOWNotifyOperation = class;
+  end;
+//---------------------------------------------------------------------------
 
   IOWNotifyOperation = interface
     ['{AC2714E1-1E70-4C60-ABBB-EA27737CEE74}']
@@ -553,10 +560,10 @@ end;
 //---------------------------------------------------------------------------
 TOWDestroyLock = class( TInterfacedObject, IOWDestroyLock )
 protected
-  FLockCounter    : LongInt;
-  FDestroying     : LongInt;
+  FLockCounter  : LongInt;
+  FDestroying   : LongInt;
 
-  FOwner          : TOWObject;
+  FOwner        : TOWObject;
 //  FUnlockSection  : IOWLockSection;
 
 protected
@@ -928,6 +935,9 @@ protected
   function _Release(): Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
 public
+  procedure BeforeDestruction(); override;
+
+public
   property InputPin  : TOWSinkPin   read FInputPin;
   property OutputPin : TOWSourcePin read FOutputPin;
 
@@ -1027,14 +1037,14 @@ end;
 //---------------------------------------------------------------------------
 TOWSourcePin = class(TOWStreamPin)
 protected
-  FInputOwnerLock       : IOWLock; // The input side lock of the component taht owns the pin.
-  FSinkPins             : TOWPinEntryList;
-  FFormatConverters     : TOWFormatConverterList;
-  FFunctionSources      : TOWFunctionSinkPinList;
-  FDataTypeSources      : TOWDataTypeSinkPinList;
-  FInDependOn           : Boolean;
-  FInDisconnect         : Boolean;
-  FInEditor             : Boolean;
+  FInputOwnerLock   : IOWLock; // The input side lock of the component taht owns the pin.
+  FSinkPins         : TOWPinEntryList;
+  FFormatConverters : TOWFormatConverterList;
+  FFunctionSources  : TOWFunctionSinkPinList;
+  FDataTypeSources  : TOWDataTypeSinkPinList;
+  FInDependOn       : Boolean;
+  FInDisconnect     : Boolean;
+  FInEditor         : Boolean;
 
 protected
   procedure IntConnect( SinkPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
@@ -1177,9 +1187,9 @@ end;
 //---------------------------------------------------------------------------
 TOWBasicSinkPin = class(TOWStreamPin)
 protected
-  FFunctionDependants   : TObjectList;
-  FDataTypeDependants   : TObjectList;
-  FIgnoreUpstream       : Boolean;
+  FFunctionDependants : TObjectList;
+  FDataTypeDependants : TObjectList;
+  FIgnoreUpstream     : Boolean;
 
 protected
   procedure DownStreamForthRestrictPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
@@ -1219,17 +1229,17 @@ public
   destructor  Destroy(); override;
 
 public
-  property IgnoreUpstream       : Boolean read FIgnoreUpstream write FIgnoreUpstream;
-  property DownStreamLinkName   : String read GetDownStreamLinkName;
-  property UpStreamLinkName     : String read GetUpStreamLinkName;
+  property IgnoreUpstream     : Boolean read FIgnoreUpstream write FIgnoreUpstream;
+  property DownStreamLinkName : String read GetDownStreamLinkName;
+  property UpStreamLinkName   : String read GetUpStreamLinkName;
 
 end;
 //---------------------------------------------------------------------------
 TOWMultiSinkPin = class(TOWBasicSinkPin)
 protected
-  FSourcePins         : TOWPinEntryList;
-  FFormatConverters   : TOWFormatConverterList;
-  FInDisconnect       : Boolean;
+  FSourcePins       : TOWPinEntryList;
+  FFormatConverters : TOWFormatConverterList;
+  FInDisconnect     : Boolean;
 
 protected
   function  GetSourceCount() : Integer; virtual;
@@ -1426,11 +1436,11 @@ public
   destructor  Destroy(); override;
 
 public
-  property SourcePin            : TOWBasicPin read GetSourcePin write SetSourcePin;
-  property FormatConverter      : IOWFormatConverter read GetFormatConverter;
+  property SourcePin        : TOWBasicPin read GetSourcePin write SetSourcePin;
+  property FormatConverter  : IOWFormatConverter read GetFormatConverter;
 
-  property DownStreamID         : TGUID read GetDownStreamID;
-  property UpStreamID           : TGUID read GetUpStreamID;
+  property DownStreamID     : TGUID read GetDownStreamID;
+  property UpStreamID       : TGUID read GetUpStreamID;
 
 end;
 //---------------------------------------------------------------------------
@@ -1476,7 +1486,7 @@ end;
 // Internal storage class
 TOWDispatcherPinStorage = class
 protected
-  DConnectionPin : TOWBasicPin;
+  ConnectionPin : TOWBasicPin;
   RealPin       : TOWBasicPin;
   AfterPin      : TOWBasicPin;
 end;
@@ -1493,12 +1503,12 @@ end;
 //---------------------------------------------------------------------------
 TOWStateDispatcher = class( TOWPinObject )
 protected
-  FName                 : String;
-  FPins                 : TOWDispatcherPinStorageList;
-  FFormatConverters     : TOWFormatConverterList;
-  FSavedForms           : TList;
+  FName             : String;
+  FPins             : TOWDispatcherPinStorageList;
+  FFormatConverters : TOWFormatConverterList;
+  FSavedForms       : TList;
 
-  FCountSaved           : Integer;
+  FCountSaved       : Integer;
 
 public
   procedure AfterConstruction(); override;
@@ -1578,7 +1588,7 @@ protected
   FPinsList           : TStringList;
 
 protected
-  FPinsOwner : Boolean;
+  FPinsOwner          : Boolean;
 
 protected
   LastIndicatedCount  : Integer;
@@ -1653,14 +1663,14 @@ public
   property PinsOwner : Boolean read FPinsOwner write FPinsOwner;
   
 published
-  property Count : Integer read GetCount write SetCount nodefault;
+  property Count : Integer read GetCount write SetCount stored False;
 
 end;
 //---------------------------------------------------------------------------
 TOWPinCreateFunction = function ( APinListOwner : TOWPinList ) : TOWPin of object;
 TOWPinDestroyFunction = procedure ( APinListOwner : TOWPinList; APin : TOWBasicPin ) of object;
 //---------------------------------------------------------------------------
-TOWPinListOwner = class(TOWPinList)
+TOWPinListOwner = class( TOWPinList )
 protected
   FPinCreateFunction  : TOWPinCreateFunction;
   FPinDestroyFunction : TOWPinDestroyFunction;
@@ -1681,8 +1691,10 @@ public
   constructor CreateEx( AOwner : TComponent; AMinPins : Integer; AMaxPins : Integer; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL );
   constructor CreateLock( AOwner : TComponent; AOwnerLock : IOWLock; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL );
   constructor CreateLockEx( AOwner : TComponent; AOwnerLock : IOWLock; AMinPins : Integer; AMaxPins : Integer; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL );
-//  destructor  Destroy(); override;
                            
+published
+  property Count stored True nodefault;
+
 end;
 //---------------------------------------------------------------------------
 type TOWPinValueFilters = set of ( pvoFullList, pvoSaveValue, pvoExcludeDirectDependency );
@@ -1705,8 +1717,8 @@ function  OWGetAllLinked() : Boolean;
 function  OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
 procedure OWClearPendingLinks();
 function  OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject ) : String;
-
-function  Dispatchers( DesignTime : Boolean ) : TObjectList;
+//---------------------------------------------------------------------------
+function  OWDispatchers( DesignTime : Boolean ) : TObjectList;
 //---------------------------------------------------------------------------
 type IOWPinNotifier = interface
   ['{EEFCD8A1-9AD8-4326-97BF-F537E5EAF366}']
@@ -1729,6 +1741,10 @@ type IOWPinNotifier = interface
   procedure RemoveDispatcher( ADispatcher : TOWStateDispatcher; DesignFormClosing : Boolean );
   procedure ChangeDispatcher( ADispatcher : TOWStateDispatcher );
 
+  procedure NestedComponentRegistered( AClass : TPersistentClass );
+  procedure ComponentOwnerChanged( AComponent : TComponent );
+  procedure ComponentIndexChanged( AComponent : TComponent; AIndex : Integer );
+
 end;
 
 type IOWDBGNotify = interface
@@ -1737,17 +1753,30 @@ type IOWDBGNotify = interface
   
 end;
 
+procedure OWRegisterNestedComponent( AClass : TPersistentClass );
+function  OWGetNestedComponentCount() : Integer;
+function  OWGetNestedComponent( AIndex : Integer ) : TPersistentClass;
+
+procedure OWComponentOwnerChanged( AComponent : TComponent );
+procedure OWComponentIndexChanged( AComponent : TComponent; AIndex : Integer );
+
 procedure OWAddPinNotifier( ANotifyItem : IOWPinNotifier );
 procedure OWRemovePinNotifier( ANotifyItem : IOWPinNotifier );
 
-function OWGetPinCount() : Integer;
-function OWGetPin( Index : Integer ) : TOWBasicPin;
+procedure OWGlobalLock();
+procedure OWGlobalUnlock();
+
+function  OWGetPinCount() : Integer;
+function  OWGetPin( Index : Integer ) : TOWBasicPin;
+
+function  OWGetPinListCount() : Integer;
+function  OWGetPinList( Index : Integer ) : TOWPinList;
 
 procedure OWSetIgnoreDesignMode( Ignore : Boolean );
 
 // State pins support.
-function OWGetDispatcherCount() : Integer;
-function OWGetDispatcher( Index : Integer ) : TOWStateDispatcher;
+function  OWGetDispatcherCount() : Integer;
+function  OWGetDispatcher( Index : Integer ) : TOWStateDispatcher;
 
 procedure OWDBGRegisterNotify( ANotify : IOWDBGNotify );
 procedure OWDBGUnregisterNotify( ANotify : IOWDBGNotify );
@@ -1765,7 +1794,8 @@ implementation
 
 {$T-}
 
-uses Dialogs, Forms
+uses
+  Dialogs, Forms
 {$IFNDEF D6}
   ,ActiveX, ComObj
 {$ENDIF}
@@ -1777,10 +1807,10 @@ type TOWPinEntryListNotifyArray = array of TOWNotifyPinEntry;
 //---------------------------------------------------------------------------
 function OWInterlockedExchangeAdd( var Addend: Longint; Value: Longint): Longint;
 begin
-{$IFDEF fpc}
-  Result := InterlockedExchangeAdd( Addend, Value );
-{$ELSE}
+{$IFDEF D5Down}
   Result := InterlockedExchangeAdd( @Addend, Value );
+{$ELSE}
+  Result := InterlockedExchangeAdd( Addend, Value );
 {$ENDIF}
 end;
 //---------------------------------------------------------------------------
@@ -1794,7 +1824,7 @@ begin
 end;
 //---------------------------------------------------------------------------
 type
-  TOWBasicPinList = class(TObjectList)
+  TOWBasicPinList = class( TObjectList )
   protected
     function GetItem( Index : integer ) : TOWBasicPin;
 
@@ -1811,7 +1841,7 @@ type
   end;
 //---------------------------------------------------------------------------
 type
-  TOWInternalPinList = class(TOWBasicPinList)
+  TOWInternalPinList = class( TOWBasicPinList )
   public
     function GetByNameCreate( ARoot : TComponent; AType : TOWPinType; APinIdentName : String; APinDisplayName : String; ACreatedFrom : String ) : TOWBasicPin;
 
@@ -1856,7 +1886,7 @@ type
     function  GetRoot() : TComponent; override;
     function  GetName() : String; override;
     function  GetFullName( IncludeRootForm : Boolean ) : String; override;
-    function  GetFullIdentName( IncludeRootForm : Boolean ) : String; override;
+    function  GetFullIdentName( AIncludeRootForm : Boolean ) : String; override;
 
   public
     procedure PopulatePinAndDestroy( APin : TOWBasicPin );
@@ -1885,31 +1915,35 @@ type
 //---------------------------------------------------------------------------
 var
   GOWPins         : TOWInternalPinList;
+  GOWPinLists     : TObjectList;
   GOWUnloadedPins : TOWBasicPinList;
 
   StreamTypes     : array of TOWStreamTypeEntry;
   ConverterTypes  : array of TOWTypeConverterEntry;
 
-  NotifyList      : TInterfaceList;
-  gOWOperationID  : LongInt;
+  GNotifyList     : TInterfaceList;
+  GNotifySection  : TOWCriticalSection;
+
+  GOWOperationID  : LongInt;
 
 var
-  Loaded          : Boolean;
+  GLoaded         : Boolean;
 
 var
   __OWCountLockObjects : Integer = 0;
 
 var // State pins support
-  DesignDispatchers : TObjectList;
-  RunDispatchers : TObjectList;
-  GIgnoreDesignMode : Boolean;
-  GlobalStorageSection : TOWCriticalSection;
+  GDesignDispatchers    : TObjectList;
+  GRunDispatchers       : TObjectList;
+  GNestedComponents     : TClassList;
+  GIgnoreDesignMode     : Boolean;
+  GlobalStorageSection  : TOWCriticalSection;
 {$IFDEF __LOCKS_DBG__}
-  LogStorageSection : TOWDebugCriticalSection;
-  GOWDBGCurrentID   : Int64 = 0;
+  LogStorageSection     : TOWDebugCriticalSection;
+  GOWDBGCurrentID       : Int64 = 0;
 {$IFDEF __LOCKS_DBG_MAPPED__}
-  LogStartStopEvent : TOWEvent;
-  LogEvent          : TOWEvent;
+  LogStartStopEvent     : TOWEvent;
+  LogEvent              : TOWEvent;
 {$ENDIF}
 
 {$ENDIF}
@@ -1979,28 +2013,120 @@ type
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure OWAddPinNotifier( ANotifyItem : IOWPinNotifier );
-begin
-  try
-    if( NotifyList = NIL ) then
-      Exit;
+procedure OWRegisterNestedComponent( AClass : TPersistentClass );
+var
+  I : Integer;
 
-    NotifyList.Add( ANotifyItem );
+begin
+  GNotifySection.Enter();
+  try
+    if( GNestedComponents <> NIL ) then
+      GNestedComponents.Add( AClass );
+
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).NestedComponentRegistered( AClass );
+
+        except;
+          end;
+
   except
     end;
 
+  GNotifySection.Leave();
+end;
+//---------------------------------------------------------------------------
+procedure OWComponentOwnerChanged( AComponent : TComponent );
+var
+  I : Integer;
+
+begin
+  GNotifySection.Enter();
+  try
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).ComponentOwnerChanged( AComponent );
+
+        except;
+          end;
+
+  except
+    end;
+
+  GNotifySection.Leave();
+end;
+//---------------------------------------------------------------------------
+procedure OWComponentIndexChanged( AComponent : TComponent; AIndex : Integer );
+var
+  I : Integer;
+
+begin
+  GNotifySection.Enter();
+  try
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).ComponentIndexChanged( AComponent, AIndex );
+
+        except;
+          end;
+
+  except
+    end;
+
+  GNotifySection.Leave();
+end;
+//---------------------------------------------------------------------------
+function OWGetNestedComponentCount() : Integer;
+begin
+  GNotifySection.Enter();
+  if( GNestedComponents = NIL ) then
+    Result := 0
+
+  else
+    Result := GNestedComponents.Count;
+
+  GNotifySection.Leave();
+end;
+//---------------------------------------------------------------------------
+function OWGetNestedComponent( AIndex : Integer ) : TPersistentClass;
+begin
+  GNotifySection.Enter();
+  if( GNestedComponents = NIL ) then
+    Result := NIL
+
+  else
+    Result := TPersistentClass( GNestedComponents[ AIndex ] );
+
+  GNotifySection.Leave();
+end;
+//---------------------------------------------------------------------------
+procedure OWAddPinNotifier( ANotifyItem : IOWPinNotifier );
+begin
+  GNotifySection.Enter();
+  try
+    if( GNotifyList <> NIL ) then
+      GNotifyList.Add( ANotifyItem );
+
+  except
+    end;
+
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWRemovePinNotifier( ANotifyItem : IOWPinNotifier );
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      GNotifyList.Remove( ANotifyItem );
 
-    NotifyList.Remove( ANotifyItem );
   except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddPin( APin : TOWBasicPin );
@@ -2008,20 +2134,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).AddPin( APin );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).AddPin( APin );
-
-      except;
-        end;
+        except;
+          end;
 
   except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyRemovePin( APin : TOWBasicPin; DesignFormClosing : Boolean );
@@ -2029,20 +2155,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).RemovePin( APin, DesignFormClosing );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).RemovePin( APin, DesignFormClosing );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyChangePin( APin : TOWBasicPin );
@@ -2050,20 +2176,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).ChangePin( APin );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).ChangePin( APin );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyConnected( AObject1 : TOWObject; AObject2 : TOWObject );
@@ -2071,20 +2197,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).Connected( AObject1, AObject2 );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).Connected( AObject1, AObject2 );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyDisconnected( AObject1 : TOWObject; AObject2 : TOWObject );
@@ -2092,20 +2218,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).Disconnected( AObject1, AObject2 );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).Disconnected( AObject1, AObject2 );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddDispatcher( ADispatcher : TOWStateDispatcher );
@@ -2113,20 +2239,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).AddDispatcher( ADispatcher );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).AddDispatcher( ADispatcher );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyRemoveDispatcher( ADispatcher : TOWStateDispatcher; DesignFormClosing : Boolean );
@@ -2134,20 +2260,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).RemoveDispatcher( ADispatcher, DesignFormClosing );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).RemoveDispatcher( ADispatcher, DesignFormClosing );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyChangeDispatcher( ADispatcher : TOWStateDispatcher );
@@ -2155,20 +2281,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).ChangeDispatcher( ADispatcher );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).ChangeDispatcher( ADispatcher );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyAddPinList( APinList : TOWPinList );
@@ -2176,20 +2302,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).AddPinList( APinList );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).AddPinList( APinList );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyRemovePinList( APinList : TOWPinList );
@@ -2197,20 +2323,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).RemovePinList( APinList );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).RemovePinList( APinList );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyChangePinList( APinList : TOWPinList );
@@ -2218,20 +2344,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).ChangePinList( APinList );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).ChangePinList( APinList );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinAdded( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
@@ -2239,20 +2365,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).PinListPinAdded( APinList, APin, Index );
 
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinAdded( APinList, APin, Index );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinRemoved( APinList : TOWPinList; APin : TOWBasicPin; Index : Integer );
@@ -2260,20 +2386,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
+    if( GNotifyList <> NIL ) then
+      for I := GNotifyList.Count - 1 downto 0 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).PinListPinRemoved( APinList, APin, Index );
 
-    for I := NotifyList.Count - 1 downto 0 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinRemoved( APinList, APin, Index );
+        except;
+          end;
 
-      except;
-        end;
-
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure OWNotifyPinListPinsSwapped( APinList : TOWPinList; APin1 : TOWBasicPin; Index1 : Integer; APin2 : TOWBasicPin; Index2 : Integer );
@@ -2281,20 +2407,20 @@ var
   I : Integer;
 
 begin
+  GNotifySection.Enter();
   try
-    if( NotifyList = NIL ) then
-      Exit;
-    
-    for I := 0 to NotifyList.Count - 1 do
-      try
-        IOWPinNotifier( NotifyList.Items[ I ] ).PinListPinsSwapped( APinList, APin1, Index1, APin2, Index2 );
+    if( GNotifyList <> NIL ) then
+      for I := 0 to GNotifyList.Count - 1 do
+        try
+          IOWPinNotifier( GNotifyList.Items[ I ] ).PinListPinsSwapped( APinList, APin1, Index1, APin2, Index2 );
 
-      except;
-        end;
+        except;
+          end;
 
-  except;
+  except
     end;
 
+  GNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
 function _OWGetEntryIndex( ID : TGUID ) : Integer;
@@ -2698,7 +2824,7 @@ begin
 //  FOwner.BeginWrite();
 end;
 //---------------------------------------------------------------------------
-destructor  TOWSimpleWriteLockSection.Destroy();
+destructor TOWSimpleWriteLockSection.Destroy();
 var
   AThread : Cardinal;
 
@@ -3468,27 +3594,21 @@ end;
 constructor TOWBasicPin.Create();
 begin
   inherited;
-//  FDestroyLock := TOWDestroyLock.Create();
   FDestroyLock := TOWDestroyLock.Create( Self );
   GlobalStorageSection.Enter();
   GOWPins.Add( Self );
   GlobalStorageSection.Leave();
-//  FAfterLinkList := TObjectList.Create( False );
 end;
 //---------------------------------------------------------------------------
-destructor  TOWBasicPin.Destroy();
+destructor TOWBasicPin.Destroy();
 var
   ADestroyLock : IOWDestroyLockSection;
-  
+
 begin
-//  FAfterLinkList.Free();
   ADestroyLock := FDestroyLock.DestroyLock();
   if( CurrentEditorPtr <> NIL )then
     CurrentEditorPtr^ := NIL;
 
-  GlobalStorageSection.Enter();
-  GOWPins.Remove( Self );
-  GlobalStorageSection.Leave();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -3510,13 +3630,11 @@ end;
 procedure TOWBasicPin.BeforeDestruction();
 var
   DesignFormClosing : Boolean;
-  AStopLock         : IOWLockSection;
   AWriteLock        : IOWLockSection;
   ADestroyLock      : IOWDestroyLockSection;
   I                 : Integer;
 
 begin
-//  Log( 'DELETE : ' + IntToHex( Integer( Self ), 8 ) + ' - ' + GetFullName( True ) );
   AWriteLock := WriteLock();
   ADestroyLock := FDestroyLock.DestroyLock();
   Disconnect();
@@ -3525,16 +3643,19 @@ begin
     if( RootInDestroying() ) then
       DesignFormClosing := True;
 
+  ADestroyLock := NIL;
+  AWriteLock := NIL;
+  AWriteLock := UnlockAll(); // Unlock the pin before getting GlobalStorageSection
+
   OWNotifyRemovePin( Self, DesignFormClosing );
 
   GlobalStorageSection.Enter();
-  for I := 0 to GOWPins.Count - 1 do
+  GOWPins.Remove( Self );
+  for I := GOWPins.Count - 1 downto 0 do
     GOWPins[ I ].PinDeletedNotify( Self );
-    
+
   GlobalStorageSection.Leave();
 
-  AStopLock := NIL;
-  AWriteLock := NIL;
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -5502,6 +5623,11 @@ begin
       ReorderChangedData();
 
     Dec( FInSending );
+
+    AUnlock := UnlockAll();
+    for I := 0 to Length( ASinksList ) - 1 do
+      ASinksList[ I ].Converter := NIL;
+
   end;
 
 end;
@@ -6115,7 +6241,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.UpStreamFillPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin );
 var
-  I : Integer;
+  I         : Integer;
   AReadLock : IOWLockSection;
 
 begin
@@ -6128,8 +6254,8 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.PinDeletedNotify( ADeletedPin : TOWBasicPin );
 var
-  I : Integer;
-  AWriteLock : IOWLockSection;
+  I           : Integer;
+  AWriteLock  : IOWLockSection;
 
 begin
   AWriteLock := WriteLock();
@@ -9881,7 +10007,7 @@ begin
     GetMem( PropList, sizeof( PPropInfo ) * ClassTypeData.PropCount );
     try
       // fill PropList with the pointer references to the TPropInfo structures
-      GetPropInfos( PTypeInfo( AClass.ClassInfo() ), PropList);
+      GetPropInfos( ClassTypeInfo, PropList);
       for i := 0 to ClassTypeData.PropCount - 1 do
         begin
 {$IFDEF fpc}
@@ -9998,7 +10124,7 @@ begin
 //    PropList := new PPropInfo [ ClassTypeData->PropCount ];
     try
       // fill PropList with the pointer references to the TPropInfo structures
-      GetPropInfos( PTypeInfo( AClass.ClassInfo() ), PropList );
+      GetPropInfos( ClassTypeInfo, PropList );
       for i := 0 to ClassTypeData.PropCount - 1 do
         begin
 {$IFDEF fpc}
@@ -10050,7 +10176,6 @@ begin
     end;
     
     FreeMem( PropList );
-
     end;
 
 end;
@@ -10338,12 +10463,18 @@ end;
 procedure TOWPinList.AfterConstruction();
 begin
   inherited;
+  GlobalStorageSection.Enter();
+  GOWPinLists.Add( Self );
+  GlobalStorageSection.Leave();
   OWNotifyAddPinList( Self );
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinList.BeforeDestruction();
 begin
   OWNotifyRemovePinList( Self );
+  GlobalStorageSection.Enter();
+  GOWPinLists.Remove( Self );
+  GlobalStorageSection.Leave();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -11189,19 +11320,6 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-{
-destructor TOWPinListOwner.Destroy();
-var
-  I : Integer;
-
-begin
-  for I := 0 to Count - 1 do
-    Pins[ I ].Free();
-
-  inherited;
-end;
-}
-//---------------------------------------------------------------------------
 procedure TOWPinListOwner.SetCount( ACount : Integer );
 var
   Pin : TOWBasicPin;
@@ -11662,9 +11780,9 @@ var
 
 begin
   GlobalStorageSection.Enter();
-  for I := 0 to Dispatchers( DesignTime ).Count - 1 do
+  for I := 0 to OWDispatchers( DesignTime ).Count - 1 do
     begin
-    Result := TOWStateDispatcher( Dispatchers( DesignTime ).Items[ I ] );
+    Result := TOWStateDispatcher( OWDispatchers( DesignTime ).Items[ I ] );
     if( Result.FName = Name ) then
       begin
       GlobalStorageSection.Leave();
@@ -11683,9 +11801,9 @@ var
 
 begin
   GlobalStorageSection.Enter();
-  for I := 0 to Dispatchers( DesignTime ).Count - 1 do
+  for I := 0 to OWDispatchers( DesignTime ).Count - 1 do
     begin
-    Result := TOWStateDispatcher( Dispatchers( DesignTime ).Items[ I ] );
+    Result := TOWStateDispatcher( OWDispatchers( DesignTime ).Items[ I ] );
     if( Result.FName = Name ) then
       begin
       GlobalStorageSection.Leave();
@@ -11714,9 +11832,9 @@ begin
     Inc( Index );
     Result := OwnerForm.Name + 'Link' + IntToStr( Index );
     NotFound := True;
-    for I := 0 to Dispatchers( csDesigning in OwnerForm.ComponentState ).Count - 1 do
+    for I := 0 to OWDispatchers( csDesigning in OwnerForm.ComponentState ).Count - 1 do
       begin
-      if( TOWStateDispatcher( Dispatchers( csDesigning in OwnerForm.ComponentState ).Items[ I ] ).FName = Result ) then
+      if( TOWStateDispatcher( OWDispatchers( csDesigning in OwnerForm.ComponentState ).Items[ I ] ).FName = Result ) then
         begin
         NotFound := False;
         Break;
@@ -11736,8 +11854,8 @@ begin
   Result := False;
 
   GlobalStorageSection.Enter();
-  for I := 0 to Dispatchers( DesignTime ).Count - 1 do
-    if( TOWStateDispatcher( Dispatchers( DesignTime ).Items[ I ] ).FName = Name ) then
+  for I := 0 to OWDispatchers( DesignTime ).Count - 1 do
+    if( TOWStateDispatcher( OWDispatchers( DesignTime ).Items[ I ] ).FName = Name ) then
       begin
       GlobalStorageSection.Leave();
       Exit;
@@ -11759,7 +11877,7 @@ begin
   FFormatConverters := TOWFormatConverterList.Create();
   FSavedForms := TList.Create();
   GlobalStorageSection.Enter();
-  Dispatchers( DesignTime ).Add( Self );
+  OWDispatchers( DesignTime ).Add( Self );
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
@@ -11776,8 +11894,8 @@ begin
   AWriteLock := WriteLock();
 
   GlobalStorageSection.Enter();
-  Dispatchers( True ).Remove( Self );
-  Dispatchers( False ).Remove( Self );
+  OWDispatchers( True ).Remove( Self );
+  OWDispatchers( False ).Remove( Self );
   GlobalStorageSection.Leave();
   FFormatConverters.Free();
   FPins.Free();               
@@ -11869,7 +11987,7 @@ var
 
 begin
   AReadLock := ReadLock();
-  Result := FPins.Items[ Index ].DConnectionPin;
+  Result := FPins.Items[ Index ].ConnectionPin;
 end;
 //---------------------------------------------------------------------------
 function TOWStateDispatcher.GetAfterPin( Index : Integer ) : TOWBasicPin;
@@ -11915,7 +12033,7 @@ begin
 
 
   APinStorage := TOWDispatcherPinStorage.Create();
-  APinStorage.DConnectionPin := AConnectionPin;
+  APinStorage.ConnectionPin := AConnectionPin;
   APinStorage.RealPin := ARealPin;
   APinStorage.AfterPin := NotifyAfterPin; 
   FPins.Add( APinStorage );
@@ -11992,9 +12110,9 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStateDispatcher.RemovePin( APin : TOWBasicPin );
 var
-  AWriteLock       : IOWLockSection;
-  I                : Integer;
-  AAfterPin        : TOWBasicPin;
+  AWriteLock  : IOWLockSection;
+  I           : Integer;
+  AAfterPin   : TOWBasicPin;
 
 begin
   AWriteLock := WriteLock();
@@ -12003,12 +12121,12 @@ begin
     if( FPins.Items[ I ].RealPin = APin ) then
       begin
       FPins.Items[ I ].RealPin.FDispatcher := NIL;
-      FPins.Items[ I ].DConnectionPin.FDispatcher := NIL;
+      FPins.Items[ I ].ConnectionPin.FDispatcher := NIL;
       AAfterPin := FPins.Items[ I ].AfterPin;
       FPins.Delete( I );
       Break;
       end;
-      
+
   for I := 0 to FPins.Count - 1 do
     if( FPins.Items[ I ].AfterPin = AAfterPin ) then
       begin
@@ -12020,7 +12138,7 @@ begin
     begin
     // Remove the last refference.
     FPins.Items[ 0 ].RealPin.FDispatcher := NIL;
-    FPins.Items[ 0 ].DConnectionPin.FDispatcher := NIL;
+    FPins.Items[ 0 ].ConnectionPin.FDispatcher := NIL;
     FPins.Clear();
     end;
 
@@ -12036,7 +12154,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWStateDispatcher.IsConnectedTo( APin : TOWBasicPin ) : Boolean;
 var
-  I : Integer;
+  I         : Integer;
   AReadLock : IOWLockSection;
 
 begin
@@ -12051,7 +12169,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWStateDispatcher.IsCrosForm() : Boolean;
 var
-  I : Integer;
+  I         : Integer;
   AReadLock : IOWLockSection;
 
 begin
@@ -12115,8 +12233,8 @@ end;
 //---------------------------------------------------------------------------
 function TOWStateDispatcher.ConnectedToForm( OwnerComponent : TComponent ) : Boolean;
 var
-  I : Integer;
-  AWriteLock : IOWLockSection;
+  I           : Integer;
+  AWriteLock  : IOWLockSection;
 
 begin
   Result := False;
@@ -12134,8 +12252,8 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStateDispatcher.SetNotifyAfterByName( APin : TOWPin; AfterPinName : String );
 var
-  I : Integer;
-  AAfterPin  : TOWBasicPin;
+  I         : Integer;
+  AAfterPin : TOWBasicPin;
   
 begin
   AAfterPin := NIL;
@@ -12172,6 +12290,16 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+procedure OWGlobalLock();
+begin
+  GlobalStorageSection.Enter();
+end;
+//---------------------------------------------------------------------------
+procedure OWGlobalUnlock();
+begin
+  GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
 function OWGetPinCount() : Integer;
 begin
   GlobalStorageSection.Enter();
@@ -12186,14 +12314,28 @@ begin
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
+function OWGetPinListCount() : Integer;
+begin
+  GlobalStorageSection.Enter();
+  Result := GOWPinLists.Count;
+  GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
+function OWGetPinList( Index : Integer ) : TOWPinList;
+begin
+  GlobalStorageSection.Enter();
+  Result := TOWPinList( GOWPinLists[ Index ] );
+  GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
 function OWGetDispatcherCount() : Integer;
 begin
   GlobalStorageSection.Enter();
-  if( DesignDispatchers.Count > 0 ) then
-    Result := DesignDispatchers.Count
+  if( GDesignDispatchers.Count > 0 ) then
+    Result := GDesignDispatchers.Count
 
   else
-    Result := RunDispatchers.Count;
+    Result := GRunDispatchers.Count;
 
   GlobalStorageSection.Leave();
 end;
@@ -12201,11 +12343,11 @@ end;
 function OWGetDispatcher( Index : Integer ) : TOWStateDispatcher;
 begin
   GlobalStorageSection.Enter();
-  if( DesignDispatchers.Count > 0 ) then
-    Result := TOWStateDispatcher( DesignDispatchers.Items[ Index ] )
+  if( GDesignDispatchers.Count > 0 ) then
+    Result := TOWStateDispatcher( GDesignDispatchers.Items[ Index ] )
 
   else
-    Result := TOWStateDispatcher( RunDispatchers.Items[ Index ] );
+    Result := TOWStateDispatcher( GRunDispatchers.Items[ Index ] );
 
   GlobalStorageSection.Leave();
 end;
@@ -12381,7 +12523,7 @@ end;
 constructor TOWNotifyOperation.Create();
 begin
   inherited;
-  FOperationID := InterlockedIncrement( gOWOperationID );
+  FOperationID := InterlockedIncrement( GOWOperationID );
 end;
 //---------------------------------------------------------------------------
 function TOWNotifyOperation.Instance() : TOWNotifyOperation;
@@ -12690,20 +12832,20 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWUnloadedPin.GetFullIdentName( IncludeRootForm : Boolean ) : String;
+function TOWUnloadedPin.GetFullIdentName( AIncludeRootForm : Boolean ) : String;
 var
-  Position : Integer;
+  APosition : Integer;
 
 begin
-  if( IncludeRootForm ) then
+  if( AIncludeRootForm ) then
     Result := FIdentName
 
   else
     begin
     Result := FIdentName;
-    Position := Pos( '.', Result );
-    if( Position <> 0 ) then
-      Delete( Result, 1, Position );
+    APosition := Pos( '.', Result );
+    if( APosition <> 0 ) then
+      Delete( Result, 1, APosition );
 
     end;
 
@@ -12884,6 +13026,16 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
+procedure TOWFormatConverter.BeforeDestruction();
+var
+  ALock : IOWLockSection;
+
+begin
+  ALock := FLock.UnlockAll();
+  FInputPin.Disconnect();
+  inherited;
+end;
+//---------------------------------------------------------------------------
 function TOWFormatConverter.SourceOperationEvent( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 begin
   Result := FInputPin.Notify( Operation );
@@ -12927,35 +13079,16 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-{
-function TOWInternalPinList.Add( APin : TOWBasicPin): Integer;
-var
-  AUnloadedPin : TOWUnloadedPin;
-
-begin
-  Result := inherited Add( APin );
-
-  // There could be more than one Unloaded pins with full and/or partial names.
-    repeat
-      AUnloadedPin := TOWUnloadedPin( GOWUnloadedPins.GetByIdentName( APin.GetFullName( True ) ));
-      if( AUnloadedPin <> NIL ) then
-        AUnloadedPin.PopulatePinAndDestroy( APin );
-
-    until( AUnloadedPin = NIL );
-    
-end;
-}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-function Dispatchers( DesignTime : Boolean ) : TObjectList;
+function OWDispatchers( DesignTime : Boolean ) : TObjectList;
 begin
   if( DesignTime ) then
-    Result := DesignDispatchers
+    Result := GDesignDispatchers
 
   else
-    Result := RunDispatchers;
+    Result := GRunDispatchers;
 
 end;
 //---------------------------------------------------------------------------
@@ -13501,31 +13634,37 @@ initialization
 {$ENDIF}
   GOWDBGNotifySection := TOWCriticalSection.Create();
   GOWDBGNotifyList := TInterfaceList.Create();
-  Loaded := True;
-  NotifyList := TInterfaceList.Create();
+  GLoaded := True;
+  GNotifySection := TOWCriticalSection.Create();
+  GNotifyList := TInterfaceList.Create();
+  GNestedComponents := TClassList.Create();
 
   // State pins support
-  DesignDispatchers := TObjectList.Create( False );
-  RunDispatchers := TObjectList.Create( False );
+  GDesignDispatchers := TObjectList.Create( False );
+  GRunDispatchers := TObjectList.Create( False );
   GOWPins := TOWInternalPinList.Create( False );
+  GOWPinLists := TObjectList.Create( False );
   GOWUnloadedPins := TOWBasicPinList.Create( True );
 {$IFDEF __LOCKS_DBG_MAPPED__}
   LogStartStopEvent.Signal();
 {$ENDIF}
 
 finalization
-  if( Loaded ) then
+  if( GLoaded ) then
     begin
-    DesignDispatchers.Free(); // State pins support
-    RunDispatchers.Free(); // State pins support
+    GDesignDispatchers.Free(); // State pins support
+    GRunDispatchers.Free(); // State pins support
     GOWUnloadedPins.Free();
     FreeAndNil( GOWDBGNotifyList );
     FreeAndNil( GOWDBGNotifySection );
+    GOWPinLists.Free();
     GOWPins.Free();
 
-    NotifyList.Free();
-    NotifyList := NIL;
-    Loaded := False;
+    FreeAndNil( GNestedComponents );
+    FreeAndNil( GNotifySection );
+    FreeAndNil( GNotifyList );
+
+    GLoaded := False;
 {$IFDEF __LOCKS_DBG_MAPPED__}
     GOWDBGLockHistory.Active := False;
     LogStartStopEvent.Signal();
