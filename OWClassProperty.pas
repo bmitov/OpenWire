@@ -151,8 +151,8 @@ type
     FList : TObjectList;
 
   private
-    function GetCount() : Integer;
-    function GetItem( AIndex : Integer ) : TOWComponentEditorItem;
+    function  GetCount() : Integer;
+    function  GetItem( AIndex : Integer ) : TOWComponentEditorItem;
     procedure SetItem( AIndex : Integer; AValue : TOWComponentEditorItem );
 
   public

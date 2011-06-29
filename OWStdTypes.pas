@@ -1553,7 +1553,7 @@ type
 implementation
 
 uses
-  SysUtils, Graphics;
+  SysUtils;
 //---------------------------------------------------------------------------
 function IncMilliSecond(const AValue: TDateTime;
   const ANumberOfMilliSeconds: Int64): TDateTime;
@@ -5871,17 +5871,17 @@ end;
 //---------------------------------------------------------------------------
 initialization
   OWRegisterStream( IOWClockStream,       'Clock' );
-  OWRegisterStreamWithColorThickness( IOWIntegerStream,     '32 bit Integer', clFuchsia, 1 );
-  OWRegisterStreamWithColorThickness( IOWInt64Stream,       '64 bit Integer', clFuchsia, 1 );
-  OWRegisterStreamWithColorThickness( IOWFloatStream,       'Float', clRed, 1 );
-  OWRegisterStreamWithColorThickness( IOWRealStream,        'Real', clRed, 1 );
-  OWRegisterStreamWithColorThickness( IOWRealComplexStream, 'Real Complex', clAqua, 1 );
-  OWRegisterStreamWithColorThickness( IOWBoolStream,        'Boolean', clBlue, 1 );
-  OWRegisterStreamWithColorThickness( IOWCharStream,        'Character', clTeal, 1 );
-  OWRegisterStreamWithColorThickness( IOWStringStream,      'Sting', clTeal, 2 );
-  OWRegisterStreamWithColorThickness( IOWIntRangedStream,   'Ranged 32 bit Integer', clFuchsia, 1 );
-  OWRegisterStreamWithColorThickness( IOWInt64RangedStream, 'Ranged 64 bit Integer', clFuchsia, 1 );
-  OWRegisterStreamWithColorThickness( IOWRealRangedStream,  'Ranged Real', clRed, 1 );
+  OWRegisterStream( IOWIntegerStream,     '32 bit Integer' );
+  OWRegisterStream( IOWInt64Stream,       '64 bit Integer' );
+  OWRegisterStream( IOWFloatStream,       'Float' );
+  OWRegisterStream( IOWRealStream,        'Real' );
+  OWRegisterStream( IOWRealComplexStream, 'Real Complex' );
+  OWRegisterStream( IOWBoolStream,        'Boolean' );
+  OWRegisterStream( IOWCharStream,        'Character' );
+  OWRegisterStream( IOWStringStream,      'Sting' );
+  OWRegisterStream( IOWIntRangedStream,   'Ranged 32 bit Integer' );
+  OWRegisterStream( IOWInt64RangedStream, 'Ranged 64 bit Integer' );
+  OWRegisterStream( IOWRealRangedStream,  'Ranged Real' );
   OWRegisterStream( IOWDateTimeStream,    'Date/Time' );
   
   OWRegisterDefaultHandler( IOWDataStream, OWDefaultDataNotificationHandler );
@@ -5893,4 +5893,5 @@ initialization
   OWRegisterTypeConverter( IOWFloatStream,        IOWRealStream,        TOWFloatToRealFormatConverter );
   OWRegisterTypeConverter( IOWIntRangedStream,    IOWRealRangedStream,  TOWIntToRealRangedFormatConverter );
   OWRegisterTypeConverter( IOWInt64RangedStream,  IOWRealRangedStream,  TOWInt64ToRealRangedFormatConverter );
+
 end.

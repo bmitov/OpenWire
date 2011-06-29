@@ -37,8 +37,10 @@ contains
   OWClassProperty in 'OWClassProperty.pas',
   OWStateEditors in 'OWStateEditors.pas' {OWStatePinForm},
   OWAboutFormUnit in 'OWAboutFormUnit.pas' {OWAboutForm},
-  OWExtCollectionEditor in 'OWExtCollectionEditor.pas';
+  OWExtCollectionEditor in 'OWExtCollectionEditor.pas',
+  OWDesignTypes in 'OWDesignTypes.pas';
 
 end.
+
 
 

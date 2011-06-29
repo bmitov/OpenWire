@@ -164,11 +164,11 @@ uses
 {$ELSE}
   windows,
 {$ENDIF}
-  typinfo, SysUtils, Contnrs, Graphics;
+  typinfo, SysUtils, Contnrs;
 
-var  PinsNeedRefresh : Boolean;
+var PinsNeedRefresh : Boolean;
 
-const  OWNULLID : TGUID = '{00000000-0000-0000-0000-000000000000}';
+const OWNULLID : TGUID = '{00000000-0000-0000-0000-000000000000}';
 
 {$IFDEF fpc}
 type TOWCriticalSection = TCriticalSection;
@@ -642,7 +642,7 @@ end;
 //---------------------------------------------------------------------------
 TOWPinType = ( ptSource, ptSink, ptState, ptMultiSink, ptDispatcher );
 //---------------------------------------------------------------------------
-TOWBasicPin = class(TOWPinObject, IOWStream)
+TOWBasicPin = class( TOWPinObject, IOWStream )
 protected
   CurrentEditorPtr  : ^TOWBasicPin;
 
@@ -772,14 +772,14 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWPin = class(TOWBasicPin)
+TOWPin = class( TOWBasicPin )
 protected
-  FOwner                : TComponent;
-  FLastRootName         : String;
-  StreamType            : TOWPinStreamType;
-  FInSending            : Integer;
-  FIsLoaded             : Boolean;
-  FOwnerLock            : IOWLock; // The lock of the component taht owns the pin.
+  FOwner        : TComponent;
+  FLastRootName : String;
+  StreamType    : TOWPinStreamType;
+  FInSending    : Integer;
+  FIsLoaded     : Boolean;
+  FOwnerLock    : IOWLock; // The lock of the component taht owns the pin.
 
 public
   constructor Create(AOwner: TComponent);
@@ -1699,9 +1699,9 @@ end;
 //---------------------------------------------------------------------------
 type TOWPinValueFilters = set of ( pvoFullList, pvoSaveValue, pvoExcludeDirectDependency );
 //---------------------------------------------------------------------------
-procedure OWRegisterStream( ID : TGUID; Name : String );
-procedure OWRegisterStreamWithColorThickness( ID : TGUID; Name : String; Color : TColor; Thickness : Single );
-procedure OWRegisterDefaultHandler( ID : TGUID; SendFunction : TOWGlobalSubmit );
+procedure OWRegisterStream( AStreamTypeID : TGUID; Name : String );
+procedure OWFreeStreamInfo( AStreamTypeID : TGUID );
+procedure OWRegisterDefaultHandler( AStreamTypeID : TGUID; SendFunction : TOWGlobalSubmit );
 procedure OWRegisterTypeConverter( InputID : TGUID; OutputID : TGUID; AConverterClass : TOWFormatConverterClass );
 function  OWGetConverter( InputID : TGUID; OutputID : TGUID ) : TOWFormatConverterClass;   
 //---------------------------------------------------------------------------
@@ -1710,9 +1710,7 @@ function  OWGetPinsValueList( List : TStrings; StreamPin : TOWPin; Link : String
 function  OWGetPinsValueListSingle( List : TStrings; OwnerComponent : TComponent;  APin : TOWPin; Link : String; RootName : String; ValueFilters : TOWPinValueFilters ) : Boolean;
 function  OWGetPinsValueListSingleRoot( List : TStrings; OwnerComponent : TComponent;  APin : TOWPin; Link : String; RootName : String; ValueFilters : TOWPinValueFilters ) : Boolean;
 function  OWGetMainOwnerComponent( Component : TComponent ) : TComponent;
-function  OWGetStreamTypeFromID( ID : TGUID ) : String;
-function  OWGetStreamThicknessColorFromID( ID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
-procedure OWReportAwaitsLinking();
+function  OWGetStreamTypeFromID( AStreamTypeID : TGUID ) : String;
 function  OWGetAllLinked() : Boolean;
 function  OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
 procedure OWClearPendingLinks();
@@ -1746,13 +1744,35 @@ type IOWPinNotifier = interface
   procedure ComponentIndexChanged( AComponent : TComponent; AIndex : Integer );
 
 end;
-
+//---------------------------------------------------------------------------
 type IOWDBGNotify = interface
   ['{1EDD88CA-D8DC-46B3-B3EA-42FD5DD8D1C8}']
   procedure Notify( ALock : TOWLock; ASection : Pointer; AOperation : TOWDBOperation; AThreadID : Integer );
-  
-end;
 
+end;
+//---------------------------------------------------------------------------
+type
+  IOWStreamInfoExtention = interface
+    ['{A4E3AC9E-29CE-4F0D-B270-05A356339310}']
+
+    function GetExtentionId() : TGUID;
+  end;
+//---------------------------------------------------------------------------
+  TOWStreamInfoExtention = class( TInterfacedObject, IOWStreamInfoExtention )
+  protected
+    FExtentionId : TGUID;
+
+  public
+    function GetExtentionId() : TGUID;
+
+  public
+    constructor Create( AExtentionId : TGUID );
+
+  end;
+//---------------------------------------------------------------------------
+procedure OWRegisterStreamExtention( AStreamTypeID : TGUID; AExtention : IOWStreamInfoExtention );
+function  OWGetStreamExtentionFromID( AStreamTypeID : TGUID; AExtentionID : TGUID ) : IOWStreamInfoExtention;
+//---------------------------------------------------------------------------
 procedure OWRegisterNestedComponent( AClass : TPersistentClass );
 function  OWGetNestedComponentCount() : Integer;
 function  OWGetNestedComponent( AIndex : Integer ) : TPersistentClass;
@@ -1794,12 +1814,10 @@ implementation
 
 {$T-}
 
-uses
-  Dialogs, Forms
 {$IFNDEF D6}
-  ,ActiveX, ComObj
+uses
+  ActiveX, ComObj, Forms;
 {$ENDIF}
-  ;
 
 type PGUID = ^TGUID;
 type TOWPinEntryListArray = array of TOWPinEntry;
@@ -1840,14 +1858,12 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWInternalPinList = class( TOWBasicPinList )
   public
     function GetByNameCreate( ARoot : TComponent; AType : TOWPinType; APinIdentName : String; APinDisplayName : String; ACreatedFrom : String ) : TOWBasicPin;
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWUnloadedPin = class( TOWBasicPin )
   protected
     FDisplayName    : String;
@@ -1897,13 +1913,10 @@ type
 
   end;
 //---------------------------------------------------------------------------
-type
   TOWStreamTypeEntry = record
     ID            : TGUID;
     Name          : String;
-    HasColor      : Boolean;
-    Color         : TColor;
-    Thickness     : Single;
+    Extentions    : IInterfaceList;
     SendFunction  : TOWGlobalSubmit;
   end;
 //---------------------------------------------------------------------------
@@ -2435,45 +2448,93 @@ begin
       Result := I;
       Exit;
       end;
-
     end;
 
   Result := Length( StreamTypes );
   SetLength( StreamTypes, Result + 1 );
   StreamTypes[ Result ].ID := ID;
   StreamTypes[ Result ].Name := '';
-  StreamTypes[ Result ].HasColor := False;
+  StreamTypes[ Result ].Extentions := TInterfaceList.Create();
   StreamTypes[ Result ].SendFunction := NIL;
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterStream( ID : TGUID; Name : String );
+procedure OWRegisterStream( AStreamTypeID : TGUID; Name : String );
 var
   EntryIndex : Integer;
 
 begin
-  EntryIndex := _OWGetEntryIndex( ID );
+  EntryIndex := _OWGetEntryIndex( AStreamTypeID );
   StreamTypes[ EntryIndex ].Name := Name;
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterStreamWithColorThickness( ID : TGUID; Name : String; Color : TColor; Thickness : Single );
+procedure OWFreeStreamInfo( AStreamTypeID : TGUID );
 var
-  EntryIndex : Integer;
+  I : Integer;
 
 begin
-  EntryIndex := _OWGetEntryIndex( ID );
-  StreamTypes[ EntryIndex ].Name := Name;
-  StreamTypes[ EntryIndex ].HasColor := True;
-  StreamTypes[ EntryIndex ].Color := Color;
-  StreamTypes[ EntryIndex ].Thickness := Thickness;
+  for I := 0 to Length(StreamTypes) - 1 do
+    begin
+    if( IsEqualGUID( StreamTypes[ I ].ID, AStreamTypeID )) then
+      begin
+      StreamTypes[ I ].Extentions.Clear();
+      Exit;
+      end;
+    end;
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterDefaultHandler( ID : TGUID; SendFunction : TOWGlobalSubmit );
+procedure OWRegisterStreamExtention( AStreamTypeID : TGUID; AExtention : IOWStreamInfoExtention );
+var
+  AExtentions   : IInterfaceList;
+  AEntryIndex   : Integer;
+  I             : Integer;
+  AExtentionID  : TGUID;
+
+begin
+  AEntryIndex := _OWGetEntryIndex( AStreamTypeID );
+  AExtentions := StreamTypes[ AEntryIndex ].Extentions;
+  AExtentionID := AExtention.GetExtentionId();
+  for I := 0 to AExtentions.Count - 1 do
+    if( IsEqualGUID( ( AExtentions[ I ] as IOWStreamInfoExtention ).GetExtentionId(), AExtentionID )) then
+      begin
+      AExtentions[ I ] := AExtention;
+      Exit;
+      end;
+
+  AExtentions.Add( AExtention );
+end;
+//---------------------------------------------------------------------------
+function OWGetStreamExtentionFromID( AStreamTypeID : TGUID; AExtentionID : TGUID ) : IOWStreamInfoExtention;
+var
+  I           : Integer;
+  J           : Integer;
+  AExtentions : IInterfaceList;
+
+begin
+  for I := 0 to Length( StreamTypes ) - 1 do
+    if( IsEqualGUID( StreamTypes[ i ].ID, AStreamTypeID ))then
+      begin
+      AExtentions := StreamTypes[ I ].Extentions;
+      for J := 0 to AExtentions.Count - 1 do
+        begin
+        Result := ( AExtentions[ J ] as IOWStreamInfoExtention );
+        if( IsEqualGUID( Result.GetExtentionId(), AExtentionID )) then
+          Exit;
+
+        end;
+
+      Result := NIL;
+      Exit;
+      end;
+
+  Result := NIL;
+end;
+//---------------------------------------------------------------------------
+procedure OWRegisterDefaultHandler( AStreamTypeID : TGUID; SendFunction : TOWGlobalSubmit );
 var
   EntryIndex : Integer;
 
 begin
-  EntryIndex := _OWGetEntryIndex( ID );
-//  StreamTypes[ EntryIndex ].Name := Name;
+  EntryIndex := _OWGetEntryIndex( AStreamTypeID );
   StreamTypes[ EntryIndex ].SendFunction := SendFunction;
 end;
 //---------------------------------------------------------------------------
@@ -2549,49 +2610,46 @@ begin
   Result := Result + '}';
 end;
 //---------------------------------------------------------------------------
-function OWGetStreamTypeFromID( ID : TGUID ) : String;
+function OWGetStreamTypeFromID( AStreamTypeID : TGUID ) : String;
 var
   I : Integer;
   
 begin
-  if( IsEqualGUID( ID, OWNULLID )) then
+  if( IsEqualGUID( AStreamTypeID, OWNULLID )) then
     begin
     Result := 'NIL ID';
     Exit;
     end;
 
   for I := 0 to Length( StreamTypes ) - 1 do
-    if( IsEqualGUID( StreamTypes[ i ].ID, ID ))then
+    if( IsEqualGUID( StreamTypes[ i ].ID, AStreamTypeID ))then
       begin
       Result := StreamTypes[ I ].Name;
       Exit;
       end;
 
-  Result := OWGetStreamGUIDFromID( ID );
-end;
-//---------------------------------------------------------------------------
-function OWGetStreamThicknessColorFromID( ID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
-var
-  I : Integer;
-
-begin
-  for I := 0 to Length( StreamTypes ) - 1 do
-    if( IsEqualGUID( StreamTypes[ i ].ID, ID ))then
-      begin
-      Result := StreamTypes[ I ].HasColor;
-      if( Result ) then
-        begin
-        Color := StreamTypes[ I ].Color;
-        Thickness := StreamTypes[ I ].Thickness;
-        end;
-
-      Exit;
-      end;
-
-  Result := False;
+  Result := OWGetStreamGUIDFromID( AStreamTypeID );
 end;
 //---------------------------------------------------------------------------
 function OWGetMainOwnerComponent( Component : TComponent ) : TComponent;
+  function InheritsFromClassName( AClass : TClass; AName : String ) : Boolean;
+  begin
+    if( AClass.ClassNameIs( AName )) then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+    AClass := AClass.ClassParent();
+
+    if( AClass = NIL ) then
+      Result := False
+
+    else
+      Result := InheritsFromClassName( AClass, AName );
+
+  end;
+
 begin
   if( Component = NIL ) then
     Result := NIL
@@ -2599,21 +2657,21 @@ begin
   else if( Component.Owner = NIL ) then
     Result := Component
 
-  else if( Component.Owner is TApplication ) then
+  else if( InheritsFromClassName( Component.Owner.ClassType(), 'TApplication' )) then
     Result := Component
     
   else if( Component is TDataModule ) then
     Result := Component
 
-  else if( Component is TCustomForm ) then
+  else if( InheritsFromClassName( Component.ClassType(), 'TCustomForm' )) then
     Result := Component
 
-  else if( Component is TFrame ) then
+  else if( InheritsFromClassName( Component.ClassType(), 'TFrame' )) then
     Result := Component
 
   else
     Result := OWGetMainOwnerComponent( Component.Owner );
-    
+
 end;
 
 //---------------------------------------------------------------------------
@@ -2622,22 +2680,6 @@ begin
   GlobalStorageSection.Enter();
   Result := ( GOWUnloadedPins.Count = 0 );
   GlobalStorageSection.Leave();
-end;
-//---------------------------------------------------------------------------
-procedure OWReportAwaitsLinking();
-var
-  Info     : String;
-  I        : Integer;
-
-begin
-  GlobalStorageSection.Enter();
-  Info := 'AwaitsLinkingPins =' + IntToStr( GOWUnloadedPins.Count ) + #13;
-  for I := 0 to GOWUnloadedPins.Count - 1 do
-    Info := Info + '  ' + GOWUnloadedPins[ I ].GetFullName( True ) + #13;
-
-  GlobalStorageSection.Leave();
-
-  ShowMessage( Info );
 end;
 //---------------------------------------------------------------------------
 procedure OWClearPendingLinks();
@@ -10327,6 +10369,20 @@ begin
   Result := OWGetPinsValueListSingleRoot( List, MainComponent, StreamPin, Link, '', ValueFilters );
 
 //  Forms.Free();
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWStreamInfoExtention.Create( AExtentionId : TGUID );
+begin
+  inherited Create();
+  FExtentionId := AExtentionId;
+end;
+//---------------------------------------------------------------------------
+function TOWStreamInfoExtention.GetExtentionId() : TGUID;
+begin
+  Result := FExtentionId;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

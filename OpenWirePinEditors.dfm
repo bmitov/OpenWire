@@ -29,16 +29,6 @@ object OWPinEditorForm: TOWPinEditorForm
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 0
-    object TestButton: TButton
-      Left = 6
-      Top = 194
-      Width = 75
-      Height = 25
-      Caption = 'Test'
-      TabOrder = 0
-      Visible = False
-      OnClick = TestButtonClick
-    end
     object Panel2: TPanel
       Left = 0
       Top = 242
@@ -46,7 +36,7 @@ object OWPinEditorForm: TOWPinEditorForm
       Height = 79
       Align = alBottom
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 0
       object OkButton: TBitBtn
         Left = 6
         Top = 4
@@ -76,7 +66,7 @@ object OWPinEditorForm: TOWPinEditorForm
       BevelInner = bvRaised
       BevelOuter = bvLowered
       Caption = 'AboutPanel'
-      TabOrder = 2
+      TabOrder = 1
       object Image1: TImage
         Left = 2
         Top = 2
@@ -261,7 +251,7 @@ object OWPinEditorForm: TOWPinEditorForm
         CCF0B0FF08888880FF0BBB008888888800BBBB088888888880BBBB0888888888
         80BB000888888888800088888888888888888888888888888888}
       Margin = 3
-      TabOrder = 4
+      TabOrder = 3
       OnClick = LinkAllButtonClick
     end
     object UnlinkAllButton: TBitBtn
@@ -298,7 +288,7 @@ object OWPinEditorForm: TOWPinEditorForm
         FF0000800000FFC0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0
         C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0}
       Margin = 3
-      TabOrder = 5
+      TabOrder = 4
       OnClick = UnlinkAllButtonClick
     end
     object RestoreButton: TBitBtn
@@ -317,7 +307,7 @@ object OWPinEditorForm: TOWPinEditorForm
         0020770A00000000A22070AAAAAAAAAA2A200AAAAAAAAAAAA20770AAAAAAAAAA
         0077770A00000000877777700777777777777777077777777777}
       Margin = 3
-      TabOrder = 3
+      TabOrder = 2
       OnClick = RestoreButtonClick
     end
     object AfterPinButton: TBitBtn
@@ -336,7 +326,7 @@ object OWPinEditorForm: TOWPinEditorForm
         8888B0FF088888888000BB00888CC88880BBBB08888CC88800BBBB0888888880
         FF0B0008888CC8CCCCF08888888CC8CCCCF0888888888880FF0B}
       Margin = 3
-      TabOrder = 6
+      TabOrder = 5
       OnClick = AfterPinButtonClick
     end
   end
@@ -456,7 +446,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 16
     Top = 64
     Bitmap = {
-      494C010107000800880310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101070008005C0410001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       00000000000000000000000000000000FF000000FF0000000000000000000000
@@ -732,7 +722,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 56
     Top = 64
     Bitmap = {
-      494C010106000700880310001000FFFFFF000510FFFFFFFFFFFFFFFF424D7600
+      494C0101060007005C0410001000FFFFFF000510FFFFFFFFFFFFFFFF424D7600
       0000000000007600000028000000400000002000000001000400000000000004
       0000000000000000000000000000000000000000000000008000008000000080
       8000800000008000800080800000C0C0C000808080000000FF0000FF000000FF
@@ -785,7 +775,7 @@ object OWPinEditorForm: TOWPinEditorForm
     Left = 96
     Top = 64
     Bitmap = {
-      494C010104000500880310001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101040005005C0410001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

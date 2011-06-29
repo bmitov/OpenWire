@@ -85,6 +85,7 @@
 				<Form>OWAboutForm</Form>
 			</DCCReference>
 			<DCCReference Include="OWExtCollectionEditor.pas"/>
+			<DCCReference Include="OWDesignTypes.pas"/>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_Release</Key>
 				<CfgParent>Base</CfgParent>

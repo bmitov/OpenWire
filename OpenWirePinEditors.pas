@@ -147,7 +147,6 @@ type
     ImageList1: TImageList;
     SourcesImageList: TImageList;
     Panel1: TPanel;
-    TestButton: TButton;
     Panel2: TPanel;
     Panel3: TPanel;
     ListView: TListView;
@@ -178,7 +177,6 @@ type
     procedure ListViewCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
     procedure FormsComboBoxChange(Sender: TObject);
-    procedure TestButtonClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Image1Click(Sender: TObject);
     procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -2458,11 +2456,6 @@ end;
 
 var EditorNotifier : TIOWPinsEditorNotifier;
 {$ENDIF}
-
-procedure TOWPinEditorForm.TestButtonClick(Sender: TObject);
-begin
-  OWReportAwaitsLinking();
-end;
 
 procedure TOWPinEditorForm.Image1Click(Sender: TObject);
 var

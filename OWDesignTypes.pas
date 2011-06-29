@@ -54,7 +54,7 @@ uses
 {$IFDEF FPC}
   LCLIntf, LMessages, LResources, PropEdits, ComponentEditors,
 {$ELSE}
-  Windows,
+  Windows, Graphics,
 
   {$IFDEF __VSDESIGN__}
     VSDesign,
@@ -69,7 +69,7 @@ uses
   {$ENDIF}
 
 {$ENDIF}
-    Forms, Messages, Classes, Contnrs, OWPins;
+    Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes;
 
 {$IFDEF VER130}
   type IProperty = TPropertyEditor;
@@ -128,6 +128,11 @@ function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
 {$ENDIF}
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
+//---------------------------------------------------------------------------
+procedure OWRegisterStreamColorThickness( AStreamTypeID : TGUID; AColor : TColor; AThickness : Single );
+function  OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
+//---------------------------------------------------------------------------
+procedure Register;
 //---------------------------------------------------------------------------
 const
 {$IFDEF fpc}
@@ -377,13 +382,108 @@ begin
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
+type
+  TOWStreamInfoOWEditorExtention = class;
+//---------------------------------------------------------------------------
+  IOWStreamInfoOWEditorExtention = interface
+    ['{21C15026-CF32-4579-AE17-4EA6A065A7C5}']
+    function GetInstance() : TOWStreamInfoOWEditorExtention;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWStreamInfoOWEditorExtention = class( TOWStreamInfoExtention, IOWStreamInfoOWEditorExtention )
+  protected
+    FColor      : TColor;
+    FThickness  : Single;
+
+  protected
+    function GetInstance() : TOWStreamInfoOWEditorExtention;
+
+  public
+    constructor Create( AExtentionId : TGUID; AColor : TColor; AThickness : Single );
+
+  public
+    property Color      : TColor  read FColor;
+    property Thickness  : Single  read FThickness;
+
+  end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWStreamInfoOWEditorExtention.Create( AExtentionId : TGUID; AColor : TColor; AThickness : Single );
+begin
+  inherited Create( AExtentionId );
+  FColor := AColor;
+  FThickness := AThickness;
+end;
+//---------------------------------------------------------------------------
+function TOWStreamInfoOWEditorExtention.GetInstance() : TOWStreamInfoOWEditorExtention;
+begin
+  Result := Self;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+procedure OWRegisterStreamColorThickness( AStreamTypeID : TGUID; AColor : TColor; AThickness : Single );
+begin
+  OWRegisterStreamExtention( AStreamTypeID, TOWStreamInfoOWEditorExtention.Create( IOWStreamInfoOWEditorExtention, AColor, AThickness ) );
+end;
+//---------------------------------------------------------------------------
+function OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
+var
+  AExtention : IOWStreamInfoOWEditorExtention;
+
+begin
+  AExtention := ( OWGetStreamExtentionFromID( AStreamTypeID, IOWStreamInfoOWEditorExtention ) as IOWStreamInfoOWEditorExtention );
+  if( AExtention = NIL ) then
+    begin
+    Result := False;
+    Exit;
+    end;
+
+  Color := AExtention.GetInstance().Color;
+  Thickness  := AExtention.GetInstance().Thickness;
+
+  Result := True;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+procedure Register;
+begin
+  OWRegisterStreamColorThickness( IOWIntegerStream,     clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWInt64Stream,       clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWFloatStream,       clRed, 1 );
+  OWRegisterStreamColorThickness( IOWRealStream,        clRed, 1 );
+  OWRegisterStreamColorThickness( IOWRealComplexStream, clAqua, 1 );
+  OWRegisterStreamColorThickness( IOWBoolStream,        clBlue, 1 );
+  OWRegisterStreamColorThickness( IOWCharStream,        clTeal, 1 );
+  OWRegisterStreamColorThickness( IOWStringStream,      clTeal, 2 );
+  OWRegisterStreamColorThickness( IOWIntRangedStream,   clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWInt64RangedStream, clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWRealRangedStream,  clRed, 1 );
+end;
+
 initialization
 {$IFNDEF __VSDESIGN__}
   InOppening := False;
 {$ENDIF}
   GOWInRefresh := False;
+
+finalization
+  OWFreeStreamInfo( IOWIntegerStream );
+  OWFreeStreamInfo( IOWInt64Stream );
+  OWFreeStreamInfo( IOWFloatStream );
+  OWFreeStreamInfo( IOWRealStream );
+  OWFreeStreamInfo( IOWRealComplexStream );
+  OWFreeStreamInfo( IOWBoolStream );
+  OWFreeStreamInfo( IOWCharStream );
+  OWFreeStreamInfo( IOWStringStream );
+  OWFreeStreamInfo( IOWIntRangedStream );
+  OWFreeStreamInfo( IOWInt64RangedStream );
+  OWFreeStreamInfo( IOWRealRangedStream );
 
 end.
