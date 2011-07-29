@@ -86,6 +86,9 @@
 			</DCCReference>
 			<DCCReference Include="OWExtCollectionEditor.pas"/>
 			<DCCReference Include="OWDesignTypes.pas"/>
+			<DCCReference Include="OWAfterPinSelectFormUnit.pas">
+				<Form>OWAfterPinSelectForm</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Release">
 				<Key>Cfg_Release</Key>
 				<CfgParent>Base</CfgParent>

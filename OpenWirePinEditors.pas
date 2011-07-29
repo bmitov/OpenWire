@@ -397,7 +397,7 @@ implementation
 
 {$ELSE}
   {$IFDEF D6}
-    uses OWStateEditors, OWDesignSelectionsList, ToolsAPI, ToolIntf, ExptIntf, OWAboutFormUnit, Math,
+    uses OWStateEditors, OWDesignSelectionsList, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
     OWAfterPinSelectFormUnit;
     type TADesignerSelectionList = TOWDesignerSelectionList;
   {$ELSE}

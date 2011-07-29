@@ -158,13 +158,13 @@ unit OWPins;
 interface
 
 uses
-  classes,
+  Classes,
 {$IFDEF fpc}
   LCLIntf, LCLType, SyncObjs,
 {$ELSE}
-  windows,
+  Windows,
 {$ENDIF}
-  typinfo, SysUtils, Contnrs;
+  TypInfo, SysUtils, Contnrs;
 
 var PinsNeedRefresh : Boolean;
 
@@ -564,7 +564,8 @@ protected
   FDestroying   : LongInt;
 
   FOwner        : TOWObject;
-//  FUnlockSection  : IOWLockSection;
+  FSection      : TOWCriticalSection;
+  FThreadID     : DWORD;
 
 protected
   procedure Unlock();
@@ -579,6 +580,7 @@ public
 
 public
   constructor Create( AOwner : TOWObject ); 
+  destructor  Destroy(); override;
 
 end;
 //---------------------------------------------------------------------------
@@ -663,6 +665,7 @@ protected
   procedure CheckRemove(); virtual;
   procedure ApplyFormName( var Ident : String );
   function  CanConnectToInt( const OtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; UseConverters : Boolean ) : Boolean; virtual; abstract;
+  procedure BeforeDisconnect(); virtual;
 
 protected
   function  GetPinType() : TOWPinType; virtual; abstract;
@@ -1000,8 +1003,8 @@ end;
 //---------------------------------------------------------------------------
 TOWSinkPinList = class( TObject )
 protected
-  FList       : TObjectList;
-  FOwner      : TOWSourcePin;
+  FList   : TObjectList;
+  FOwner  : TOWSourcePin;
 
 protected
   function GetCount() : Integer;
@@ -1035,7 +1038,7 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWSourcePin = class(TOWStreamPin)
+TOWSourcePin = class( TOWStreamPin )
 protected
   FInputOwnerLock   : IOWLock; // The input side lock of the component taht owns the pin.
   FSinkPins         : TOWPinEntryList;
@@ -1045,6 +1048,7 @@ protected
   FInDependOn       : Boolean;
   FInDisconnect     : Boolean;
   FInEditor         : Boolean;
+  FMaxConnections   : Integer;
 
 protected
   procedure IntConnect( SinkPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin ); override;
@@ -1165,8 +1169,8 @@ public
   function  Notify( Operation : IOWNotifyOperation ) : TOWNotifyResult; override;
 
 public
-  constructor Create( AOwner: TComponent );
-  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
+  constructor Create( AOwner: TComponent; AMaxConnections : Integer = -1 );
+  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AMaxConnections : Integer = -1 );
   destructor  Destroy(); override;
 
 public
@@ -1185,7 +1189,7 @@ public
 end;
 
 //---------------------------------------------------------------------------
-TOWBasicSinkPin = class(TOWStreamPin)
+TOWBasicSinkPin = class( TOWStreamPin )
 protected
   FFunctionDependants : TObjectList;
   FDataTypeDependants : TObjectList;
@@ -1225,7 +1229,7 @@ protected
 
 public
   constructor Create(AOwner: TComponent);
-  constructor CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+  constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
   destructor  Destroy(); override;
 
 public
@@ -1326,7 +1330,7 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWSinkPin = class(TOWBasicSinkPin)
+TOWSinkPin = class( TOWBasicSinkPin )
 protected
   FConnectionSourcePin  : TOWBasicPin;
   FRealSourcePin        : TOWBasicPin;
@@ -1619,6 +1623,7 @@ protected
   function  GetStoredName( Item : Integer ) : String;
 
   function  GetListName() : String;
+  function  GetListNameInt( SaveValue : Boolean ) : String;
   procedure CleanUnloaded();
   function  GetRoot() : TComponent;
   procedure ApplyFormName( var Ident : String );  
@@ -1714,7 +1719,7 @@ function  OWGetStreamTypeFromID( AStreamTypeID : TGUID ) : String;
 function  OWGetAllLinked() : Boolean;
 function  OWGetClassPropertiesOfTypeName( AClass : TObject; TypeName : String; AStrings : TStrings; SaveValue : Boolean ) : Boolean;
 procedure OWClearPendingLinks();
-function  OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject ) : String;
+function  OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject; SaveValue : Boolean ) : String;
 //---------------------------------------------------------------------------
 function  OWDispatchers( DesignTime : Boolean ) : TObjectList;
 //---------------------------------------------------------------------------
@@ -3502,26 +3507,39 @@ end;
 constructor TOWDestroyLock.Create( AOwner : TOWObject );
 begin
   inherited Create();
+  FSection := TOWCriticalSection.Create();
   FOwner := AOwner;
+end;
+//---------------------------------------------------------------------------
+destructor TOWDestroyLock.Destroy();
+begin
+  FSection.Free();
+  inherited;
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.Lock() : IOWDestroyLockSection;
 begin
+  FSection.Enter();
   InterlockedIncrement( FLockCounter );
   if( OWInterlockedExchangeAdd( FDestroying, 0 ) <> 0 ) then
     begin
-    InterlockedDecrement( FLockCounter );
-    Result := NIL;
-    Exit;
+    if( FThreadID <> GetCurrentThreadId()) then
+      begin
+      InterlockedDecrement( FLockCounter );
+      Result := NIL;
+      FSection.Leave();
+      Exit;
+      end;
     end;
 
   Result := TOWDestroyLockSection.Create( Self );
+  FSection.Leave();
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.DestroyLock() : IOWDestroyLockSection;
 var
   AUnlockSection  : IOWLockSection;
-  
+
 begin
   InterlockedIncrement( FDestroying );
   AUnlockSection := FOwner.UnlockAll();
@@ -3529,13 +3547,16 @@ begin
     Sleep( 0 );
 
   AUnlockSection := NIL;
-  Result := TOWDestroyLockLockSection.Create( Self );   
+  FSection.Enter();
+  FThreadID := GetCurrentThreadId();
+  Result := TOWDestroyLockLockSection.Create( Self );
+  FSection.Leave();
 end;
 //---------------------------------------------------------------------------
 function TOWDestroyLock.DestroyUnlockLock() : IOWDestroyLockSection;
 var
   ACount : LongInt;
-   
+
 begin
   ACount := InterlockedExchange( FDestroying, 0 );
   Result := TOWDestroyLockUnlockSection.Create( Self, ACount );
@@ -3554,8 +3575,13 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWDestroyLock.DestroyUnlock();
 begin
+  FSection.Enter();
   InterlockedDecrement( FDestroying );
+  if( FDestroying = 0 ) then
+    FThreadID := 0;
+
 //  FUnlockSection := NIL;
+  FSection.Leave();
 end;
 //---------------------------------------------------------------------------
 procedure TOWDestroyLock.DestroyLockNum( ACount : LongInt );
@@ -3819,6 +3845,10 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWBasicPin.CheckRemove();
+begin
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicPin.BeforeDisconnect();
 begin
 end;
 //---------------------------------------------------------------------------
@@ -4099,12 +4129,9 @@ end;
 function TOWBasicPin.CanConnectAfter( OtherPin : TOWBasicPin; NotifyAfterPin : TOWBasicPin; UseConverters : Boolean ) : Boolean;
 begin
   if( NotifyAfterPin = NIL ) then
-    begin
-    Result := CanConnectTo( OtherPin, UseConverters );
-    Exit;
-    end;
-    
-  if( FDispatcher <> NIL ) then
+    Result := CanConnectTo( OtherPin, UseConverters )
+
+  else if( FDispatcher <> NIL ) then
     Result := FDispatcher.CanConnectAfter( OtherPin, NotifyAfterPin, UseConverters )
 
   else
@@ -4114,7 +4141,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWBasicPin.Disconnect();
 var
-  AWriteLock  : IOWLockSection;
+  AWriteLock   : IOWLockSection;
   ADestroyLock : IOWDestroyLockSection;
 
 begin
@@ -5113,14 +5140,14 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSourcePin.Create(AOwner: TComponent);
+constructor TOWSourcePin.Create( AOwner: TComponent; AMaxConnections : Integer );
 var
   AWriteLock : IOWLockSection;
 
 begin
-  inherited;
+  inherited Create( AOwner );
   AWriteLock := WriteLock();
-
+  FMaxConnections := AMaxConnections;
   FInDependOn := False;
   FSinkPins  := TOWPinEntryList.Create();
   FFormatConverters := TOWFormatConverterList.Create();
@@ -5128,7 +5155,7 @@ begin
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
 end;
 //---------------------------------------------------------------------------
-constructor TOWSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
+constructor TOWSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AMaxConnections : Integer );
 var
   AWriteLock : IOWLockSection;
 
@@ -5136,8 +5163,9 @@ begin
   inherited CreateLock( AOwner, AOwnerLock );
   FInputOwnerLock := AInputOwnerLock;
   AWriteLock := WriteLock();
+  FMaxConnections := AMaxConnections;
   FInDependOn := False;
-  FSinkPins  := TOWPinEntryList.Create();
+  FSinkPins := TOWPinEntryList.Create();
   FFormatConverters := TOWFormatConverterList.Create();
   FFunctionSources := TOWFunctionSinkPinList.Create( Self );
   FDataTypeSources := TOWDataTypeSinkPinList.Create( Self );
@@ -5462,7 +5490,12 @@ var
 
 begin
   AWriteLock := WriteLock();
-  
+
+  if( FMaxConnections > 0 ) then
+    if( SinkCount >= FMaxConnections ) then
+      if( not IsConnectedTo( SinkPin )) then
+        DisconnectFrom( Sinks[ 0 ] );
+
   PEntry := FSinkPins.Add();
   PEntry.RealPin := SinkPin; 
   PEntry.NotifyAfterPin := NotifyAfterPin;
@@ -5573,9 +5606,14 @@ begin
   if( FOwnerLock <> NIL ) then
     begin
     if( FInputOwnerLock <> NIL ) then
+      begin
       AInUnlock := FInputOwnerLock.UnlockAll();
+      AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
+      end
 
-    AUnlock := FOwnerLock.UnlockAllLockInOrder( FInputOwnerLock );
+    else
+      AUnlock := FOwnerLock.UnlockAll();
+
     end;
 
   ALock := ReadLock();
@@ -5600,12 +5638,10 @@ begin
 
 
   try
-  
     if( FInSending > 200 ) then
       begin
       ALock := NIL;
       raise EOWException.Create( 'The pin depends on itself. Please protect with functional dependency.' );
-      Exit;
       end;
 
     Inc( FInSending );
@@ -6444,7 +6480,14 @@ begin
 
   if( OtherPin <> NIL ) then
     if( ( OtherPin is TOWBasicSinkPin ) or ( OtherPin is TOWStatePin ) or ( OtherPin is TOWUnloadedPin )) then
+      begin
+      if( FMaxConnections > 0 ) then
+        if( SinkCount >= FMaxConnections ) then
+          if( not IsConnectedTo( OtherPin )) then
+            DisconnectFrom( Sinks[ 0 ] );
+
       Result := OtherPin.ConnectAfter( Self, NotifyAfterPin );
+      end;
 
 end;
 //---------------------------------------------------------------------------
@@ -6477,7 +6520,6 @@ begin
 
         Break;
         end;
-
       end;
     end;
 
@@ -6485,8 +6527,8 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.NewConnection( ASinkPin : TOWBasicPin );
 var
-  PEntry : POWPinEntry;
-  AWriteLock : IOWLockSection;
+  PEntry      : POWPinEntry;
+  AWriteLock  : IOWLockSection;
 
 begin
   AWriteLock := WriteLock();
@@ -6497,8 +6539,8 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.BackPopulateStreamChains( AChain : TOWObjectListList; AList : TOWObjectList );
 var
-  I : Integer;
-  ASubList : TOWObjectList;
+  I         : Integer;
+  ASubList  : TOWObjectList;
 
 begin
   AList.Add( Self );
@@ -6537,10 +6579,7 @@ begin
   ASubmitFunction := TOWSubmit( ASubmitFunctionIn );
   AWriteLock := WriteLock();
   if( FInSending > 10 ) then
-    begin
     raise EOWException.Create( 'The pin depends on itself. Please protect with functional dependency.' );
-    Exit;
-    end;
 
   Inc( FInSending );
   DataTypeID := DownStreamFindConnectionID( ASinkPin, True, False, AConverter, AConverterClass );
@@ -6905,17 +6944,20 @@ end;
 procedure TOWSourcePin.Disconnect();
 var
   ADestroyLock : IOWDestroyLockSection;
-  AWriteLock  : IOWLockSection;
+  AWriteLock   : IOWLockSection;
 
-  I         : Integer;
+  I            : Integer;
 
 begin
   AWriteLock := WriteLock();
   ADestroyLock := FDestroyLock.DestroyLock();
-
+  BeforeDisconnect();
   inherited Disconnect();
   for I := GetSinkCount() - 1 downto 0 do
+    begin
+    GetSink( I ).BeforeDisconnect();
     IntDisconnectFrom( GetSink( I ) );
+    end;
 
   FSinkPins.Clear();
 end;
@@ -6923,7 +6965,7 @@ end;
 procedure TOWSourcePin.IntDisconnectFrom( OtherPin : TOWBasicPin );
 var
   DesignFormClosing : Boolean;
-  OldInDisconnect : Boolean;
+  OldInDisconnect   : Boolean;
   
 begin
   DesignFormClosing := False;
@@ -6937,15 +6979,17 @@ begin
   IntDisconnect( OtherPin, DesignFormClosing );
   FInDisconnect := OldInDisconnect;
   OtherPin.IntDisconnect( Self, DesignFormClosing );
+  FSinkPins.Remove( FSinkPins.GetItemByPin( OtherPin ));
   OtherPin.CheckRemove();
 end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.DisconnectFrom( OtherPin : TOWBasicPin );
 var
   ADestroyLock : IOWDestroyLockSection;
-  AWriteLock  : IOWLockSection;
+  AWriteLock   : IOWLockSection;
 
 begin
+  BeforeDisconnect();
   if( not IsConnectedTo( OtherPin ) ) then
     inherited DisconnectFrom( OtherPin )
 
@@ -6967,7 +7011,7 @@ begin
   IntCreate();
 end;
 //---------------------------------------------------------------------------
-constructor TOWBasicSinkPin.CreateLock(AOwner: TComponent; AOwnerLock : IOWLock);
+constructor TOWBasicSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock );
 begin
   inherited;
   IntCreate();
@@ -7887,17 +7931,21 @@ end;
 procedure TOWMultiSinkPin.Disconnect();
 var
   ADestroyLock : IOWDestroyLockSection;
-  AWriteLock  : IOWLockSection;
+  AWriteLock   : IOWLockSection;
 
-  I         : Integer;
+  I            : Integer;
 
 begin
   AWriteLock := WriteLock();
   ADestroyLock := FDestroyLock.DestroyLock();
 
+  BeforeDisconnect();
   inherited Disconnect();
   for I := SourceCount - 1 downto 0 do
+    begin
+    Sources[ I ].BeforeDisconnect();
     DisconnectFrom( Sources[ I ] );
+    end;
 
   FSourcePins.Clear();
 end;
@@ -7924,8 +7972,8 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWMultiSinkPin.DisconnectFrom( OtherPin : TOWBasicPin );
 var
-  ADestroyLock : IOWDestroyLockSection;
-  AWriteLock  : IOWLockSection;
+  ADestroyLock  : IOWDestroyLockSection;
+  AWriteLock    : IOWLockSection;
 
 begin
   if( not IsConnectedTo( OtherPin ) ) then
@@ -8160,12 +8208,10 @@ begin
             ASourcesList[ I ].Entry.SubmitFunction := NIL;
 
   try
-  
     if( FInSending > 200 ) then
       begin
       ALock := NIL;
       raise EOWException.Create( 'The pin depends on itself. Please protect with functional dependency.' );
-      Exit;
       end;
 
     Inc( FInSending );
@@ -8848,7 +8894,9 @@ begin
         AWriteLock := NIL;
         AWriteLock := WriteLock();
         ChainReconnect( ADownStreamID, FConnectedID );
-        end;        
+        end;
+
+      IntConnect( OtherPin, NotifyAfterPin );
       end
 
     else
@@ -8916,15 +8964,19 @@ var
   ASourceWriteLock    : IOWLockSection;
 
 begin
+  BeforeDisconnect();
   if( FRealSourcePin <> NIL ) then
+    begin
+    FRealSourcePin.BeforeDisconnect();
     if( not ( FRealSourcePin is TOWUnloadedPin )) then
       begin
-      ASourceDestroyLock := FRealSourcePin.FDestroyLock.DestroyLock();  
+      ASourceDestroyLock := FRealSourcePin.FDestroyLock.DestroyLock();
       ASourceWriteLock := FRealSourcePin.WriteLock();
       end;
+    end;
 
   ADestroyLock := FDestroyLock.DestroyLock();
-  AWriteLock := WriteLock();
+  AWriteLock := TOWSimpleStopLockSection.Create( FIntLock );//WriteLock();
   inherited Disconnect();
   Connect( NIL );
 
@@ -10018,16 +10070,19 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-function OWGetClassPropertyNameForPropertyObjectPrefix( APrefix : String; AClass : TObject; TypeName : String; PinObject : TObject; ALevel : Integer; APropertyStack : TList ) : String;
+function OWGetClassPropertyNameForPropertyObjectPrefix( APrefix : String; AClass : TObject; TypeName : String; PinObject : TObject; ALevel : Integer; APropertyStack : TList; SaveValue : Boolean ) : String;
 var
   PropList              : PPropList;
   ClassTypeInfo         : PTypeInfo;
   ClassTypeData         : PTypeData;
   i                     : Integer;
+  J                     : Integer;
   TypeInfo              : TTypeInfo;
   PropertyObject        : TObject;
   PinIndex              : Integer;
   DoBreak               : Boolean;
+  ACollection           : TCollection;
+  AObjectStr            : String;
 
 begin
   Result := '';
@@ -10097,7 +10152,28 @@ begin
                 if( APropertyStack.IndexOf( PropertyObject ) = -1 ) then
                   begin
                   APropertyStack.Add( PropertyObject );
-                  Result := OWGetClassPropertyNameForPropertyObjectPrefix( String(PropList[i].Name) + '.', PropertyObject, TypeName, PinObject, ALevel + 1, APropertyStack );
+                  Result := OWGetClassPropertyNameForPropertyObjectPrefix( APrefix + String(PropList[i].Name) + '.', PropertyObject, TypeName, PinObject, ALevel + 1, APropertyStack, SaveValue );
+                  if( PropertyObject is TCollection ) then
+                    begin
+                    ACollection := TCollection( PropertyObject );
+                    for J := 0 to ACollection.Count - 1 do
+                      begin
+                      APropertyStack.Add( ACollection.Items[ J ] );
+                      if( SaveValue ) then
+                        AObjectStr := String(PropList[i].Name) + '._Item' + IntToStr( J )
+
+                      else
+                        AObjectStr := String(PropList[i].Name) + '[' + IntToStr( J ) + ']';
+
+                      Result := OWGetClassPropertyNameForPropertyObjectPrefix( APrefix + AObjectStr + '.', ACollection.Items[ J ], TypeName, PinObject, ALevel + 1, APropertyStack, SaveValue );
+                      if( Result <> '' ) then
+                        Break;
+
+                      end;
+                      
+                    Result := Result;
+                    end;
+
                   if( Result <> '' ) then
                     Break;
                     
@@ -10117,13 +10193,13 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject ) : String;
+function OWGetClassPropertyNameForPropertyObject( AClass : TObject; TypeName : String; PinObject : TObject; SaveValue : Boolean ) : String;
 var
   APropertyStack : TList;
 
 begin
   APropertyStack := TList.Create();
-  Result := OWGetClassPropertyNameForPropertyObjectPrefix( '', AClass, TypeName, PinObject, 0, APropertyStack );
+  Result := OWGetClassPropertyNameForPropertyObjectPrefix( '', AClass, TypeName, PinObject, 0, APropertyStack, SaveValue );
   APropertyStack.Free();
 end;
 //---------------------------------------------------------------------------
@@ -10253,7 +10329,7 @@ begin
 
   if( StreamPin.FOwnerPinList <> NIL ) then
     begin
-    LinkPath := StreamPin.Owner.Name + '.' + OWGetClassPropertyNameForPropertyObject( StreamPin.Owner, 'TOWPinList', StreamPin.FOwnerPinList );
+    LinkPath := StreamPin.Owner.Name + '.' + OWGetClassPropertyNameForPropertyObject( StreamPin.Owner, 'TOWPinList', StreamPin.FOwnerPinList, SaveValue );
     for PinIndex := 0 to StreamPin.FOwnerPinList.Count - 1 do
       begin
       if( StreamPin.FOwnerPinList.Pins[ PinIndex ] = StreamPin ) then
@@ -10271,7 +10347,7 @@ begin
     end
 
   else
-    LinkPath := StreamPin.Owner.Name + '.' + OWGetClassPropertyNameForPropertyObject( StreamPin.Owner, 'TOWPin', StreamPin );
+    LinkPath := StreamPin.Owner.Name + '.' + OWGetClassPropertyNameForPropertyObject( StreamPin.Owner, 'TOWPin', StreamPin, SaveValue );
 
   Result := LinkPath;
   if( AddRoot ) then
@@ -10712,7 +10788,12 @@ end;
 //---------------------------------------------------------------------------
 function TOWPinList.GetListName() : String;
 begin
-  Result := {FOwner.Name + '.' +} OWGetClassPropertyNameForPropertyObject( FOwner, 'TOWPinList', Self )
+  Result := GetListNameInt( False );
+end;
+//---------------------------------------------------------------------------
+function TOWPinList.GetListNameInt( SaveValue : Boolean ) : String;
+begin
+  Result := OWGetClassPropertyNameForPropertyObject( FOwner, 'TOWPinList', Self, SaveValue )
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinList.SetName( Item : Integer; Name : String );
@@ -10981,7 +11062,7 @@ begin
     ATmpPin := NIL;
     while( FPinsList.Count <= CurrentPinIndex ) do
       begin
-      ATmpIdent := GetRoot().Name + '.' + FOwner.Name + '.' + GetListName() + '._Pin' + IntToStr( FPinsList.Count );
+      ATmpIdent := GetRoot().Name + '.' + FOwner.Name + '.' + GetListNameInt( True ) + '._Pin' + IntToStr( FPinsList.Count );
       ApplyFormName( ATmpIdent );
       ATmpPin := GOWPins.GetByNameCreate( GetRoot(), AType, ATmpIdent, ATmpIdent, ATmpIdent );
       Add( ATmpPin );

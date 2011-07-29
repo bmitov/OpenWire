@@ -38,7 +38,8 @@ contains
   OWStateEditors in 'OWStateEditors.pas' {OWStatePinForm},
   OWAboutFormUnit in 'OWAboutFormUnit.pas' {OWAboutForm},
   OWExtCollectionEditor in 'OWExtCollectionEditor.pas',
-  OWDesignTypes in 'OWDesignTypes.pas';
+  OWDesignTypes in 'OWDesignTypes.pas',
+  OWAfterPinSelectFormUnit in 'OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm};
 
 end.
 

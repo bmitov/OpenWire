@@ -46,16 +46,18 @@ object OWAfterPinSelectForm: TOWAfterPinSelectForm
         Top = 8
         Width = 75
         Height = 25
-        TabOrder = 0
         Kind = bkCancel
+        NumGlyphs = 2
+        TabOrder = 0
       end
       object OkButton: TBitBtn
         Left = 8
         Top = 8
         Width = 75
         Height = 25
-        TabOrder = 1
         Kind = bkOK
+        NumGlyphs = 2
+        TabOrder = 1
       end
     end
   end

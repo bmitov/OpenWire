@@ -154,7 +154,7 @@ implementation
     uses
     SysUtils, OWDesignSelectionsList,
     {$IFNDEF __VSDESIGN__}
-      ToolsAPI, ToolIntf, ExptIntf,
+      ToolsAPI,
     {$ENDIF}
     Math;
     type TADesignerSelectionList = TOWDesignerSelectionList;
