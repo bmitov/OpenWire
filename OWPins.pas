@@ -898,7 +898,7 @@ public
 
 end;
 //---------------------------------------------------------------------------
-TOWStreamPin = class(TOWPin)
+TOWStreamPin = class( TOWPin )
 protected
   procedure DownStreamFillPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); virtual;
   procedure UpStreamFillPossibleStreamTypes( PossibleStreamTypes : TOWPinTypeRestricted; ForPin : TOWPin ); virtual;
@@ -2555,7 +2555,6 @@ begin
       Result := I;
       Exit;
       end;
-
     end;
 
   Result := -1;
@@ -2724,7 +2723,6 @@ begin
           Result := '';
           
         end;
-        
       end
 
     else
@@ -3221,6 +3219,7 @@ begin
 
   AThread := GetCurrentThreadId();
 {$IFDEF __LOCKS_DBG__}
+{
   if( AThread <> FOwningThread ) then
     if( FCountStopLocks = 0 ) then
       if( FInStopCount = 0 ) then
@@ -3228,6 +3227,7 @@ begin
         GOWDBGSaveLocks( Self );
         ExitProcess( 8 );
         end;
+}
 {$ENDIF}
 {
   if( FCountWrites <= 0 ) then
@@ -4273,15 +4273,11 @@ begin
       if( GOWIsStringValueType( Reader.NextValue() ) ) then
           AfterReadName := Reader.ReadString();
           
-//        FDispatcher.AddLinkStorage( ReadIdent, ReadName, AfterReadIdent, AfterReadName ); 
         Reader.ReadListEnd();
         end
 
       else
-        begin
         ReadName := Reader.ReadIdent();
-//        FDispatcher.AddLinkStorage( ReadName, ReadName, '', '' );
-        end;
         
       end;
       
@@ -4458,6 +4454,8 @@ begin
       TOWSinkPin( OtherPin ).FIntRealSourcePin := Self;
 //      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
       OtherPin.FDispatcher := FDispatcher;
+      OWNotifyConnected( OtherPin, FDispatcher );
+      OWNotifyChangePin( OtherPin );
       Result := True;
       end
       
@@ -5702,10 +5700,12 @@ begin
 
     Dec( FInSending );
 
+    ALock := NIL;
     AUnlock := UnlockAll();
     for I := 0 to Length( ASinksList ) - 1 do
       ASinksList[ I ].Converter := NIL;
 
+    AUnlock := NIL;
   end;
 
 end;
@@ -6630,7 +6630,6 @@ begin
     
   else if( OtherPin is TOWStatePin ) then
     begin
-
     StatePin := TOWStatePin( OtherPin );
 
     Result := not IsEqualGUID( FindConnectionID( StatePin, AConverter, AConverterClass , UseConverters ), OWNULLID );
@@ -8791,7 +8790,6 @@ begin
       Result := True;
       Exit
       end;
-
     end;
 
   if( OtherPin <> NIL ) then
@@ -8835,6 +8833,12 @@ begin
       ASourcePin.CheckRemove();
 
     Exit
+    end;
+
+  if( OtherPin is TOWStatePin ) then
+    begin
+    Result := OtherPin.Connect( Self );
+    Exit;
     end;
 
   if( CanConnectTo( OtherPin )) then
@@ -8969,10 +8973,12 @@ begin
     begin
     FRealSourcePin.BeforeDisconnect();
     if( not ( FRealSourcePin is TOWUnloadedPin )) then
-      begin
-      ASourceDestroyLock := FRealSourcePin.FDestroyLock.DestroyLock();
-      ASourceWriteLock := FRealSourcePin.WriteLock();
-      end;
+      if( not ( FRealSourcePin.Owner is TOWFormatConverter )) then
+        begin
+        ASourceDestroyLock := FRealSourcePin.FDestroyLock.DestroyLock();
+        ASourceWriteLock := FRealSourcePin.WriteLock();
+        end;
+
     end;
 
   ADestroyLock := FDestroyLock.DestroyLock();
@@ -9660,15 +9666,15 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.ReadStateConverterConnectionsData( Reader : TReader );
 var
-  ReadIdent : String;
-  ReadDispName  : String;
-  ReadName  : String;
-  AfterReadIdent : String;
-  AfterReadName  : String;
-  AWriteLock : IOWLockSection;
-  AString    : String; 
-  AGuidFrom     : TGUID;
-  AGuidTo       : TGUID;
+  AReadIdent      : String;
+  AReadDispName   : String;
+  AReadName       : String;
+  AAfterReadIdent : String;
+  AAfterReadName  : String;
+  AWriteLock      : IOWLockSection;
+  AString         : String;
+  AGuidFrom       : TGUID;
+  AGuidTo         : TGUID;
   AConverterClass : TOWFormatConverterClass;
   AConverter      : IOWFormatConverter;
 
@@ -9680,36 +9686,31 @@ begin
   if( Reader.NextValue() = vaList ) then
     begin
     Reader.ReadListBegin();
-    ReadDispName := Reader.ReadString();
-//    LinkToStateByName( ReadName );
+    AReadDispName := Reader.ReadString();
 
     while not Reader.EndOfList do
       begin
-      AfterReadIdent := '';
-      AfterReadName := '';
-      ReadName := '';
+      AAfterReadIdent := '';
+      AAfterReadName := '';
+      AReadName := '';
       if( Reader.NextValue() = vaList ) then
         begin
         Reader.ReadListBegin();
-        ReadIdent := Reader.ReadIdent();
+        AReadIdent := Reader.ReadIdent();
         if( Reader.NextValue() = vaIdent ) then
-          AfterReadIdent := Reader.ReadIdent(); 
+          AAfterReadIdent := Reader.ReadIdent();
 
-      if( GOWIsStringValueType( Reader.NextValue() ) ) then
-          ReadName := Reader.ReadString();
+        if( GOWIsStringValueType( Reader.NextValue() ) ) then
+          AReadName := Reader.ReadString();
 
-      if( GOWIsStringValueType( Reader.NextValue() ) ) then
-          AfterReadName := Reader.ReadString();
+        if( GOWIsStringValueType( Reader.NextValue() ) ) then
+          AAfterReadName := Reader.ReadString();
           
-//        FDispatcher.AddLinkStorage( ReadIdent, ReadName, AfterReadIdent, AfterReadName );
         Reader.ReadListEnd();
         end
 
       else
-        begin
-        ReadName := Reader.ReadIdent();
-//        FDispatcher.AddLinkStorage( ReadName, ReadName, '', '' );
-        end;
+        AReadName := Reader.ReadIdent();
         
       end;
       
@@ -9717,39 +9718,24 @@ begin
     end
 
   else
-    begin
-    ReadDispName := Reader.ReadString();
-//    LinkToStateByName( ReadName );
-    end;
+    AReadDispName := Reader.ReadString();
 
   AString := Reader.ReadString();
   AGuidFrom := StringToGUID( AString );
   AString := Reader.ReadString();
   AGuidTo := StringToGUID( AString );
-{
-  FDispatcher := TOWStateDispatcher.GetByName( ReadDispName, OwnerInDesigning() );
-  if( FDispatcher <> NIL ) then
-    LinkToStateByName( ReadDispName )
 
-  else
-    begin
-}
-    AConverterClass := OWGetConverter( AGuidFrom, AGuidTo );
-    AConverter := AConverterClass.Create();
-    AConverter.GetInstance().FOutputPin.ConnectAfter( Self, NIL );
-    FDispatcher := TOWStateDispatcher.GetByNameCreate( Self, ReadDispName, OwnerInDesigning() );
+  AConverterClass := OWGetConverter( AGuidFrom, AGuidTo );
+  AConverter := AConverterClass.Create();
+  AConverter.GetInstance().FOutputPin.ConnectAfter( Self, NIL );
+  FDispatcher := TOWStateDispatcher.GetByNameCreate( Self, AReadDispName, OwnerInDesigning() );
 
-      AConverter.GetInstance().FInputPin.FDispatcher := FDispatcher;
-      FDispatcher.AddPin( AConverter.GetInstance().FInputPin, Self );
-      FDispatcher.FFormatConverters.Add( AConverter ); 
-//      PEntry.ConnectionPin := AConverter.FInputPin;
-//      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := Self; // AConverter.FOutputPin;
-//      TOWSinkPin( OtherPin ).FRealSourcePin := Self;
-//      TOWSinkPin( AConverter.FInputPin ).FConnectionSourcePin := AConverter.FOutputPin;
-//      Self.FDispatcher := FDispatcher;
-//    FDispatcher.AddPin( Self, Self );
-    UpdateStateValue();
-//    end;
+  AConverter.GetInstance().FInputPin.FDispatcher := FDispatcher;
+  FDispatcher.AddPin( AConverter.GetInstance().FInputPin, Self );
+  FDispatcher.FFormatConverters.Add( AConverter );
+  OWNotifyConnected( Self, FDispatcher );
+  OWNotifyChangePin( Self );
+  UpdateStateValue();
   
   Reader.ReadListEnd();
   AWriteLock := NIL;
@@ -12073,7 +12059,6 @@ var
 begin
   AWriteLock := WriteLock();
   for I := 0 to PinCount - 1 do
-    begin
     if( Pins[ I ] is TOWSourcePin ) then
       begin
       if( Pins[ I ] = APin ) then
@@ -12084,8 +12069,6 @@ begin
 
       Exit;
       end;
-
-    end;
 
   for I := 0 to PinCount - 1 do
     if( not( Pins[ I ] is TOWBasicSinkPin )) then
@@ -13157,8 +13140,8 @@ begin
   ALock := FLock.StopLock();
   FInputPin.Disconnect();
   FOutputPin.Disconnect();
-  FInputPin.Free();
-  FOutputPin.Free();
+  FreeAndNil( FInputPin );
+  FreeAndNil( FOutputPin );
   ALock := NIL;
   inherited;
 end;
