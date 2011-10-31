@@ -88,11 +88,20 @@ V4.0         03/14/2009  Added Format Converters.
                          Added Lazarus support for Windows, and Linux
                          New threading lock mechanism.
                          Added debug subscription support.
-V4.3         09/23/2009  Added Delphi 2010 and C++ Builder support.
+V4.3         09/23/2009  Added Delphi and C++ Builder 2010 support.
 V4.3.1       10/10/2009  Improved pin list editor.
-V4.5         04/29/2010  TOWSinkPins added.
+V4.5         04/29/2010  TOWMultiSinkPins added.
                          Improved pin editors.
                          Fully Lazarus compatible under Windows.
+
+V5.0         09/02/2011  Added Delphi and C++ Builder XE and XE2 support.
+                         Improved Lazarus support.
+                         64 bit compatible.
+                         Improved threading support.
+                         Added expandable editors support.
+                         The maximal number of sink pins connected to a source pin can be restricted.
+
+V5.0.1       10/01/2011  Added workaround for C++ Builder XE2 initialization bug
 
 
 Legal issues: Copyright (C) 2001-2011 by Boian Mitov
@@ -125,7 +134,7 @@ Acknowledgement: Special thanks to Atanas Stoyanov for his idea of using the
                  Interfaces instead oh plain GUIDs.
 
 TODO :
-                Graph editor.
+                 None.
 
 \***************************************************************************}
 
@@ -1440,8 +1449,8 @@ public
   destructor  Destroy(); override;
 
 public
-  property SourcePin        : TOWBasicPin read GetSourcePin write SetSourcePin;
-  property FormatConverter  : IOWFormatConverter read GetFormatConverter;
+  property SourcePin        : TOWBasicPin         read GetSourcePin write SetSourcePin;
+  property FormatConverter  : IOWFormatConverter  read GetFormatConverter;
 
   property DownStreamID     : TGUID read GetDownStreamID;
   property UpStreamID       : TGUID read GetUpStreamID;
@@ -1931,18 +1940,34 @@ type
     ConverterClass  : TOWFormatConverterClass;
   end;
 //---------------------------------------------------------------------------
+{$IFDEF D16}
+  // Added to fix runtime packages initialization bug in C++ Builder XE2
+  IOWCBuilderXE2Unloader = interface
+    ['{EC181DEB-255F-40F6-8581-60089BCE5D81}']
+  end;
+//---------------------------------------------------------------------------
+  TOWCBuilderXE2Unloader = class( TInterfacedObject, IOWCBuilderXE2Unloader )
+  public
+    destructor  Destroy(); override;
+
+  end;
+{$ENDIF}
+//---------------------------------------------------------------------------
 var
-  GOWPins         : TOWInternalPinList;
-  GOWPinLists     : TObjectList;
-  GOWUnloadedPins : TOWBasicPinList;
+  GOWPins                   : TOWInternalPinList;
+  GOWPinLists               : TObjectList;
+  GOWUnloadedPins           : TOWBasicPinList;
 
-  StreamTypes     : array of TOWStreamTypeEntry;
-  ConverterTypes  : array of TOWTypeConverterEntry;
+  StreamTypes               : array of TOWStreamTypeEntry;
+  ConverterTypes            : array of TOWTypeConverterEntry;
 
-  GNotifyList     : TInterfaceList;
-  GNotifySection  : TOWCriticalSection;
+  GNotifyList               : TInterfaceList;
+  GNotifySection            : TOWCriticalSection;
 
-  GOWOperationID  : LongInt;
+  GOWOperationID            : LongInt;
+{$IFDEF D16}
+  GOWOWCBuilderXE2Unloader  : IOWCBuilderXE2Unloader;
+{$ENDIF}
 
 var
   GLoaded         : Boolean;
@@ -2485,6 +2510,7 @@ begin
       Exit;
       end;
     end;
+
 end;
 //---------------------------------------------------------------------------
 procedure OWRegisterStreamExtention( AStreamTypeID : TGUID; AExtention : IOWStreamInfoExtention );
@@ -13551,6 +13577,76 @@ var
   GOWDBGNotifySection   : TOWCriticalSection;
   
 //---------------------------------------------------------------------------
+procedure GOWInitGlobals();
+begin
+  GlobalStorageSection := TOWCriticalSection.Create();
+{$IFDEF __LOCKS_DBG__}
+{$IFNDEF __LOCKS_DBG_MAPPED__}
+  LogStorageSection := TOWCriticalSection.Create();
+{$ELSE}
+  LogStartStopEvent := TOWEvent.CreateNamed( 'OpenWireDbgStartStopEvent', False, False );
+  OpenDebugMemoryMap();
+{$ENDIF}
+  GOWDBGLockHistory.Index := 0;
+  GOWDBGLockHistory.Active := True;
+{$ENDIF}
+  GOWDBGNotifySection := TOWCriticalSection.Create();
+  GOWDBGNotifyList := TInterfaceList.Create();
+  GLoaded := True;
+  GNotifySection := TOWCriticalSection.Create();
+  GNotifyList := TInterfaceList.Create();
+  GNestedComponents := TClassList.Create();
+
+  // State pins support
+  GDesignDispatchers := TObjectList.Create( False );
+  GRunDispatchers := TObjectList.Create( False );
+  GOWPins := TOWInternalPinList.Create( False );
+  GOWPinLists := TObjectList.Create( False );
+  GOWUnloadedPins := TOWBasicPinList.Create( True );
+{$IFDEF __LOCKS_DBG_MAPPED__}
+  LogStartStopEvent.Signal();
+{$ENDIF}
+end;
+//---------------------------------------------------------------------------
+procedure GOWUninitGlobals();
+begin
+  if( GLoaded ) then
+    begin
+    GDesignDispatchers.Free(); // State pins support
+    GRunDispatchers.Free(); // State pins support
+    GOWUnloadedPins.Free();
+    FreeAndNil( GOWDBGNotifyList );
+    FreeAndNil( GOWDBGNotifySection );
+    GOWPinLists.Free();
+    GOWPins.Free();
+
+    FreeAndNil( GNestedComponents );
+    FreeAndNil( GNotifySection );
+    FreeAndNil( GNotifyList );
+
+    GLoaded := False;
+{$IFDEF __LOCKS_DBG_MAPPED__}
+    GOWDBGLockHistory.Active := False;
+    LogStartStopEvent.Signal();
+    if( GOWDBGLockHistory <> NIL ) then
+      UnMapViewOfFile( GOWDBGLockHistory );
+
+    GOWDBGLockHistory := NIL;
+    if( GDBGMemMap <> 0 ) then
+      CloseHandle( GDBGMemMap );
+
+    LogStartStopEvent.Free();
+    LogEvent.Free();
+{$ENDIF}
+
+{$IFDEF __LOCKS_DBG__}
+    LogStorageSection.Free();
+{$ENDIF}
+    GlobalStorageSection.Free();
+    end;
+
+end;
+//---------------------------------------------------------------------------
 procedure OWDBGRegisterNotify( ANotify : IOWDBGNotify );
 begin
   GOWDBGNotifySection.Enter();
@@ -13572,6 +13668,14 @@ var
   I : Integer;
 
 begin
+{$IFDEF D16}
+  if( GOWDBGNotifySection = NIL ) then
+    begin
+    GOWInitGlobals();
+    GOWOWCBuilderXE2Unloader := TOWCBuilderXE2Unloader.Create();
+    end;
+{$ENDIF}
+
   GOWDBGNotifySection.Enter();
   if( GOWDBGNotifyListSize > 0 ) then
     for I := 0 to GOWDBGNotifyList.Count - 1 do
@@ -13685,8 +13789,22 @@ begin
 
   CloseFile(F);
 end;
-{$IFDEF __LOCKS_DBG__}
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+{$IFDEF D16}
+destructor TOWCBuilderXE2Unloader.Destroy();
+begin
+  GOWUninitGlobals();
+  inherited;
+end;
+{$ENDIF}
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+{$IFDEF __LOCKS_DBG__}
 procedure GOWDBGSaveLocks( ALock : TOWLock );
 begin
   LogStorageSection.Enter();
@@ -13741,69 +13859,10 @@ end;
 {$ENDIF}
 //---------------------------------------------------------------------------
 initialization
-  GlobalStorageSection := TOWCriticalSection.Create();
-{$IFDEF __LOCKS_DBG__}
-{$IFNDEF __LOCKS_DBG_MAPPED__}
-  LogStorageSection := TOWCriticalSection.Create();
-{$ELSE}
-  LogStartStopEvent := TOWEvent.CreateNamed( 'OpenWireDbgStartStopEvent', False, False );
-  OpenDebugMemoryMap();
-{$ENDIF}
-  GOWDBGLockHistory.Index := 0;
-  GOWDBGLockHistory.Active := True;
-{$ENDIF}
-  GOWDBGNotifySection := TOWCriticalSection.Create();
-  GOWDBGNotifyList := TInterfaceList.Create();
-  GLoaded := True;
-  GNotifySection := TOWCriticalSection.Create();
-  GNotifyList := TInterfaceList.Create();
-  GNestedComponents := TClassList.Create();
-
-  // State pins support
-  GDesignDispatchers := TObjectList.Create( False );
-  GRunDispatchers := TObjectList.Create( False );
-  GOWPins := TOWInternalPinList.Create( False );
-  GOWPinLists := TObjectList.Create( False );
-  GOWUnloadedPins := TOWBasicPinList.Create( True );
-{$IFDEF __LOCKS_DBG_MAPPED__}
-  LogStartStopEvent.Signal();
-{$ENDIF}
+  GOWInitGlobals();
 
 finalization
-  if( GLoaded ) then
-    begin
-    GDesignDispatchers.Free(); // State pins support
-    GRunDispatchers.Free(); // State pins support
-    GOWUnloadedPins.Free();
-    FreeAndNil( GOWDBGNotifyList );
-    FreeAndNil( GOWDBGNotifySection );
-    GOWPinLists.Free();
-    GOWPins.Free();
-
-    FreeAndNil( GNestedComponents );
-    FreeAndNil( GNotifySection );
-    FreeAndNil( GNotifyList );
-
-    GLoaded := False;
-{$IFDEF __LOCKS_DBG_MAPPED__}
-    GOWDBGLockHistory.Active := False;
-    LogStartStopEvent.Signal();
-    if( GOWDBGLockHistory <> NIL ) then
-      UnMapViewOfFile( GOWDBGLockHistory );
-
-    GOWDBGLockHistory := NIL;
-    if( GDBGMemMap <> 0 ) then
-      CloseHandle( GDBGMemMap );
-
-    LogStartStopEvent.Free();
-    LogEvent.Free();
-{$ENDIF}
-
-{$IFDEF __LOCKS_DBG__}
-    LogStorageSection.Free();
-{$ENDIF}
-    GlobalStorageSection.Free();
-    end;
+  GOWUninitGlobals();
 //---------------------------------------------------------------------------
 end.
 
