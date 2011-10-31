@@ -1,0 +1,54 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{e0cf4031-bb65-448c-aa3b-f5eca1bcec49}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="OpenWireDsnD11.dproj" />
+    <Projects Include="OpenWireLabDemo\OpenWireLabPkgD11.dproj" />
+    <Projects Include="OpenWirePkgD11.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="OpenWirePkgD11">
+    <MSBuild Projects="OpenWirePkgD11.dproj" Targets="" />
+  </Target>
+  <Target Name="OpenWirePkgD11:Clean">
+    <MSBuild Projects="OpenWirePkgD11.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="OpenWirePkgD11:Make">
+    <MSBuild Projects="OpenWirePkgD11.dproj" Targets="Make" />
+  </Target>
+  <Target Name="OpenWireDsnD11">
+    <MSBuild Projects="OpenWireDsnD11.dproj" Targets="" />
+  </Target>
+  <Target Name="OpenWireDsnD11:Clean">
+    <MSBuild Projects="OpenWireDsnD11.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="OpenWireDsnD11:Make">
+    <MSBuild Projects="OpenWireDsnD11.dproj" Targets="Make" />
+  </Target>
+  <Target Name="OpenWireLabPkgD11">
+    <MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD11.dproj" Targets="" />
+  </Target>
+  <Target Name="OpenWireLabPkgD11:Clean">
+    <MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD11.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="OpenWireLabPkgD11:Make">
+    <MSBuild Projects="OpenWireLabDemo\OpenWireLabPkgD11.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="OpenWirePkgD11;OpenWireDsnD11;OpenWireLabPkgD11" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="OpenWirePkgD11:Clean;OpenWireDsnD11:Clean;OpenWireLabPkgD11:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="OpenWirePkgD11:Make;OpenWireDsnD11:Make;OpenWireLabPkgD11:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>

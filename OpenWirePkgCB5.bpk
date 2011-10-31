@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.05.03"/>
+    <PROJECT value="OpenWirePkgCB5.bpl"/>
+    <OBJFILES value="OWPins.obj OWStdTypes.obj OWExtCollection.obj OpenWirePkgCB5.obj"/>
+    <RESFILES value="OpenWirePkgCB5.res"/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES)"/>
+    <LIBFILES value=""/>
+    <LIBRARIES value=""/>
+    <SPARELIBS value=""/>
+    <PACKAGES value="vcl50.bpi"/>
+    <PATHCPP value=".;"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="USEPACKAGES"/>
+    <SYSDEFINES value="NO_STRICT;_VIS_NOLIB;USEPACKAGES"/>
+    <MAINSOURCE value="OpenWirePkgCB5.cpp"/>
+    <INCLUDEPATH value="$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl"/>
+    <LIBPATH value="$(BCB)\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi"/>
+    <WARNINGS value="-w-par -w-8027 -w-8026"/>
+    <WARNOPTSTR value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-I$(BCB)\OpenWire -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp 
+      -DUSEPACKAGES -boa"/>
+    <CFLAG1 value="-Od -Vx -Ve -Tkh30000 -ff -X- -a8 -5 -b- -k- -y -v -vi -c -tWM"/>
+    <PFLAGS value="-$Y+ -$W -$R -$Q -$O- -v -M -JPHNE"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zn"/>
+    <LFLAGS value="-D&quot;Interface Package to Open Wire&quot; -aa -Tpp -Gpr -x -Gn -Gl -Gi -v"/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0pkg32.obj $(PACKAGES) sysinit.obj $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
+  </LINKER>
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=1
+MajorVer=4
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1033
+CodePage=1252
+
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=4.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+
+[Excluded Packages]
+[HistoryLists\hlIncludePath]
+Count=21
+Item0=$(BCB)\OpenWire;$(BCB)\include;$(BCB)\include\vcl
+Item1=..\..\CBuilder5\OpenWire;..\..\CBuilder5\Delphi5;$(BCB)\include;$(BCB)\include\vcl
+Item2=..\Delphi5;$(BCB)\include;$(BCB)\include\vcl
+Item3=..\Delphi5;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Source\vcl
+Item4=..\Delphi5;..;$(BCB)\include;$(BCB)\include\vcl
+Item5=..\Delphi5;..\;$(BCB)\include;$(BCB)\include\vcl
+Item6=$(BCB)\include;$(BCB)\include\vcl
+Item7=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Sources\ToolsApi
+Item8=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder;$(BCB)\Innovative
+Item9=..\Projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder;$(BCB)\Innovative
+Item10=..\Projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder;$(BCB)\Innovative\
+Item11=..\Projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder;$(BCB)\Innovative\Package
+Item12=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder;$(BCB)\Innovative\Package
+Item13=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp;$(BCB)\Proess3\Builder
+Item14=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3;$(BCB)\Armada\Nsp
+Item15=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3\Builder;$(BCB)\Armada\Nsp
+Item16=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3\Builder
+Item17=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3\Builder;$(BCB)\IIHasp
+Item18=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\Armada;$(BCB)\Proess3\Builder;$(BCB)\IIHasp;C:\Program Files\Borland\CBuilder4\IIHasp
+Item19=$(BCB)\Armada;$(BCB)\Proess3\Builder;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\IIHasp
+Item20=$(BCB)\Armada;$(BCB)\Proess3\Builder;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=20
+Item0=$(BCB)\lib\debug;..\lib\debug;..\..\cbuilder5\lib\debug;$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item1=$(BCB)\OpenWire;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item2=..\..\CBuilder5\OpenWire;..\..\CBuilder5\Delphi5;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item3=..\Delphi5;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item4=..\Delphi5;..;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item5=..\Delphi5;..\;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item6=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Source\ToolsApi
+Item7=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Sources\ToolsApi
+Item8=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib
+Item9=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder
+Item10=$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder
+Item11=..\Projects\Lib;..\Projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder;Obj5
+Item12=..\Projects\Lib;..\Projects;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder;Obj5
+Item13=..\Projects;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder;Obj5
+Item14=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada;$(BCB)\Proess3\Builder;Obj5
+Item15=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3;$(BCB)\Armada
+Item16=..\Projects\Lib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3\Builder;$(BCB)\Armada
+Item17=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\Proess3\Builder;$(BCB)\Armada
+Item18=..\Projects\Lib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\proess3\builder;$(BCB)\Armada;$(BCB)\IIHasp
+Item19=$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\proess3\builder;$(BCB)\Armada;$(BCB)\IIHasp
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=3
+Item0=USEPACKAGES
+Item1=_RTLDLL
+Item2=_RTLDLL;USEPACKAGES
+
+[HistoryLists\hlIntOutputDir]
+Count=4
+Item0=Obj5
+Item1=..\Projects\Obj5
+Item2=Obj4
+Item3=ArmadaObj
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=-ns
+HostApplication=C:\Program Files\Borland\CBuilder5\Bin\bcb.exe
+RemoteHost=
+RemotePath=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>
