@@ -31,6 +31,7 @@ package OpenWireLabPkgD16;
 requires
   rtl,
   vcl,
+  vclx,
   OpenWirePkgD16;
 
 contains

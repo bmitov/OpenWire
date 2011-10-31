@@ -58,11 +58,11 @@
 			<GenPackage>true</GenPackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win64)'!=''">
-			<DCC_UsePackage>vcl;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_UsePackage>vcl;vclx;$(DCC_UsePackage)</DCC_UsePackage>
 			<Icon_MainIcon>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\OpenWire\OpenWireLabDemo\OpenWireLabPkgD16_Icon1.ico</Icon_MainIcon>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
-			<DCC_UsePackage>vcl;OpenWirePkgD16;OpenWireLabPkgD16;$(DCC_UsePackage)</DCC_UsePackage>
+			<DCC_UsePackage>vcl;OpenWirePkgD16;OpenWireLabPkgD16;vclx;$(DCC_UsePackage)</DCC_UsePackage>
 			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 			<Icon_MainIcon>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\OpenWire\OpenWireLabDemo\OpenWireLabPkgD16_Icon1.ico</Icon_MainIcon>
@@ -100,6 +100,7 @@
 			<DCCReference Include="OWLComps.dcr"/>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
 			<DCCReference Include="OpenWirePkgD16.dcp"/>
 			<DCCReference Include="OWLStateComps.pas"/>
 			<DCCReference Include="OWLComps.pas"/>
