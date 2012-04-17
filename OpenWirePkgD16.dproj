@@ -11,13 +11,18 @@
 			<AppType>Package</AppType>
 			<FrameworkType>None</FrameworkType>
 			<Platform Condition="'$(Platform)'==''">Win32</Platform>
-			<TargetedPlatforms>1</TargetedPlatforms>
+			<TargetedPlatforms>7</TargetedPlatforms>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
 			<Base_Win64>true</Base_Win64>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Base)'=='true') or '$(Base_OSX32)'!=''">
+			<Base_OSX32>true</Base_OSX32>
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
@@ -31,9 +36,33 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_Release)'=='true') or '$(Cfg_Release_Win64)'!=''">
+			<Cfg_Release_Win64>true</Cfg_Release_Win64>
+			<CfgParent>Cfg_Release</CfgParent>
+			<Cfg_Release>true</Cfg_Release>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Cfg_Release)'=='true') or '$(Cfg_Release_OSX32)'!=''">
+			<Cfg_Release_OSX32>true</Cfg_Release_OSX32>
+			<CfgParent>Cfg_Release</CfgParent>
+			<Cfg_Release>true</Cfg_Release>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_Debug)'!=''">
 			<Cfg_Debug>true</Cfg_Debug>
 			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_Debug)'=='true') or '$(Cfg_Debug_Win64)'!=''">
+			<Cfg_Debug_Win64>true</Cfg_Debug_Win64>
+			<CfgParent>Cfg_Debug</CfgParent>
+			<Cfg_Debug>true</Cfg_Debug>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Cfg_Debug)'=='true') or '$(Cfg_Debug_OSX32)'!=''">
+			<Cfg_Debug_OSX32>true</Cfg_Debug_OSX32>
+			<CfgParent>Cfg_Debug</CfgParent>
+			<Cfg_Debug>true</Cfg_Debug>
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_Debug)'=='true') or '$(Cfg_Debug_Win32)'!=''">
@@ -43,12 +72,13 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_ObjOutput>$(BDS)\OpenWire</DCC_ObjOutput>
-			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
+			<DCC_BplOutput>.\$(Platform)\$(Config)</DCC_BplOutput>
+			<DCC_BpiOutput>.\$(Platform)\$(Config)</DCC_BpiOutput>
+			<DCC_DcpOutput>.\$(Platform)</DCC_DcpOutput>
+			<DCC_ObjOutput>.\$(Platform)\$(Config)</DCC_ObjOutput>
+			<DCC_HppOutput>.</DCC_HppOutput>
 			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-			<DCC_DcuOutput>$(BDS)\OpenWire</DCC_DcuOutput>
-			<DCC_DcpOutput>$(BDS)\OpenWire</DCC_DcpOutput>
-			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
+			<DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
 			<VerInfo_Build>15</VerInfo_Build>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=4.5.0.15;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=0.0.0.0;Comments=;CompileDate=Thursday, October 07, 2010 7:56 PM</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -65,7 +95,13 @@
 			<GenPackage>true</GenPackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win64)'!=''">
+			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=4.5.0.15;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<Icon_MainIcon>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\OpenWire\OpenWirePkgD16_Icon1.ico</Icon_MainIcon>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base_OSX32)'!=''">
+			<Debugger_Launcher>/usr/X11/bin/xterm -e &quot;%debuggee%&quot;</Debugger_Launcher>
+			<VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName)</VerInfo_Keys>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
 			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
@@ -77,12 +113,26 @@
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_Release_Win64)'!=''">
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_Release_OSX32)'!=''">
+			<VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName)</VerInfo_Keys>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_Debug)'!=''">
 			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_Debug_Win64)'!=''">
+			<DCC_BplOutput>$(windir)\Sysnative</DCC_BplOutput>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_Debug_OSX32)'!=''">
+			<VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName)</VerInfo_Keys>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_Debug_Win32)'!=''">
-			<Debugger_HostApplication>C:\Users\mitov\Documents\RAD Studio\Projects\New folder (282)\Win32\Debug\Project1.exe</Debugger_HostApplication>
+			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
+			<Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\bds.exe</Debugger_HostApplication>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="$(MainSource)">
@@ -143,14 +193,17 @@
 						<Source Name="MainSource">OpenWirePkgD16.dpk</Source>
 					</Source>
 					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\OpenWireLabPkgD16.bpl">OpenWire DemoLab demonstration package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
+				<Deployment/>
 				<Platforms>
-					<Platform value="Win64">False</Platform>
+					<Platform value="Win64">True</Platform>
+					<Platform value="OSX32">True</Platform>
 					<Platform value="Win32">True</Platform>
 				</Platforms>
 			</BorlandProject>

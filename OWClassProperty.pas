@@ -91,8 +91,7 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     procedure Revert(); virtual;
     procedure Modified(); virtual;
 
-    procedure SetPropEntry(Index: Integer; AInstance: TPersistent;
-      APropInfo: PPropInfo); override;
+    procedure SetPropEntry(Index: Integer; AInstance: TPersistent; APropInfo: PPropInfo); override;
 
   public
   {$IFDEF __VSDESIGN__}
@@ -119,7 +118,7 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
   {$ENDIF}
 
   protected
-    FDesigner       : IDesigner;
+    FDesigner : IDesigner;
 
   public
     constructor CreateEx( const ADesigner: IDesigner );
@@ -297,7 +296,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetPropType() : PTypeInfo;
 begin
-  Result := typeinfo( TPersistent );
+  Result := TypeInfo( TPersistent );
 end;
 //---------------------------------------------------------------------------
 {$IFDEF __VSDESIGN__}
@@ -309,7 +308,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWClassPropertyEditor.GetKind() : TTypeKind;
 begin
-  Result := GetPropType.Kind;
+  Result := GetPropType().Kind;
 end;
 //---------------------------------------------------------------------------
 function  TOWClassPropertyEditor.GetIsDefault() : Boolean;
@@ -317,8 +316,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-procedure TOWClassPropertyEditor.SetPropEntry(Index: Integer; AInstance: TPersistent;
-      APropInfo: PPropInfo);
+procedure TOWClassPropertyEditor.SetPropEntry( Index: Integer; AInstance: TPersistent; APropInfo: PPropInfo);
 begin
 end;
 //---------------------------------------------------------------------------

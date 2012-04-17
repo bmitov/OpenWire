@@ -126,6 +126,7 @@ procedure OWRequestDesignerRefresh();
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
 function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
+procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
 {$ENDIF}
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 //---------------------------------------------------------------------------
@@ -138,8 +139,9 @@ const
 {$IFDEF fpc}
   WM_APP = $8000;
 {$ENDIF}
-  OWM_UPDATE              = WM_APP + 10;
-  OWMSG_UPDATE_INSPECTOR  = WM_APP + 11;
+  OWM_UPDATE                      = WM_APP + 10;
+  OWMSG_UPDATE_INSPECTOR          = WM_APP + 11;
+  OWMSG_UPDATE_MODIFIED_INSPECTOR = WM_APP + 12;
 //---------------------------------------------------------------------------
 var GOWInRefresh   : Boolean;
 var GOWRefreshForm : TForm;
@@ -357,6 +359,24 @@ begin
   FormNames.Free;
 {$ENDIF}
   OWRequestDesignerRefresh();
+end;
+//---------------------------------------------------------------------------
+procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
+begin
+{$IFNDEF FPC}
+  if( GOWInRefresh ) then
+    Exit;
+
+  if( Assigned( Designer)) then
+    begin
+    GOWInRefresh := True;
+    if( GOWRefreshForm <> NIL ) then
+      PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_MODIFIED_INSPECTOR,
+                Integer( Designer ), 0 );
+
+    end;
+
+{$ENDIF}
 end;
 //---------------------------------------------------------------------------
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );

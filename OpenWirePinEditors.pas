@@ -17,39 +17,51 @@ interface
 
 {$IFDEF VER170} // Delphi 9.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
-{$DEFINE BDS2005_OR_2006_BUG}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER180} // Delphi 10.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
-{$DEFINE BDS2005_OR_2006_BUG}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER190} // Delphi 11.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER200} // Delphi 12.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER210} // Delphi 14.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER220} // Delphi 15.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFDEF VER230} // Delphi 16.0
 {$DEFINE D6}
+{$DEFINE D7}
 {$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
 {$ENDIF}
 
 {$IFNDEF FPC}
@@ -220,16 +232,17 @@ type
   private
     procedure OWMUpdate(var Message: TMessage); message OWM_UPDATE;
     procedure OWMUpdateInspector(var Message: TMessage); message OWMSG_UPDATE_INSPECTOR;
+    procedure OWMUpdateModifiedInspector(var Message: TMessage); message OWMSG_UPDATE_MODIFIED_INSPECTOR;
 
   public
     function ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
     function ExecuteForSink( ADesigner : TOWPropertyDesigner; ASinkPin : TOWSinkPin ): Integer;
-    function ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWMultiSinkPin ): Integer;
+    function ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
 
   private
-    ColumnToSort : Integer;
-    Direction    : Boolean;
-    AllSelected  : Boolean;
+    FColumnToSort : Integer;
+    FDirection    : Boolean;
+    FAllSelected  : Boolean;
 
   public
     function  GetListItems() : TListItems;
@@ -254,7 +267,10 @@ type
   public
     function  GetValue() : String; override;
     procedure SetValue(const Value: String); override;
-    
+{$IFDEF D7}
+    function  GetIsDefault() : Boolean; override;
+{$ENDIF}
+
   end;
 //---------------------------------------------------------------------------
   TOWPinListPropertyEditor = class(TOWBasicPropertyEditor)
@@ -327,6 +343,21 @@ type
     
   end;
 //---------------------------------------------------------------------------
+  TOWSinkPinPropertyEditor = class(TOWBasicPinPropertyEditor)
+  public
+    function  GetAttributes() : TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure Edit(); override;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWMultiSinkPinPropertyEditor = class(TOWBasicPinPropertyEditor)
+  public
+    function  GetAttributes() : TPropertyAttributes; override;
+    procedure Edit(); override;
+
+  end;
+//---------------------------------------------------------------------------
   TOWSourcePinListPropertyEditor = class(TOWBasicPinListPropertyEditor)
   public
 {$IFDEF D6}
@@ -337,22 +368,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWSinkPinPropertyEditor = class(TOWBasicPinPropertyEditor)
-  public
-    function  GetAttributes() : TPropertyAttributes; override;
-    procedure GetValues(Proc: TGetStrProc); override;
-    procedure Edit(); override;
-
-  end;
-//---------------------------------------------------------------------------
-  TOWEventSinkPinPropertyEditor = class(TOWBasicPinPropertyEditor)
-  public
-    function  GetAttributes() : TPropertyAttributes; override;
-    procedure Edit(); override;
-
-  end;
-//---------------------------------------------------------------------------
-  TOWSinkPinListPropertyEditor = class(TOWBasicPinListPropertyEditor)
+  TOWSinkPinListPropertyEditor = class( TOWBasicPinListPropertyEditor )
   public
 {$IFDEF D6}
     function  GetPropType() : PTypeInfo; override;
@@ -363,7 +379,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWEventSinkPinListPropertyEditor = class(TOWBasicPinListPropertyEditor)
+  TOWMultiSinkPinListPropertyEditor = class(TOWBasicPinListPropertyEditor)
   public
 {$IFDEF D6}
     function  GetPropType() : PTypeInfo; override;
@@ -382,6 +398,13 @@ type
     procedure Edit(); override;
 
   end;
+//---------------------------------------------------------------------------
+function  OWGetPinValue( APin : TOWBasicPin; ADesigner : TOWPropertyDesigner ) : String;
+function  OWSetPinValue( Root : TComponent; APin : TOWBasicPin; const Value: String ) : Boolean;
+function  OWSourcePinEdit( Designer : TOWPropertyDesigner; SourcePin : TOWSourcePin ) : Boolean;
+function  OWSinkPinEdit( Designer : TOWPropertyDesigner; SinkPin : TOWSinkPin ) : Boolean;
+function  OWMultiSinkPinEdit( Designer : TOWPropertyDesigner; MultiSinkPin : TOWMultiSinkPin ) : Boolean;
+procedure OWGetSinkPinValues( SinkPin : TOWSinkPin; Proc: TGetStrProc );
 //---------------------------------------------------------------------------
 procedure Register;
 
@@ -461,7 +484,7 @@ begin
   OWGetPinsValueList( List, SinkPin, '.', [] );
 end;
 //---------------------------------------------------------------------------
-procedure GetSinkPinValues( SinkPin : TOWSinkPin; Proc: TGetStrProc );
+procedure OWGetSinkPinValues( SinkPin : TOWSinkPin; Proc: TGetStrProc );
 var
   Values : TStringList;
   I      : Integer;
@@ -550,7 +573,7 @@ function OWGetPinValueEx( APin : TOWBasicPin; ADesigner : TOWPropertyDesigner; A
 var
   OwnRoot1      : Boolean;
   FullSinkPath  : Boolean;
-  Str     : String;
+  Str           : String;
   PinStr        : String;
 
 begin
@@ -572,7 +595,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function SinkPinEdit( Designer : TOWPropertyDesigner; SinkPin : TOWSinkPin ) : Boolean;
+function OWSinkPinEdit( Designer : TOWPropertyDesigner; SinkPin : TOWSinkPin ) : Boolean;
 var
   I             : Integer;
   OtherPin      : TOWBasicPin;
@@ -724,7 +747,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function EventSinkPinEdit( Designer : TOWPropertyDesigner; EventSinkPin : TOWMultiSinkPin ) : Boolean;
+function OWMultiSinkPinEdit( Designer : TOWPropertyDesigner; MultiSinkPin : TOWMultiSinkPin ) : Boolean;
 var
   I             : Integer;
   OtherPin      : TOWBasicPin;
@@ -737,11 +760,11 @@ var
 
 begin
   Result := False;
-  if( EventSinkPin = NIL ) then
+  if( MultiSinkPin = NIL ) then
     Exit;
 
   try
-    if( GOWPinEditorForm.ExecuteForEventSink( Designer, EventSinkPin ) = mrOk ) then
+    if( GOWPinEditorForm.ExecuteForEventSink( Designer, MultiSinkPin ) = mrOk ) then
       begin
       for I := 0 to GOWPinEditorForm.Items.Count - 1 do
         begin
@@ -756,21 +779,21 @@ begin
           begin
           if( Dispatcher <> NIL ) then
             begin
-            if( not Dispatcher.IsConnectedTo( EventSinkPin )) then
+            if( not Dispatcher.IsConnectedTo( MultiSinkPin )) then
               SourceChanged := True;
 
             end
 
           else if( OtherPin = NIL ) then
             begin
-            if( not TOWExposedSinkPin( EventSinkPin ).IsConnectedToPinName( PinIdent )) then
+            if( not TOWExposedSinkPin( MultiSinkPin ).IsConnectedToPinName( PinIdent )) then
               SourceChanged := True;
 
             end
 
           else
             begin
-            if( not EventSinkPin.IsConnectedTo( OtherPin )) then
+            if( not MultiSinkPin.IsConnectedTo( OtherPin )) then
               SourceChanged := True;
 
             end;
@@ -780,18 +803,18 @@ begin
           begin
           if( Dispatcher <> NIL ) then
             begin
-            if( Dispatcher.IsConnectedTo( EventSinkPin )) then
+            if( Dispatcher.IsConnectedTo( MultiSinkPin )) then
               SourceChanged := True;
 
             end
 
           else if( OtherPin = NIL ) then
-            if( TOWExposedSinkPin( EventSinkPin ).IsConnectedToPinName( PinIdent )) then
+            if( TOWExposedSinkPin( MultiSinkPin ).IsConnectedToPinName( PinIdent )) then
               SourceChanged := True
               
           else
             begin
-            if( EventSinkPin.IsConnectedTo( OtherPin )) then
+            if( MultiSinkPin.IsConnectedTo( OtherPin )) then
               SourceChanged := True;
               
             end;
@@ -802,7 +825,7 @@ begin
           { TODO : Modify the forms connected trough the Dispatcher }
 
 {$IFDEF FPC}
-          Designer.Modified( EventSinkPin );
+          Designer.Modified( MultiSinkPin );
 {$ELSE}
           Designer.Modified();
 {$ENDIF}
@@ -824,7 +847,7 @@ begin
 
         end;
 
-      EventSinkPin.Disconnect();
+      MultiSinkPin.Disconnect();
       for I := 0 to GOWPinEditorForm.Items.Count - 1 do
         begin
         Dispatcher := NIL;
@@ -836,25 +859,25 @@ begin
         if( GOWPinEditorForm.Items [ I ].StateIndex and 1 > 0 ) then
           begin
           if( Dispatcher <> NIL ) then
-            EventSinkPin.ConnectToStateAfter( Dispatcher, AfterPin )
+            MultiSinkPin.ConnectToStateAfter( Dispatcher, AfterPin )
 
           else
             begin
             if( OtherPin is TOWStatePin ) then
               begin
-              if( TOWExposedPin( EventSinkPin ).FDispatcher <> NIL ) then
-                OtherPin.ConnectToStateAfter( TOWExposedPin( EventSinkPin ).FDispatcher, AfterPin )
+              if( TOWExposedPin( MultiSinkPin ).FDispatcher <> NIL ) then
+                OtherPin.ConnectToStateAfter( TOWExposedPin( MultiSinkPin ).FDispatcher, AfterPin )
 
               else if( AEntry.IsDispatcher ) then
-                EventSinkPin.ConnectByStateAfter( OtherPin, AfterPin )
+                MultiSinkPin.ConnectByStateAfter( OtherPin, AfterPin )
                 
               else
-                EventSinkPin.ConnectAfter( OtherPin, AfterPin );
+                MultiSinkPin.ConnectAfter( OtherPin, AfterPin );
 
               end
 
             else
-              EventSinkPin.ConnectAfter( OtherPin, AfterPin );
+              MultiSinkPin.ConnectAfter( OtherPin, AfterPin );
 
             end;
             
@@ -874,7 +897,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function SourcePinEdit( Designer : TOWPropertyDesigner; SourcePin : TOWSourcePin ) : Boolean;
+function OWSourcePinEdit( Designer : TOWPropertyDesigner; SourcePin : TOWSourcePin ) : Boolean;
 var
   I             : Integer;
 //  SinkPin       : TOWSinkPin;
@@ -991,7 +1014,7 @@ var
 begin
   OWRequestRefreshEx( GetIntDesigner() );
   SourcePin := TOWSourcePin( GetPin());
-  if( SourcePinEdit( GetIntDesigner(), SourcePin )) then
+  if( OWSourcePinEdit( GetIntDesigner(), SourcePin )) then
     Modified();
 
 end;
@@ -1092,7 +1115,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function  TOWSourcePinListPropertyEditor.GetAttributes() : TPropertyAttributes;
+function TOWSourcePinListPropertyEditor.GetAttributes() : TPropertyAttributes;
 begin
   Result := [ paDialog ];
   OWRequestDesignerRefresh();
@@ -1101,17 +1124,17 @@ end;
 {$IFDEF D6}
 function TOWSourcePinListPropertyEditor.GetPropType() : PTypeInfo;
 begin
-  Result := typeinfo( TOWSourcePin );
+  Result := TypeInfo( TOWSourcePin );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
 procedure TOWSourcePinListPropertyEditor.Edit();
 var
-  SourcePin     : TOWSourcePin;
+  SourcePin : TOWSourcePin;
 
 begin
   SourcePin := TOWSourcePin( GetPin() );
-  if( SourcePinEdit( GetIntDesigner(), SourcePin )) then
+  if( OWSourcePinEdit( GetIntDesigner(), SourcePin )) then
     Modified();
     
 end;
@@ -1126,7 +1149,7 @@ var
 begin
   OWRequestRefreshEx( GetIntDesigner() );
   SinkPin := TOWSinkPin( GetPin() );
-  if( SinkPinEdit( GetIntDesigner(), SinkPin )) then
+  if( OWSinkPinEdit( GetIntDesigner(), SinkPin )) then
     Modified();
 
 end;
@@ -1143,26 +1166,26 @@ var
 
 begin
   SinkPin := TOWSinkPin( GetPin() );
-  GetSinkPinValues( SinkPin, Proc );
+  OWGetSinkPinValues( SinkPin, Proc );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function TOWEventSinkPinPropertyEditor.GetAttributes() : TPropertyAttributes;
+function TOWMultiSinkPinPropertyEditor.GetAttributes() : TPropertyAttributes;
 begin
   Result := [ paDialog ];
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPinPropertyEditor.Edit();
+procedure TOWMultiSinkPinPropertyEditor.Edit();
 var
-  EventSinkPin : TOWMultiSinkPin;
+  MultiSinkPin : TOWMultiSinkPin;
 
 begin
   OWRequestRefreshEx( GetIntDesigner() );
-  EventSinkPin := TOWMultiSinkPin( GetPin() );
-  if( EventSinkPinEdit( GetIntDesigner(), EventSinkPin )) then
+  MultiSinkPin := TOWMultiSinkPin( GetPin() );
+  if( OWMultiSinkPinEdit( GetIntDesigner(), MultiSinkPin )) then
     Modified();
     
 end;
@@ -1173,7 +1196,7 @@ end;
 {$IFDEF D6}
 function TOWSinkPinListPropertyEditor.GetPropType: PTypeInfo;
 begin
-  Result := typeinfo( TOWSinkPin );
+  Result := TypeInfo( TOWSinkPin );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
@@ -1184,7 +1207,7 @@ var
 begin
   SinkPin := TOWSinkPin( GetPin() );
   OWRequestRefreshEx( GetIntDesigner() );
-  if( SinkPinEdit( GetIntDesigner(), SinkPin )) then
+  if( OWSinkPinEdit( GetIntDesigner(), SinkPin )) then
     Modified();
 
 end;
@@ -1201,32 +1224,32 @@ var
 
 begin
   SinkPin := TOWSinkPin( GetPin() );
-  GetSinkPinValues( SinkPin, Proc );
+  OWGetSinkPinValues( SinkPin, Proc );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 {$IFDEF D6}
-function TOWEventSinkPinListPropertyEditor.GetPropType: PTypeInfo;
+function TOWMultiSinkPinListPropertyEditor.GetPropType: PTypeInfo;
 begin
-  Result := typeinfo( TOWMultiSinkPin );
+  Result := TypeInfo( TOWMultiSinkPin );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
-procedure TOWEventSinkPinListPropertyEditor.Edit();
+procedure TOWMultiSinkPinListPropertyEditor.Edit();
 var
   SinkPin : TOWMultiSinkPin;
 
 begin
   OWRequestRefreshEx( GetIntDesigner() );
   SinkPin := TOWMultiSinkPin( GetPin() );
-  if( EventSinkPinEdit( GetIntDesigner(), SinkPin )) then
+  if( OWMultiSinkPinEdit( GetIntDesigner(), SinkPin )) then
     Modified();
     
 end;
 //---------------------------------------------------------------------------
-function TOWEventSinkPinListPropertyEditor.GetAttributes() : TPropertyAttributes;
+function TOWMultiSinkPinListPropertyEditor.GetAttributes() : TPropertyAttributes;
 begin
   Result := [ paDialog ];
   OWRequestDesignerRefresh();
@@ -1238,7 +1261,7 @@ end;
 {$IFDEF D6}
 function TOWStatePinListPropertyEditor.GetPropType: PTypeInfo;
 begin
-  Result := typeinfo( TOWStatePin );
+  Result := TypeInfo( TOWStatePin );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
@@ -1381,7 +1404,7 @@ var
   FormNames     : TOWModulesColection;
   I             : Integer;
 
-{$IFDEF BDS2005_OR_2006_BUG}
+{$IFDEF BDS2005_OR_HIGHER}
   CurProject    : IOTAProject;
   ModuleInfo    : IOTAModuleInfo;
 
@@ -1391,7 +1414,7 @@ begin
   FormNames := TOWModulesColection.Create();
 
 {$IFNDEF FPC}
-{$IFNDEF BDS2005_OR_2006_BUG}
+{$IFNDEF BDS2005_OR_HIGHER}
   Designer.GetProjectModules( FormNames.GetModules );
 
 {$ELSE}
@@ -1433,7 +1456,7 @@ begin
     FormsComboBox.Items.Add( 'All forms' );
 
   PopulateAllEntries();
-  if( AllSelected ) then
+  if( FAllSelected ) then
     FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
 
   FormsComboBoxChange( Self );
@@ -1475,8 +1498,8 @@ end;
 
 procedure TOWPinEditorForm.PopulateForm( ARootComponent : TComponent );
 var
-  I             : Integer;
-  CurrentRoot   : TComponent;
+  I           : Integer;
+  CurrentRoot : TComponent;
 
 begin
   ClearData();
@@ -1724,10 +1747,10 @@ begin
       if( Dispatcher.PinCount = 2 ) then
         begin
         if( Dispatcher.Pins[ 0 ] = FPin ) then
-          Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ) )
+          Item.SubItems.Add( Dispatcher.Pins[ 1 ].GetFullName( True ))
 
         else
-          Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ) );
+          Item.SubItems.Add( Dispatcher.Pins[ 0 ].GetFullName( True ));
 
         end
 
@@ -1994,14 +2017,14 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.OWMUpdateInspector(var Message: TMessage);
 var
-  List          : TADesignerSelectionList;
-  Designer      : IADesigner;
+  List      : TADesignerSelectionList;
+  Designer  : IADesigner;
 
 begin
   GOWInRefresh := False;
 {$IFNDEF FPC}
   Designer := IADesigner( Message.WParam );
-  List := TADesignerSelectionList.Create;
+  List := TADesignerSelectionList.Create();
   Designer.GetSelections( List );
   Designer.NoSelection();
   Designer.SetSelections( List );
@@ -2009,12 +2032,24 @@ begin
 {$ENDIF}
 end;
 //---------------------------------------------------------------------------
+procedure TOWPinEditorForm.OWMUpdateModifiedInspector(var Message: TMessage);
+var
+  Designer  : IADesigner;
+
+begin
+  OWMUpdateInspector( Message );
+{$IFNDEF FPC}
+  Designer := IADesigner( Message.WParam );
+  Designer.Modified();
+{$ENDIF}
+end;
+//---------------------------------------------------------------------------
 procedure TOWPinEditorForm.OWMUpdate(var Message: TMessage);
 begin
   OWLinkAwaitsLinkingAllForms();
 end;
-
-function  TOWPinEditorForm.ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
+//---------------------------------------------------------------------------
+function TOWPinEditorForm.ExecuteForSource( ADesigner : TOWPropertyDesigner; ASourcePin : TOWSourcePin ): Integer;
 begin
   Designer := ADesigner;
   FPin := ASourcePin;
@@ -2066,16 +2101,16 @@ begin
   Result := ShowModal();
 end;
 //---------------------------------------------------------------------------
-function TOWPinEditorForm.ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AEventSinkPin : TOWMultiSinkPin ): Integer;
+function TOWPinEditorForm.ExecuteForEventSink( ADesigner : TOWPropertyDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
 begin
   Designer := ADesigner;
-  FPin := AEventSinkPin;
-  FMultiSinkPin := AEventSinkPin;
+  FPin := AMultiSinkPin;
+  FMultiSinkPin := AMultiSinkPin;
   FSinkPin := NIL;
   FSourcePin := NIL;
 
 {$IFDEF FPC}
-  Root := OWGetMainDesignOwner( AEventSinkPin.Owner );
+  Root := OWGetMainDesignOwner( AMultiSinkPin.Owner );
 {$ELSE}
   Root := ADesigner.GetRoot();
 {$ENDIF}
@@ -2130,30 +2165,30 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.ListViewColumnClick(Sender: TObject; Column: TListColumn);
 begin
-  ListView.Columns[ ColumnToSort ].ImageIndex := -1;
-  
-  if( ColumnToSort = Column.Index ) then
-    Direction := not Direction
+  ListView.Columns[ FColumnToSort ].ImageIndex := -1;
+
+  if( FColumnToSort = Column.Index ) then
+    FDirection := not FDirection
 
   else
     begin
-    Direction := true;
-    ColumnToSort := Column.Index;
+    FDirection := True;
+    FColumnToSort := Column.Index;
     end;
 
 {$IFNDEF FPC}
   TCustomListView(Sender).AlphaSort();
 {$ENDIF}
 
-  ListView.Columns[ ColumnToSort].ImageIndex := Integer( not Direction );
+  ListView.Columns[ FColumnToSort].ImageIndex := Integer( not FDirection );
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.FormCreate(Sender: TObject);
 begin
-  PinsList     := TOWEPinsList.Create( True );
-  ColumnToSort := 0;
-  Direction    := True;
-  AllSelected  := False;
+  PinsList      := TOWEPinsList.Create( True );
+  FColumnToSort := 0;
+  FDirection    := True;
+  FAllSelected  := False;
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.FormDestroy(Sender: TObject);
@@ -2169,19 +2204,18 @@ var
   ix          : Integer;
 
 begin
-
-  if( Direction ) then
+  if( FDirection ) then
     DirMultiply :=  1
-    
+
   else
     DirMultiply := -1;
 
-  if(ColumnToSort = 0) then
+  if( FColumnToSort = 0 ) then
     Compare := DirMultiply * CompareText( Item1.Caption, Item2.Caption )
 
   else
     begin
-    ix := ColumnToSort - 1;
+    ix := FColumnToSort - 1;
     Compare := DirMultiply * CompareText( Item1.SubItems.Strings[ix], Item2.SubItems.Strings[ix] );
     end
 
@@ -2235,6 +2269,13 @@ begin
   Result := OWGetPinValue( APin, GetIntDesigner() );
 end;
 //---------------------------------------------------------------------------
+{$IFDEF D7}
+function TOWBasicPinPropertyEditor.GetIsDefault() : Boolean;
+begin
+  Result := not GetPin().IsConnected();
+end;
+{$ENDIF}
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2263,7 +2304,7 @@ begin
     
 end;
 //---------------------------------------------------------------------------
-function  TOWPinListPropertyEditor.GetValue(): String;
+function TOWPinListPropertyEditor.GetValue(): String;
 var
   Collection : TOWPinList;
   
@@ -2312,7 +2353,7 @@ begin
         Proc( TOWSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
 
       else if( Pin is TOWMultiSinkPin ) then
-        Proc( TOWEventSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
+        Proc( TOWMultiSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
 
       else if( Pin is TOWStatePin ) then
         Proc( TOWStatePinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
@@ -2413,12 +2454,12 @@ var
 
 begin
   SelectedRoot := NIL;
-  AllSelected := False;
+  FAllSelected := False;
   if( FormsComboBox.Items.Count > 1 ) then
     if( FormsComboBox.ItemIndex = FormsComboBox.Items.Count - 1 ) then
       begin
       PopulateAll();
-      AllSelected := True;
+      FAllSelected := True;
       Exit;
       end;
 
@@ -2651,26 +2692,26 @@ begin
 
 {$IFNDEF FPC}
   {$IFDEF D6}
-    RegisterPropertyInCategory( 'Input Pins',             typeinfo(TOWSinkPin) );
-    RegisterPropertyInCategory( 'Input Pins',             typeinfo(TOWMultiSinkPin) );
-    RegisterPropertyInCategory( 'Output Pins',            typeinfo(TOWSourcePin) );
-    RegisterPropertyInCategory( 'State Pins',             typeinfo(TOWStatePin) );
-    RegisterPropertyInCategory( 'Pin Lists',              typeinfo(TOWPinList) );
+    RegisterPropertyInCategory( 'Input Pins',           TypeInfo(TOWSinkPin) );
+    RegisterPropertyInCategory( 'Input Pins',           TypeInfo(TOWMultiSinkPin) );
+    RegisterPropertyInCategory( 'Output Pins',          TypeInfo(TOWSourcePin) );
+    RegisterPropertyInCategory( 'State Pins',           TypeInfo(TOWStatePin) );
+    RegisterPropertyInCategory( 'Pin Lists',            TypeInfo(TOWPinList) );
   {$ELSE}
-    RegisterPropertyInCategory( TOWInputPinsCategory,     typeinfo(TOWSinkPin) );
-    RegisterPropertyInCategory( TOWInputPinsCategory,     typeinfo(TOWMultiSinkPin) );
-    RegisterPropertyInCategory( TOWOutputPinsCategory,    typeinfo(TOWSourcePin) );
-    RegisterPropertyInCategory( TOWStatePinsCategory,     typeinfo(TOWStatePin) );
-    RegisterPropertyInCategory( TOWPinListCategory,       typeinfo(TOWPinList) );
+    RegisterPropertyInCategory( TOWInputPinsCategory,   TypeInfo(TOWSinkPin) );
+    RegisterPropertyInCategory( TOWInputPinsCategory,   TypeInfo(TOWMultiSinkPin) );
+    RegisterPropertyInCategory( TOWOutputPinsCategory,  TypeInfo(TOWSourcePin) );
+    RegisterPropertyInCategory( TOWStatePinsCategory,   TypeInfo(TOWStatePin) );
+    RegisterPropertyInCategory( TOWPinListCategory,     TypeInfo(TOWPinList) );
   {$ENDIF}
 {$ENDIF}
 
-  RegisterPropertyEditor( typeinfo(TOWSourcePin),     NIL, '', TOWSourcePinPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWMultiSinkPin),  NIL, '', TOWEventSinkPinPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWSinkPin),       NIL, '', TOWSinkPinPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWStatePin),      NIL, '', TOWStatePinPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWPinList),       NIL, '', TOWPinListPropertyEditor);
-  RegisterPropertyEditor( typeinfo(TOWPinListOwner),  NIL, '', TOWPinListOwnerPropertyEditor);
+  RegisterPropertyEditor( TypeInfo(TOWSourcePin),     NIL, '', TOWSourcePinPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWMultiSinkPin),  NIL, '', TOWMultiSinkPinPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWSinkPin),       NIL, '', TOWSinkPinPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWStatePin),      NIL, '', TOWStatePinPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWPinList),       NIL, '', TOWPinListPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWPinListOwner),  NIL, '', TOWPinListOwnerPropertyEditor );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
