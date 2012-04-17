@@ -1,18 +1,26 @@
 1 VERSIONINFO
+<<<<<<< .mine
+FILEVERSION 5,0,2,0
+=======
 FILEVERSION 5,0,0,7
+>>>>>>> .r61
 PRODUCTVERSION 1,0,0,30
 FILEFLAGSMASK 0x3FL
 FILEFLAGS 0x00L
 FILEOS 0x40004L
 FILETYPE 0x1L
-FILESUBTYPE 0x0L
+FILESUBTYPE 0x00L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
          BLOCK "040904E4"
          BEGIN
               VALUE "CompanyName", "Boian Mitov\0"
+<<<<<<< .mine
+              VALUE "FileVersion", "5.0.2.0\0"
+=======
               VALUE "FileVersion", "5.0.0.7\0"
+>>>>>>> .r61
               VALUE "ProductVersion", "1.0.0.30\0"
          END
     END

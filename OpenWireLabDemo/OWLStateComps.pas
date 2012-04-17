@@ -29,7 +29,7 @@ type
 {$ENDIF}
 
   protected
-    procedure OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer );
+    procedure OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 
   published // OpenWire support
     property PositionPin : TOWIntegerStatePin read FPositionPin write FPositionPin;
@@ -46,7 +46,7 @@ type
     destructor  Destroy; override;
 
   protected
-    procedure FloatChangeEvent( Sender : TOWPin; AValue : Single );
+    procedure FloatChangeEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
     
   published // OpenWire support
     property PositionPin : TOWFloatIntStatePin read FPositionPin write FPositionPin;
@@ -70,7 +70,7 @@ begin
   inherited;
 end;
 
-procedure TOWLTrackBar.OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer );
+procedure TOWLTrackBar.OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
   Position := AValue;
 end;
@@ -98,7 +98,7 @@ begin
   inherited;
 end;
 
-procedure TOWLProgressBar.FloatChangeEvent( Sender : TOWPin; AValue : Single );
+procedure TOWLProgressBar.FloatChangeEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
 begin
   Position := Round( AValue );
 end;
