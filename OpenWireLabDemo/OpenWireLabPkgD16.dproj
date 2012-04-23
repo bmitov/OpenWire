@@ -71,25 +71,17 @@
 			<GenPackage>true</GenPackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win64)'!=''">
-<<<<<<< .mine
 			<DCC_UnitSearchPath>$(BDS)\OpenWire\Win64;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_BplOutput>$(windir)\Sysnative</DCC_BplOutput>
 			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<DCC_UsePackage>vcl;vclx;$(DCC_UsePackage)</DCC_UsePackage>
-=======
-			<DCC_UsePackage>vcl;vclx;$(DCC_UsePackage)</DCC_UsePackage>
->>>>>>> .r61
 			<Icon_MainIcon>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\OpenWire\OpenWireLabDemo\OpenWireLabPkgD16_Icon1.ico</Icon_MainIcon>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
-<<<<<<< .mine
 			<DCC_UnitSearchPath>$(BDS)\OpenWire\Win32;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 			<DCC_UsePackage>vcl;OpenWirePkgD16;OpenWireLabPkgD16;vclx;$(DCC_UsePackage)</DCC_UsePackage>
-=======
-			<DCC_UsePackage>vcl;OpenWirePkgD16;OpenWireLabPkgD16;vclx;$(DCC_UsePackage)</DCC_UsePackage>
->>>>>>> .r61
 			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
 			<Icon_MainIcon>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\OpenWire\OpenWireLabDemo\OpenWireLabPkgD16_Icon1.ico</Icon_MainIcon>
 		</PropertyGroup>
@@ -100,6 +92,7 @@
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 			<DCC_Define>RELEASE</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_Release_Win64)'!=''">
@@ -186,13 +179,7 @@
 					<Source>
 						<Source Name="MainSource">OpenWireLabPkgD16.dpk</Source>
 					</Source>
-					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Windows\System32\OpenWireLabPkgD16.bpl">OpenWire DemoLab demonstration package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="$(BDSBIN)\dclofficexp160.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-					</Excluded_Packages>
+					<Excluded_Packages/>
 				</Delphi.Personality>
 				<Platforms>
 					<Platform value="Win64">True</Platform>
