@@ -36,6 +36,10 @@ unit OWClassProperty;
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D9}
+{$ENDIF}
+
 interface
 uses
 {$IFDEF FPC}
@@ -131,16 +135,21 @@ end;
 {$ENDIF}
 
 type TOWComponentEditorEvent = procedure of object;
+type TOWComponentEditorEvabledEvent = function() : Boolean of object;
 //---------------------------------------------------------------------------
 type TOWComponentEditorItem = class
 private
-  FMenuText     : String;
-  FPropertyName : String;
-  FFilter       : TTypeKinds;
-  FCallback     : TOWComponentEditorEvent;
+  FMenuText           : String;
+  FPropertyName       : String;
+  FFilter             : TTypeKinds;
+  FCallback           : TOWComponentEditorEvent;
+  FOnEnabledCallback  : TOWComponentEditorEvabledEvent;
 
 public
-  constructor Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter : TTypeKinds; APropertyName : String );
+  constructor Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent; AFilter : TTypeKinds; APropertyName : String );
+
+public
+  function GetEnabled() : Boolean;
 
 end;
 //---------------------------------------------------------------------------
@@ -156,6 +165,7 @@ type
 
   public
     procedure Add( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter: TTypeKinds; APropertyName : String );
+    procedure AddEnable( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent; AFilter: TTypeKinds; APropertyName : String );
 
   public
     constructor Create();
@@ -187,6 +197,7 @@ type
     function  GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
     procedure EditProperty( PropertyName : String ); overload;
     procedure EditProperty( AFilter: TTypeKinds; PropertyName : String ); overload;
+    procedure AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent ); overload;
     procedure AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent ); overload;
     procedure AddMenuItem( AMenuText : String; APropertyName : String ); overload;
     procedure AddMenuItem( AMenuText : String; AFilter: TTypeKinds; APropertyName : String ); overload;
@@ -446,6 +457,11 @@ begin
     LastIProp := Prop;
 end;
 //---------------------------------------------------------------------------
+procedure TOWComponentEditor.AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent );
+begin
+  FMenuItems.AddEnable( AMenuText, ACallback, AOnEnabledCallback, [], '' );
+end;
+//---------------------------------------------------------------------------
 procedure TOWComponentEditor.AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent );
 begin
   FMenuItems.Add( AMenuText, ACallback, [], '' ); 
@@ -472,13 +488,27 @@ begin
 end;
 //---------------------------------------------------------------------------
 function TOWComponentEditor.GetVerb(Index: Integer): String;
+var
+  I : Integer;
+
 begin
+  for I := 0 to FMenuItems.Count - 1 do
+    if( not FMenuItems[ I ].GetEnabled() ) then
+      Inc( Index );
+
   Result := FMenuItems[ Index ].FMenuText;
 end;
 //---------------------------------------------------------------------------
 function TOWComponentEditor.GetVerbCount() : Integer;
+var
+  I : Integer;
+
 begin
-  Result := FMenuItems.Count;
+  Result := 0;
+  for I := 0 to FMenuItems.Count - 1 do
+    if( FMenuItems[ I ].GetEnabled() ) then
+      Inc( Result );
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -513,19 +543,35 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWComponentEditorItems.Add( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter: TTypeKinds; APropertyName : String );
 begin
-  FList.Add( TOWComponentEditorItem.Create( AMenuText, ACallback, AFilter, APropertyName ));
+  FList.Add( TOWComponentEditorItem.Create( AMenuText, ACallback, NIL, AFilter, APropertyName ));
+end;
+//---------------------------------------------------------------------------
+procedure TOWComponentEditorItems.AddEnable( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent; AFilter: TTypeKinds; APropertyName : String );
+begin
+  FList.Add( TOWComponentEditorItem.Create( AMenuText, ACallback, AOnEnabledCallback, AFilter, APropertyName ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWComponentEditorItem.Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AFilter : TTypeKinds; APropertyName : String );
+constructor TOWComponentEditorItem.Create( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent; AFilter : TTypeKinds; APropertyName : String );
 begin
   inherited Create;
   FMenuText := AMenuText;
   FCallback := ACallback;
+  FOnEnabledCallback := AOnEnabledCallback;
   FFilter := AFilter;
   FPropertyName := APropertyName;
+end;
+//---------------------------------------------------------------------------
+function TOWComponentEditorItem.GetEnabled() : Boolean;
+begin
+  if( Assigned( FOnEnabledCallback )) then
+    Result := FOnEnabledCallback()
+
+  else
+    Result := True;
+
 end;
 //---------------------------------------------------------------------------
 end.

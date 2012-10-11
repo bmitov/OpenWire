@@ -74,7 +74,7 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_BplOutput>.\$(Platform)\$(Config)</DCC_BplOutput>
 			<DCC_BpiOutput>.\$(Platform)\$(Config)</DCC_BpiOutput>
-			<DCC_DcpOutput>.\$(Platform)</DCC_DcpOutput>
+			<DCC_DcpOutput>.\$(Platform)\$(Config)</DCC_DcpOutput>
 			<DCC_ObjOutput>.\$(Platform)\$(Config)</DCC_ObjOutput>
 			<DCC_HppOutput>.</DCC_HppOutput>
 			<DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -154,8 +154,8 @@
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 		</ItemGroup>
-		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
-		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>
@@ -193,7 +193,7 @@
 						<Source Name="MainSource">OpenWirePkgD16.dpk</Source>
 					</Source>
 					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Windows\System32\OpenWireLabPkgD16.bpl">OpenWire DemoLab demonstration package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\AccesIoLabDsnD16.bpl">(untitled)</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\bcboffice2k160.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\bcbofficexp160.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k160.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

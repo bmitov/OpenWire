@@ -26,7 +26,7 @@ type
   private
     { Private declarations }
   public
-    procedure FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWStateDispatcher; ANotifyAfterPin : TOWBasicPin );
+    procedure FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin );
     procedure FillFromSourcePin( AExcludePin : TOWBasicPin; ASourcePin : TOWSourcePin; ANotifyAfterPin : TOWBasicPin );
     function  GetSelectedName() : String;
     function  GetSelectedPin() : TOWPin;
@@ -41,7 +41,7 @@ implementation
 
 //type TOWExposedSourcePin = class(TOWSourcePin);
 
-procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWStateDispatcher; ANotifyAfterPin : TOWBasicPin );
+procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin );
 var
   I               : Integer;
   NotifyAfterName : String;

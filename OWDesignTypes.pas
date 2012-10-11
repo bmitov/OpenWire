@@ -44,6 +44,13 @@ unit OWDesignTypes;
 {$ENDIF}
 
 {$IFDEF VER230} // Delphi 16.0
+{$DEFINE D16Up}
+{$DEFINE D6}
+{$DEFINE D9}
+{$ENDIF}
+
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D16Up}
 {$DEFINE D6}
 {$DEFINE D9}
 {$ENDIF}
@@ -100,7 +107,7 @@ type
       SavedChecked      : Boolean;
       Checked           : Boolean;
 
-      Dispatcher        : TOWStateDispatcher;
+      Dispatcher        : TOWBasicStateDispatcher;
 
   end;
 //---------------------------------------------------------------------------
@@ -485,6 +492,9 @@ begin
   OWRegisterStreamColorThickness( IOWIntRangedStream,   clFuchsia, 1 );
   OWRegisterStreamColorThickness( IOWInt64RangedStream, clFuchsia, 1 );
   OWRegisterStreamColorThickness( IOWRealRangedStream,  clRed, 1 );
+{$IFDEF D16Up}
+  OWRegisterStreamColorThickness( IOWStreamPersistStream, clLime, 2 );
+{$ENDIF}
 end;
 
 initialization
@@ -505,5 +515,7 @@ finalization
   OWFreeStreamInfo( IOWIntRangedStream );
   OWFreeStreamInfo( IOWInt64RangedStream );
   OWFreeStreamInfo( IOWRealRangedStream );
-
+{$IFDEF D16Up}
+  OWFreeStreamInfo( IOWStreamPersistStream );
+{$ENDIF}
 end.

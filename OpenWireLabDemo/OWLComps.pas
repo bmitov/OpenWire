@@ -50,7 +50,7 @@ type
     destructor  Destroy(); override;
 
   published // OpenWire support
-    property OutputPin          : TOWFloatSourcePin read FOutputPin write FOutputPin;
+    property OutputPin          : TOWFloatSourcePin read FOutputPin         write FOutputPin;
     property PositiveInputPins  : TOWPinListOwner   read FPositiveInputPins write FPositiveInputPins;
     property NegativeInputPins  : TOWPinListOwner   read FNegativeInputPins write FNegativeInputPins;
 
@@ -93,9 +93,9 @@ type
     property OutputPin  : TOWFloatSourcePin   read FOutputPin write FOutputPin;
     
   published
-    property Step       : Single read FStep write FStep;
-    property Max        : Single read FMax write SetMax;
-    property Min        : Single read FMin write SetMin;
+    property Step : Single read FStep write FStep;
+    property Max  : Single read FMax  write SetMax;
+    property Min  : Single read FMin  write SetMin;
     
   end;
 
@@ -301,7 +301,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWLMultiply.DestroyInputPin( APinListOwner : TOWPinList; APin : TOWBasicPin );
 var
-  I   : Integer;
+  I : Integer;
   
 begin
   SetLength( FInputDataArray, APinListOwner.Count );

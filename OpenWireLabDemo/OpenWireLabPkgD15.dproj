@@ -47,8 +47,8 @@
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
 			<DCC_DcuOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcuOutput>
-			<DCC_ObjOutput>$(BDS)\OpenWire</DCC_ObjOutput>
-			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
+			<DCC_ObjOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_ObjOutput>
+			<DCC_HppOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_HppOutput>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 			<DCC_Define>RELEASE</DCC_Define>
 		</PropertyGroup>
@@ -56,8 +56,8 @@
 			<DCC_DependencyCheckOutputName>$(SystemRoot)\System32\OpenWireLabPkgD15.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
 			<DCC_DcuOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcuOutput>
-			<DCC_ObjOutput>$(BDS)\OpenWire</DCC_ObjOutput>
-			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
+			<DCC_ObjOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_ObjOutput>
+			<DCC_HppOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_HppOutput>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;$(BDS)\lib</DCC_UnitSearchPath>
 			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;$(BDS)\lib</DCC_ResourcePath>
@@ -106,10 +106,10 @@
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">4</VersionInfo>
-						<VersionInfo Name="MinorVer">5</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">15</VersionInfo>
+						<VersionInfo Name="MajorVer">5</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">2</VersionInfo>
+						<VersionInfo Name="Build">35</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -121,7 +121,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">4.5.0.15</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">5.0.2.35</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
@@ -129,7 +129,7 @@
 						<VersionInfoKeys Name="ProductName"/>
 						<VersionInfoKeys Name="ProductVersion">0.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="CompileDate">Thursday, October 07, 2010 7:57 PM</VersionInfoKeys>
+						<VersionInfoKeys Name="CompileDate">Thursday, July 26, 2012 6:34 PM</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Source>
 						<Source Name="MainSource">OpenWireLabPkgD15.dpk</Source>

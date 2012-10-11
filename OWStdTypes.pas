@@ -4,6 +4,8 @@ unit OWStdTypes;
 {$MODE DELPHI}{$H+}
 {$ENDIF}
 
+{$I OWDefs.inc}
+
 interface
 uses
   OWPins, classes;
@@ -78,6 +80,12 @@ type
     ['{92419B6E-F281-455A-852F-8253D761E30B}']
   end;
 
+{$IFDEF D16Up}
+  IOWStreamPersistStream = interface(IOWDataStream)
+    ['{846DC44A-1EB7-4BDD-BB93-04E9BC5E4BBD}']
+  end;
+{$ENDIF}
+//---------------------------------------------------------------------------
 type
   TOWRealComplex = record
     Real        : Real;
@@ -399,6 +407,19 @@ type
     constructor Create( AMinValue, AMaxValue : TDateTime );
 
   end;
+//---------------------------------------------------------------------------
+{$IFDEF D16Up}
+  TOWSuppliedStreamPersistOperation = class( TOWSuppliedOperation )
+  public
+    Value : TStream;
+
+  public
+    constructor Create(); overload;
+    constructor Create( AValue : TStream ); overload;
+    destructor  Destroy(); override;
+
+  end;
+{$ENDIF}
 //---------------------------------------------------------------------------
   TOWClockSourcePin = class( TOWSourcePin, IOWClockStream )
   protected
@@ -1882,6 +1903,26 @@ type
     property Value  : Integer read FValue write SetRanged;
 
   end;
+//---------------------------------------------------------------------------
+{$IFDEF D16Up}
+  TOWStreamPersistSourcePin = class( TOWClockSourcePin )
+  public
+    FPinNotificationEvent : TOWPinNotificationEvent;
+
+  public
+    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+    constructor Create( AOwner: TComponent );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
+
+  public
+    procedure SubmitData( Value : TStream );
+
+  protected
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+
+  end;
+{$ENDIF}
 //---------------------------------------------------------------------------
 implementation
 
@@ -7231,6 +7272,74 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+{$IFDEF D16Up}
+constructor TOWStreamPersistSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
+begin
+  inherited Create( AOwner );
+  FPinNotificationEvent := APinNotificationEvent;
+
+  AddType( IOWStreamPersistStream, Notification );
+end;
+//---------------------------------------------------------------------------
+constructor TOWStreamPersistSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
+  FPinNotificationEvent := APinNotificationEvent;
+
+  AddType( IOWStreamPersistStream, Notification );
+end;
+//---------------------------------------------------------------------------
+constructor TOWStreamPersistSourcePin.Create( AOwner: TComponent );
+begin
+  inherited Create( AOwner );
+  AddType( IOWStreamPersistStream, Notification );
+end;
+//---------------------------------------------------------------------------
+constructor TOWStreamPersistSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
+  AddType( IOWStreamPersistStream, Notification );
+end;
+//---------------------------------------------------------------------------
+procedure TOWStreamPersistSourcePin.SubmitData( Value : TStream );
+begin
+  Notify( TOWSuppliedStreamPersistOperation.Create( Value ));
+end;
+//---------------------------------------------------------------------------
+function TOWStreamPersistSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+var
+  InterfPersist : IOWStreamPersistStream;
+  Handled       : Boolean;
+
+begin
+  Result := [];
+  if( Handler.QueryInterface(IOWStreamPersistStream, InterfPersist ) = 0 ) then
+    begin
+    if( Assigned( FPinNotificationEvent )) then
+      begin
+      Handled := True;
+      Result := FPinNotificationEvent( InterfPersist, DataTypeID, Operation, State, Handled );
+      if( Handled ) then
+        Exit;
+
+      end;
+
+{
+    if( nsNewLink in State ) then
+      begin
+      InterfPersist.DispatchData( DataTypeID, TOWSuppliedStreamPersistOperation.Create( Value ), State );
+      Exit;
+      end;
+}
+    InterfPersist.DispatchData( DataTypeID, Operation, State );
+    end;
+
+end;
+{$ENDIF}
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 constructor TOWStartRateOperation.Create( ARate : Single );
 begin
   inherited Create;
@@ -7389,6 +7498,30 @@ begin
   Min := AMinValue;
   Max := AMaxValue;
 end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+{$IFDEF D16Up}
+constructor TOWSuppliedStreamPersistOperation.Create();
+begin
+  inherited Create();
+  Value := TMemoryStream.Create();
+end;
+//---------------------------------------------------------------------------
+constructor TOWSuppliedStreamPersistOperation.Create( AValue : TStream );
+begin
+  inherited Create();
+  Value := TMemoryStream.Create();
+  TMemoryStream( Value ).LoadFromStream( AValue );
+end;
+//---------------------------------------------------------------------------
+destructor TOWSuppliedStreamPersistOperation.Destroy();
+begin
+  Value.Free();
+  inherited;
+end;
+{$ENDIF}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

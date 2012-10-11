@@ -44,6 +44,7 @@ interface
 {$ENDIF}
 
 {$IFDEF VER210} // Delphi 14.0
+{$DEFINE D14Up}
 {$DEFINE D6}
 {$DEFINE D7}
 {$DEFINE D9}
@@ -51,6 +52,7 @@ interface
 {$ENDIF}
 
 {$IFDEF VER220} // Delphi 15.0
+{$DEFINE D14Up}
 {$DEFINE D6}
 {$DEFINE D7}
 {$DEFINE D9}
@@ -58,6 +60,15 @@ interface
 {$ENDIF}
 
 {$IFDEF VER230} // Delphi 16.0
+{$DEFINE D14Up}
+{$DEFINE D6}
+{$DEFINE D7}
+{$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
+{$ENDIF}
+
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D14Up}
 {$DEFINE D6}
 {$DEFINE D7}
 {$DEFINE D9}
@@ -137,19 +148,18 @@ type
       procedure Populate();
 
     public
-//      PinEntry          : TOWEPinEntry;
-      IsDispatcher      : Boolean;
-      StateIndex        : Integer;
+      IsDispatcher    : Boolean;
+      StateIndex      : Integer;
 
-      PinConnectIdent       : String;
-      PinConnectName        : String;
+      PinConnectIdent : String;
+      PinConnectName  : String;
 
     public
       constructor Create( AItem : TListItem; APin : TOWBasicPin );
       
     public
-      property ConnectedToPin        : TOWBasicPin read FConnectedToPin write SetConnectedToPin;
-      property ConnectedAfterPin     : TOWBasicPin read FConnectedAfterPin write SetConnectedAfterPin;
+      property ConnectedToPin     : TOWBasicPin read FConnectedToPin    write SetConnectedToPin;
+      property ConnectedAfterPin  : TOWBasicPin read FConnectedAfterPin write SetConnectedAfterPin;
       
   end;
 
@@ -216,7 +226,7 @@ type
     function  RootFromName( RootName : String ) : TComponent;
     
     function  EntryFromPin( Pin : TOWBasicPin ) : TOWEPinEntry;
-    function  EntryFromDispatcher( Dispatcher : TOWStateDispatcher ) : TOWEPinEntry;
+    function  EntryFromDispatcher( Dispatcher : TOWBasicStateDispatcher ) : TOWEPinEntry;
     procedure ChangeState( Item : TListItem );
 
   private
@@ -444,27 +454,19 @@ const
   {$IFDEF VER180} // Delphi 10.0
     {$IFNDEF VER185} // Delphi 10.0
       {$R OpenWireResources2006.res}
+
     {$ELSE} // Delphi 11
       {$R OpenWireResources2007.res}
+
     {$ENDIF}
 
   {$ELSE} // Delphi 11 up
-    {$IFDEF VER230} // Delphi 16
+    {$IFDEF D14Up} // Delphi 14 and up
       {$R OpenWireResources2006.res}
 
-    {$ELSE} // Delphi 16
-      {$IFDEF VER220} // Delphi 15
-        {$R OpenWireResources2006.res}
+    {$ELSE} // Delphi 14 and up
+      {$R OpenWireResources2007.res}
 
-      {$ELSE} // Delphi 15
-        {$IFDEF VER210} // Delphi 14
-          {$R OpenWireResources2006.res}
-
-        {$ELSE} // Delphi 14
-          {$R OpenWireResources2007.res}
-
-        {$ENDIF}
-      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
@@ -1527,7 +1529,7 @@ var
   OwnDataModule : Boolean;
   LinkName      : String;
   PinStr        : String;
-  Dispatcher    : TOWStateDispatcher;
+  Dispatcher    : TOWBasicStateDispatcher;
 
 begin
   Values := TStringList.Create;
@@ -1663,7 +1665,7 @@ begin
 
 end;
 
-function TOWPinEditorForm.EntryFromDispatcher( Dispatcher : TOWStateDispatcher ) : TOWEPinEntry;
+function TOWPinEditorForm.EntryFromDispatcher( Dispatcher : TOWBasicStateDispatcher ) : TOWEPinEntry;
 var
   I : Integer;
 
@@ -1697,7 +1699,7 @@ var
   OwnDataModule : Boolean;
   LinkName      : String;
   PinStr        : String;
-  Dispatcher    : TOWStateDispatcher;
+  Dispatcher    : TOWBasicStateDispatcher;
 
   Entry         : TOWEPinEntry;
   Linked        : Boolean;
@@ -2594,14 +2596,6 @@ begin
   TOWEItemEntry( Item.Data ).Free();
   Item.Data := NIL;
 end;
-
-{
-constructor TOWEItemEntry.Create( APinEntry : TOWEPinEntry );
-begin
-  inherited;
-  PinEntry := APinEntry;
-end;
-}
 
 procedure TOWPinEditorForm.AfterPinButtonClick(Sender: TObject);
 var

@@ -28,6 +28,10 @@ unit OWDesignSelectionsList;
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D9}
+{$ENDIF}
+
 {$IFDEF VER130}
 {$DEFINE D5}
 {$ENDIF}

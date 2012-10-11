@@ -23,6 +23,11 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+			<DCC_DcuOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcuOutput>
+			<DCC_DcpOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_DcpOutput>
+			<DCC_ObjOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_ObjOutput>
+			<DCC_HppOutput>$(BDS)\OpenWire\OpenWireLabDemo</DCC_HppOutput>
 			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\6.0\Bpl\OpenWireLabPkgD12.bpl</DCC_DependencyCheckOutputName>
@@ -39,21 +44,13 @@
 			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-			<DCC_DcuOutput>$(BDS)\OpenWire</DCC_DcuOutput>
-			<DCC_ObjOutput>$(BDS)\OpenWire</DCC_ObjOutput>
-			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
-			<DCC_DcpOutput>$(BDS)\OpenWire</DCC_DcpOutput>
 			<DCC_Define>RELEASE</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_Debug)'!=''">
 			<DCC_DependencyCheckOutputName>$(SystemRoot)\System32\OpenWireLabPkgD12.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
-			<DCC_DcuOutput>$(BDS)\OpenWire</DCC_DcuOutput>
-			<DCC_ObjOutput>$(BDS)\OpenWire</DCC_ObjOutput>
-			<DCC_HppOutput>$(BDS)\OpenWire</DCC_HppOutput>
 			<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
-			<DCC_DcpOutput>$(BDS)\OpenWire</DCC_DcpOutput>
 			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;$(BDS)\lib</DCC_UnitSearchPath>
 			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;$(BDS)\lib</DCC_ResourcePath>
 			<DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;$(BDS)\lib</DCC_ObjPath>
@@ -104,10 +101,10 @@
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">3</VersionInfo>
+						<VersionInfo Name="MajorVer">5</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">90</VersionInfo>
+						<VersionInfo Name="Release">2</VersionInfo>
+						<VersionInfo Name="Build">35</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -119,7 +116,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.0.0.90</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">5.0.2.35</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
@@ -127,11 +124,39 @@
 						<VersionInfoKeys Name="ProductName"/>
 						<VersionInfoKeys Name="ProductVersion">0.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="CompileDate">Saturday, March 14, 2009 9:21 AM</VersionInfoKeys>
+						<VersionInfoKeys Name="CompileDate">Thursday, July 26, 2012 6:34 PM</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Source>
 						<Source Name="MainSource">OpenWireLabPkgD12.dpk</Source>
 					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\6.0\Bpl\OpenWireDrawExpertD12.bpl">(untitled)</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\TimingLabBasicDsnD12.bpl">Mitov - TimingLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\ControlLabPkgD12.bpl">Mitov - ControlLab Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\ControlLabDsnD12.bpl">Mitov - ControlLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k120.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp120.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\SignalLabBasicDsnD12.bpl">Mitov - SignalLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\SignalLabAdditionalDsnD12.bpl">Mitov - SignalLab Additional Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\MediaLabBasicDsnD12.bpl">Mitov - MediaLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\SignalLabFilterDesignDsnD12.bpl">Mitov - SignalLab Filter Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\AudioLabBasicDsnD12.bpl">Mitov - AudioLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\VideoLabBasicDsnD12.bpl">Mitov - VideoLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\VideoLabAdditionalDsnD12.bpl">Mitov - VideoLab Additional Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\SignalLabDsnD12.bpl">Mitov - SignalLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\AudioLabEssentialDsnD12.bpl">Mitov - AudioLab Essential Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\AudioLabDsnD12.bpl">Mitov - AudioLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\VideoLabDsnD12.bpl">Mitov - VideoLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\VisionLabDsnD12.bpl">Mitov - Vision Lab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\SignalLabScopeDsnD12.bpl">Mitov - SignalLab Scope Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\PlotLabDsnD12.bpl">Mitov - PlotLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\UserLabBasicDsnD12.bpl">Mitov - UserLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\InstrumentLabDsnD12.bpl">Mitov - InstrumentLab Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\IntelligenceLabBasicDsnD12.bpl">Mitov - IntelligenceLab Basic Design Package</Excluded_Packages>
+						<Excluded_Packages Name="C:\Windows\System32\IntelligenceLabDsnD12.bpl">Mitov - IntelligenceLab Design Package</Excluded_Packages>
+					</Excluded_Packages>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>

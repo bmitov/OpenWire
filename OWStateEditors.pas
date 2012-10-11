@@ -42,6 +42,10 @@ unit OWStateEditors;
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D6}
+{$ENDIF}
+
 interface
 
 uses
@@ -136,7 +140,7 @@ type
     procedure ChangeState( Node : TTreeNode );
 
     function  EntryFromPin( Pin : TOWBasicPin ) : TOWEPinEntry;
-    function  EntryFromDispatcher( Dispatcher : TOWStateDispatcher ) : TOWEPinEntry;
+    function  EntryFromDispatcher( Dispatcher : TOWBasicStateDispatcher ) : TOWEPinEntry;
 
   public
     function ExecuteForState( ADesigner : TOWPropertyDesigner; AStatePin : TOWStatePin ): Integer; virtual;
@@ -329,6 +333,7 @@ begin
   while CurItem <> nil do
     begin
     if( CurItem.StateIndex = siRadioCheck ) then
+      begin
       if( CurItem.Count = 0 ) then
         Counter := 1
 
@@ -341,6 +346,9 @@ begin
           Counter := CurItem.Count;
 
         end;
+
+      Break;
+      end;
 
     CurItem := CurItem.GetNextSibling();
     end;
@@ -484,7 +492,7 @@ var
   Entry         : TOWEPinEntry;
   Node          : TTreeNode;
   SubNode       : TTreeNode;
-  Dispatcher    : TOWStateDispatcher;
+  Dispatcher    : TOWBasicStateDispatcher;
   PinName       : String;
   APin          : TOWBasicPin;
 
@@ -646,7 +654,7 @@ var
   I, J          : Integer;
   Entry         : TOWEPinEntry;
   OtherPin      : TOWPin;
-  Dispatcher    : TOWStateDispatcher;
+  Dispatcher    : TOWBasicStateDispatcher;
 
 begin
   Values := TStringList.Create;
@@ -730,7 +738,7 @@ begin
 
 end;
 
-function TOWStatePinForm.EntryFromDispatcher( Dispatcher : TOWStateDispatcher ) : TOWEPinEntry;
+function TOWStatePinForm.EntryFromDispatcher( Dispatcher : TOWBasicStateDispatcher ) : TOWEPinEntry;
 var
   I : Integer;
   
@@ -1150,7 +1158,6 @@ begin
 
           else if( Entry.Pin <> NIL ) then
             StatePin.Connect( Entry.Pin );
-
 
           Break;
           end;

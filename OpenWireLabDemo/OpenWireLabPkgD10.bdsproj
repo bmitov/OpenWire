@@ -120,9 +120,9 @@
 		</Linker>
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
-			<Directories Name="UnitOutputDir">$(BDS)\OpenWire</Directories>
+			<Directories Name="UnitOutputDir">$(BDS)\OpenWire\OpenWireLabDemo</Directories>
 			<Directories Name="PackageDLLOutputDir">$(windir)\System32</Directories>
-			<Directories Name="PackageDCPOutputDir">$(BDS)\OpenWire</Directories>
+			<Directories Name="PackageDCPOutputDir">$(BDS)\OpenWire\OpenWireLabDemo</Directories>
 			<Directories Name="SearchPath">$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10</Directories>
 			<Directories Name="Packages"></Directories>
 			<Directories Name="Conditionals"></Directories>
@@ -147,10 +147,10 @@
 		<VersionInfo>
 			<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 			<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-			<VersionInfo Name="MajorVer">3</VersionInfo>
+			<VersionInfo Name="MajorVer">5</VersionInfo>
 			<VersionInfo Name="MinorVer">0</VersionInfo>
-			<VersionInfo Name="Release">0</VersionInfo>
-			<VersionInfo Name="Build">0</VersionInfo>
+			<VersionInfo Name="Release">2</VersionInfo>
+			<VersionInfo Name="Build">34</VersionInfo>
 			<VersionInfo Name="Debug">False</VersionInfo>
 			<VersionInfo Name="PreRelease">False</VersionInfo>
 			<VersionInfo Name="Special">False</VersionInfo>
@@ -162,15 +162,16 @@
 		<VersionInfoKeys>
 			<VersionInfoKeys Name="CompanyName"></VersionInfoKeys>
 			<VersionInfoKeys Name="FileDescription"></VersionInfoKeys>
-			<VersionInfoKeys Name="FileVersion">3.0.0.0</VersionInfoKeys>
+			<VersionInfoKeys Name="FileVersion">5.0.2.34</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName"></VersionInfoKeys>
 			<VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
 			<VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys>
 			<VersionInfoKeys Name="ProductName"></VersionInfoKeys>
 			<VersionInfoKeys Name="ProductVersion">0.0.0.0</VersionInfoKeys>
-			<VersionInfoKeys Name="Comments"></VersionInfoKeys>  <VersionInfoKeys Name="CompileDate">Thursday, May 10, 2007 11:32 AM</VersionInfoKeys>
-    </VersionInfoKeys>
+			<VersionInfoKeys Name="Comments"></VersionInfoKeys>
+			<VersionInfoKeys Name="CompileDate">Thursday, July 26, 2012 6:31 PM</VersionInfoKeys>
+		</VersionInfoKeys>
 	</Delphi.Personality>
 	<StarTeamAssociation></StarTeamAssociation>
 	<StarTeamNonRelativeFiles></StarTeamNonRelativeFiles>

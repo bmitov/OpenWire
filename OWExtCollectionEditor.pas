@@ -37,6 +37,10 @@ interface
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER240} // Delphi 17.0
+{$DEFINE D6}
+{$ENDIF}
+
   uses
     SysUtils, Classes,
 {$IFDEF D6}
@@ -107,7 +111,10 @@ uses
   OWDesignSelectionsList, OWDesignTypes
 {$IFDEF VER230} // Delphi 16.0
   , ColnEdit
-  {$ENDIF}
+{$ENDIF}
+{$IFDEF VER240} // Delphi 17.0
+  , ColnEdit
+{$ENDIF}
   ;
 
 {$IFDEF VER130} // Delphi 5.0
