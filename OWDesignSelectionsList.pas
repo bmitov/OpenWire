@@ -32,6 +32,10 @@ unit OWDesignSelectionsList;
 {$DEFINE D9}
 {$ENDIF}
 
+{$IFDEF VER250} // Delphi 18.0
+{$DEFINE D9}
+{$ENDIF}
+
 {$IFDEF VER130}
 {$DEFINE D5}
 {$ENDIF}
@@ -40,7 +44,7 @@ interface
   uses
 {$IFNDEF D5}
 {$IFDEF __VSDESIGN__}
-    VSDesign
+    Mitov.Design
 {$ELSE}
     DesignIntf
 {$ENDIF}

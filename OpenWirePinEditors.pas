@@ -69,6 +69,16 @@ interface
 
 {$IFDEF VER240} // Delphi 17.0
 {$DEFINE D14Up}
+{$DEFINE D17Up}
+{$DEFINE D6}
+{$DEFINE D7}
+{$DEFINE D9}
+{$DEFINE BDS2005_OR_HIGHER}
+{$ENDIF}
+
+{$IFDEF VER250} // Delphi 18.0
+{$DEFINE D17Up}
+{$DEFINE D14Up}
 {$DEFINE D6}
 {$DEFINE D7}
 {$DEFINE D9}
@@ -105,8 +115,8 @@ uses
   {$ENDIF}
 
 {$ENDIF}
-  Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ImgList, ComCtrls, StdCtrls, Buttons, Contnrs, OWPins, ExtCtrls,
+  Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.ImgList, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Buttons, Contnrs, OWPins, Vcl.ExtCtrls,
   OWDesignTypes;
 
 {$IFDEF D6}
@@ -430,7 +440,13 @@ implementation
 
 {$ELSE}
   {$IFDEF D6}
+{$WARN UNIT_DEPRECATED OFF}
     uses OWStateEditors, OWDesignSelectionsList, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
+{$WARN UNIT_DEPRECATED ON}
+    {$IFDEF D17Up}
+    System.UITypes,
+    {$ELSE}
+    {$ENDIF}
     OWAfterPinSelectFormUnit;
     type TADesignerSelectionList = TOWDesignerSelectionList;
   {$ELSE}
@@ -2283,24 +2299,20 @@ end;
 //---------------------------------------------------------------------------
 function  TOWPinListPropertyEditor.GetAttributes(): TPropertyAttributes;
 begin
-  Result := [ paSubProperties, paReadOnly,
-{$IFNDEF D5}
-  paVolatileSubProperties,
-{$ENDIF}
-  paAutoUpdate ];
+  Result := [ paSubProperties, paReadOnly, paVolatileSubProperties ]; //, paAutoUpdate ];
   
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinListPropertyEditor.CheckRefresh();
 var
-  Collection : TOWPinList;
+  ACollection : TOWPinList;
   
 begin
-  Collection := TOWPinList( GetOrdValue() );
-  if( TOWExposedPinList( Collection ).LastIndicatedCount <> Collection.Count ) then
+  ACollection := TOWPinList( GetOrdValue() );
+  if( TOWExposedPinList( ACollection ).LastIndicatedCount <> ACollection.Count ) then
     begin
-    TOWExposedPinList( Collection ).LastIndicatedCount := Collection.Count;
+    TOWExposedPinList( ACollection ).LastIndicatedCount := ACollection.Count;
     OWResetObjectInspector( GetIntDesigner() );
     end;
     
@@ -2308,60 +2320,61 @@ end;
 //---------------------------------------------------------------------------
 function TOWPinListPropertyEditor.GetValue(): String;
 var
-  Collection : TOWPinList;
+  ACollection : TOWPinList;
   
 begin
   OWRequestRefreshEx( GetIntDesigner() );
 
-  Collection := TOWPinList( GetOrdValue() );
-  if( TOWExposedPinList( Collection ).LastIndicatedCount <> Collection.Count ) then
+  ACollection := TOWPinList( GetOrdValue() );
+  if( TOWExposedPinList( ACollection ).LastIndicatedCount <> ACollection.Count ) then
     begin
-    TOWExposedPinList( Collection ).LastIndicatedCount := Collection.Count;
+    TOWExposedPinList( ACollection ).LastIndicatedCount := ACollection.Count;
     OWResetObjectInspector( GetIntDesigner() );
     end;
 
-  if( Collection.Count = 0 ) then
+  if( ACollection.Count = 0 ) then
     begin
     Result := '(Empty)';
     Exit;
     end;
 
-  if( Collection.Count = 1 ) then
+  if( ACollection.Count = 1 ) then
     begin
     Result := '1 Pin';
     Exit;
     end;
 
-  Result := IntToStr( Collection.Count ) + ' Pins';
+  Result := IntToStr( ACollection.Count ) + ' Pins';
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinListPropertyEditor.GetProperties(Proc: TAGetPropProc);
 var
-  Collection    : TOWPinList;
-  I             : Integer;
-  Pin           : TOWBasicPin;
-begin
-  Collection := TOWPinList( GetOrdValue() );
+  ACollection : TOWPinList;
+  I           : Integer;
+  Pin         : TOWBasicPin;
 
-  TOWExposedPinList( Collection ).LastIndicatedCount := Collection.Count;
-  for I := 0 to Collection.Count - 1 do
+begin
+  ACollection := TOWPinList( GetOrdValue() );
+
+  TOWExposedPinList( ACollection ).LastIndicatedCount := ACollection.Count;
+  for I := 0 to ACollection.Count - 1 do
     begin
     try
-      Pin := Collection.Pins[ I ];
+      Pin := ACollection.Pins[ I ];
       if( Pin is TOWSourcePin ) then
-        Proc( TOWSourcePinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSourcePin( Pin ), Collection.Names[ I ], Self ))
+        Proc( TOWSourcePinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSourcePin( Pin ), ACollection.Names[ I ], Self ))
 
       else if( Pin is TOWSinkPin ) then
-        Proc( TOWSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
+        Proc( TOWSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), ACollection.Names[ I ], Self ))
 
       else if( Pin is TOWMultiSinkPin ) then
-        Proc( TOWMultiSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
+        Proc( TOWMultiSinkPinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), ACollection.Names[ I ], Self ))
 
       else if( Pin is TOWStatePin ) then
-        Proc( TOWStatePinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), Collection.Names[ I ], Self ))
+        Proc( TOWStatePinListPropertyEditor.CreateEx( GetIntDesigner(), TOWSinkPin( Pin ), ACollection.Names[ I ], Self ))
 
     finally
-    end;
+      end;
 
     end;
 
@@ -2373,11 +2386,7 @@ end;
 //---------------------------------------------------------------------------
 function  TOWPinListOwnerPropertyEditor.GetAttributes(): TPropertyAttributes;
 begin
-  Result := [ paSubProperties,
-{$IFNDEF D5}
-  paVolatileSubProperties,
-{$ENDIF}
-  paAutoUpdate ];
+  Result := [ paSubProperties, paVolatileSubProperties ]; //, paAutoUpdate ];
   
   OWRequestDesignerRefresh();
 end;
@@ -2395,17 +2404,18 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinListOwnerPropertyEditor.SetValue(const Value: String);
 var
-  Collection    : TOWPinList;
+  ACollection : TOWPinList;
 
 begin
   try
-    Collection := TOWPinList( GetOrdValue() );
-    Collection.Count := StrToInt( Value );
+    ACollection := TOWPinList( GetOrdValue() );
+    ACollection.Count := StrToInt( Value );
     Modified();
     OWResetObjectInspector( GetIntDesigner() );
       
   except;
-  end;
+    end;
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2503,6 +2513,7 @@ var EditorNotifier : TIOWPinsEditorNotifier;
 procedure TOWPinEditorForm.Image1Click(Sender: TObject);
 var
   AboutForm : TOWAboutForm;
+
 begin
   AboutPanel.BevelInner := bvLowered;
   AboutForm := TOWAboutForm.Create( Self );

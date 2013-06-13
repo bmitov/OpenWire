@@ -1,58 +1,68 @@
 unit OWDesignTypes;
 
 {$IFDEF FPC}
-{$MODE DELPHI}{$H+}
+  {$MODE DELPHI}{$H+}
 {$ENDIF}
 
 {$IFDEF VER140} // Delphi 6.0
-{$DEFINE D6}
+  {$DEFINE D6}
 {$ENDIF}
 
 {$IFDEF VER150} // Delphi 7.0
-{$DEFINE D6}
-{$DEFINE D7}
+  {$DEFINE D6}
+  {$DEFINE D7}
 {$ENDIF}
 
 {$IFDEF VER170} // Delphi 9.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER180} // Delphi 10.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER190} // Delphi 11.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER200} // Delphi 12.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER210} // Delphi 14.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER220} // Delphi 15.0
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER230} // Delphi 16.0
-{$DEFINE D16Up}
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D16Up}
+  {$DEFINE D6}
+  {$DEFINE D9}
 {$ENDIF}
 
 {$IFDEF VER240} // Delphi 17.0
-{$DEFINE D16Up}
-{$DEFINE D6}
-{$DEFINE D9}
+  {$DEFINE D16Up}
+  {$DEFINE D6}
+  {$DEFINE D9}
+{$ENDIF}
+
+{$IFDEF VER250} // Delphi 18.0
+  {$DEFINE D16Up}
+  {$DEFINE D6}
+  {$DEFINE D9}
+{$ENDIF}
+
+{$IFNDEF D16Up}
+  {$DEFINE __DELPHI_DESIGN__}
 {$ENDIF}
 
 interface
@@ -61,22 +71,26 @@ uses
 {$IFDEF FPC}
   LCLIntf, LMessages, LResources, PropEdits, ComponentEditors,
 {$ELSE}
-  Windows, Graphics,
+  Windows, Vcl.Graphics,
 
   {$IFDEF __VSDESIGN__}
-    VSDesign,
+    Mitov.Design,
   {$ELSE}
-    {$IFDEF D6}
-      DesignEditors,
-      DesignIntf,
-      TypInfo,
+    {$IFNDEF __DELPHI_DESIGN__}
+      Mitov.Design,
     {$ELSE}
-      dsgnintf,
+      {$IFDEF D6}
+        DesignEditors,
+        DesignIntf,
+        TypInfo,
+      {$ELSE}
+        dsgnintf,
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 
 {$ENDIF}
-    Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes;
+    Vcl.Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes;
 
 {$IFDEF VER130}
   type IProperty = TPropertyEditor;
@@ -127,6 +141,7 @@ type
   end;
 //---------------------------------------------------------------------------
 {$IFNDEF __VSDESIGN__}
+{$IFDEF __DELPHI_DESIGN__}
 function  OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
 procedure OWLinkAwaitsLinkingAllForms();
 procedure OWRequestDesignerRefresh();
@@ -134,8 +149,11 @@ procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : T
 function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
 procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
-{$ENDIF}
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
+{$ENDIF}
+{$ELSE}
+procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
+{$ENDIF}
 //---------------------------------------------------------------------------
 procedure OWRegisterStreamColorThickness( AStreamTypeID : TGUID; AColor : TColor; AThickness : Single );
 function  OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
@@ -161,12 +179,18 @@ implementation
 {$ELSE}
   {$IFDEF D6}
     uses
-    SysUtils, OWDesignSelectionsList,
+    SysUtils,
     {$IFNDEF __VSDESIGN__}
-      ToolsAPI,
+      {$IFDEF __DELPHI_DESIGN__}
+        ToolsAPI, OWDesignSelectionsList,
+      {$ENDIF}
     {$ENDIF}
     Math;
-    type TADesignerSelectionList = TOWDesignerSelectionList;
+    {$IFNDEF __VSDESIGN__}
+      {$IFDEF __DELPHI_DESIGN__}
+        type TADesignerSelectionList = TOWDesignerSelectionList;
+      {$ENDIF}
+    {$ENDIF}
   {$ELSE}
     uses SysUtils, ToolsAPI, ToolIntf, ExptIntf, ActiveX, Math;
     type TADesignerSelectionList = TDesignerSelectionList;
@@ -182,8 +206,10 @@ const
 {$ENDIF}
 //---------------------------------------------------------------------------
 {$IFNDEF __VSDESIGN__}
+{$IFDEF __DELPHI_DESIGN__}
 var
   InOppening  : Boolean;
+{$ENDIF}
 {$ENDIF}
 //---------------------------------------------------------------------------
 function TOWEPinsList.GetItem( Index : Integer ) : TOWEPinEntry;
@@ -205,6 +231,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 {$IFNDEF __VSDESIGN__}
+{$IFDEF __DELPHI_DESIGN__}
 function OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
 var
   Component : TComponent;
@@ -403,6 +430,7 @@ begin
 
 {$ENDIF}
 end;
+{$ENDIF}
 {$ELSE}
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 begin
@@ -488,10 +516,11 @@ begin
   OWRegisterStreamColorThickness( IOWRealComplexStream, clAqua, 1 );
   OWRegisterStreamColorThickness( IOWBoolStream,        clBlue, 1 );
   OWRegisterStreamColorThickness( IOWCharStream,        clTeal, 1 );
-  OWRegisterStreamColorThickness( IOWStringStream,      clTeal, 2 );
+  OWRegisterStreamColorThickness( IOWStringStream,      clTeal, 1.5 );
   OWRegisterStreamColorThickness( IOWIntRangedStream,   clFuchsia, 1 );
   OWRegisterStreamColorThickness( IOWInt64RangedStream, clFuchsia, 1 );
   OWRegisterStreamColorThickness( IOWRealRangedStream,  clRed, 1 );
+  OWRegisterStreamColorThickness( IOWDateTimeStream,    clFuchsia, 1 );
 {$IFDEF D16Up}
   OWRegisterStreamColorThickness( IOWStreamPersistStream, clLime, 2 );
 {$ENDIF}
@@ -499,7 +528,9 @@ end;
 
 initialization
 {$IFNDEF __VSDESIGN__}
+{$IFDEF __DELPHI_DESIGN__}
   InOppening := False;
+{$ENDIF}
 {$ENDIF}
   GOWInRefresh := False;
 
@@ -515,6 +546,7 @@ finalization
   OWFreeStreamInfo( IOWIntRangedStream );
   OWFreeStreamInfo( IOWInt64RangedStream );
   OWFreeStreamInfo( IOWRealRangedStream );
+  OWFreeStreamInfo( IOWDateTimeStream );
 {$IFDEF D16Up}
   OWFreeStreamInfo( IOWStreamPersistStream );
 {$ENDIF}

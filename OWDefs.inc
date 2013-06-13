@@ -46,3 +46,8 @@
 {$DEFINE D16Up}
 {$ENDIF}
 
+{$IFDEF VER250} // Delphi 18 (D2014)
+{$DEFINE D17}
+{$DEFINE D16Up}
+{$ENDIF}
+

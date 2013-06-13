@@ -315,6 +315,9 @@ object OWStatePinForm: TOWStatePinForm
       BevelOuter = bvNone
       Caption = 'Panel4'
       TabOrder = 0
+      DesignSize = (
+        461
+        29)
       object Label1: TLabel
         Left = 6
         Top = 8

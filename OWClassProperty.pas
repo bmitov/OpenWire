@@ -90,7 +90,7 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
   {$ELSE}
     function  GetPropType(): PTypeInfo; virtual;
   {$ENDIF}
-    function  GetKind(): TTypeKind;
+    function  GetKind(): TTypeKind; virtual;
     function  GetIsDefault(): Boolean; virtual;
     procedure Revert(); virtual;
     procedure Modified(); virtual;
@@ -180,18 +180,18 @@ type
 type
   TOWComponentEditor = class( TComponentEditor )
   protected
-    LastIProp      : IProperty;
-    TargetProperty : String;
-    FMenuItems     : TOWComponentEditorItems;
+    LastIProp       : IProperty;
+    FTargetProperty : String;
+    FMenuItems      : TOWComponentEditorItems;
 
   protected
 {$IFDEF FPC}
-    procedure AGetPropProc( Prop: TPropertyEditor );
+    procedure GetPropProc( Prop: TPropertyEditor );
 {$ELSE}
   {$IFDEF VER130}
-    procedure AGetPropProc( Prop: IProperty);
+    procedure GetPropProc( Prop: IProperty);
   {$ELSE}
-    procedure AGetPropProc(const Prop: IProperty);
+    procedure GetPropProc(const Prop: IProperty);
   {$ENDIF}
 {$ENDIF}
     function  GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
@@ -356,7 +356,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function  TOWComponentEditor.GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
+function TOWComponentEditor.GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
 var
 {$IFDEF FPC}
   SelectionList : TPersistentSelectionList;
@@ -385,17 +385,17 @@ begin
   SelectionListI := SelectionList as IDesignerSelections;
 {$ENDIF}
   SelectionList.Add( Comp );
-  TargetProperty := PropertyName;
+  FTargetProperty := PropertyName;
 
 {$IFDEF FPC}
-  GetPersistentProperties( SelectionList, AFilter, APropertyHook, AGetPropProc, NIL );
+  GetPersistentProperties( SelectionList, AFilter, APropertyHook, GetPropProc, NIL );
   SelectionList.Free();
   APropertyHook.Free();
 {$ELSE}
   {$IFDEF VER130}
-  GetComponentProperties( SelectionList, AFilter, Designer, AGetPropProc );
+  GetComponentProperties( SelectionList, AFilter, Designer, GetPropProc );
   {$ELSE}
-  GetComponentProperties( SelectionListI, AFilter, Designer, AGetPropProc );
+  GetComponentProperties( SelectionListI, AFilter, Designer, GetPropProc );
   {$ENDIF}
 {$ENDIF}
   Result := LastIProp;
@@ -444,17 +444,18 @@ begin
 end;
 //---------------------------------------------------------------------------
 {$IFDEF FPC}
-procedure TOWComponentEditor.AGetPropProc(Prop: TPropertyEditor);
+procedure TOWComponentEditor.GetPropProc(Prop: TPropertyEditor);
 {$ELSE}
   {$IFDEF VER130}
-procedure TOWComponentEditor.AGetPropProc(Prop: IProperty);
+procedure TOWComponentEditor.GetPropProc(Prop: IProperty);
   {$ELSE}
-procedure TOWComponentEditor.AGetPropProc(const Prop: IProperty);
+procedure TOWComponentEditor.GetPropProc(const Prop: IProperty);
   {$ENDIF}
 {$ENDIF}
 begin
-  if( Prop.GetName() = TargetProperty ) then
+  if( Prop.GetName() = FTargetProperty ) then
     LastIProp := Prop;
+
 end;
 //---------------------------------------------------------------------------
 procedure TOWComponentEditor.AddMenuItem( AMenuText : String; ACallback : TOWComponentEditorEvent; AOnEnabledCallback : TOWComponentEditorEvabledEvent );

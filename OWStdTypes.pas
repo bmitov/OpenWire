@@ -6,9 +6,13 @@ unit OWStdTypes;
 
 {$I OWDefs.inc}
 
+{$IFDEF D16Up}
+{$POINTERMATH ON}
+{$ENDIF}
+
 interface
 uses
-  OWPins, classes;
+  Classes, OWPins, System.Generics.Defaults;
 
 type
   IOWBasicStream = interface(IOWStream)
@@ -92,68 +96,53 @@ type
     Imaginary   : Real;
   end;
 
-
 type
   POWRealComplex = ^TOWRealComplex;
   
+type TOWClockEvent = reference to procedure( Sender : TOWPin ) ;
 
-type TOWClockEvent = procedure( Sender : TOWPin ) of object;
+type TOWStringListGetDataEvent = reference to procedure( Sender : TOWPin; AValue : TStrings );
+type TOWStringListChangeEvent = reference to procedure( Sender : TOWPin; AValue : TStrings; AOnConnect : Boolean );
+type TOWStringListPinNotificationEvent = reference to function( Handler : IOWStringListStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-type TOWStringChangeEvent = procedure( Sender : TOWPin; AValue : String; AOnConnect : Boolean ) of object;
-type TOWStringPinNotificationEvent = function( Handler : IOWStringStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWFloatChangeEvent = reference to procedure( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
+type TOWFloatPinNotificationEvent = reference to function( Handler : IOWFloatStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-type TOWStringListGetDataEvent = procedure( Sender : TOWPin; AValue : TStrings ) of object;
-type TOWStringListChangeEvent = procedure( Sender : TOWPin; AValue : TStrings; AOnConnect : Boolean ) of object;
-type TOWStringListPinNotificationEvent = function( Handler : IOWStringListStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWIntegerPinNotificationEvent = reference to function( Handler : IOWIntegerStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-type TOWCharChangeEvent = procedure( Sender : TOWPin; AValue : Char; AOnConnect : Boolean ) of object;
-type TOWCharPinNotificationEvent = function( Handler : IOWCharStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWIntValueRangeChangeEvent = reference to procedure( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
+type TOWInt64ValueRangeChangeEvent = reference to procedure( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
+type TOWRealValueRangeChangeEvent = reference to procedure( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean );
 
-type TOWBoolChangeEvent = procedure( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean ) of object;
-type TOWBoolPinNotificationEvent = function( Handler : IOWBoolStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWIntRangeChangeEvent = reference to procedure( Sender : TOWPin; AMin, AMax : Integer; AOnConnect : Boolean );
+type TOWInt64RangeChangeEvent = reference to procedure( Sender : TOWPin; AMin, AMax : Int64; AOnConnect : Boolean );
+type TOWRealRangeChangeEvent = reference to procedure( Sender : TOWPin; AMin, AMax : Real; AOnConnect : Boolean );
 
-type TOWFloatChangeEvent = procedure( Sender : TOWPin; AValue : Single; AOnConnect : Boolean ) of object;
-type TOWFloatPinNotificationEvent = function( Handler : IOWFloatStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWInt64DateTimeValueRangeChangeEvent = reference to procedure( Sender : TOWPin; AValue, AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; ARangesFilled : Boolean; AOnConnect : Boolean );
+type TOWInt64DateTimeRangeChangeEvent = reference to procedure( Sender : TOWPin; AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; AOnConnect : Boolean );
 
-type TOWIntegerChangeEvent = procedure( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean ) of object;
-type TOWIntegerPinNotificationEvent = function( Handler : IOWIntegerStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWPinNotificationEvent = reference to function( Handler : IOWDataStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+type TOWPinDispatchEvent = reference to function( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-type TOWInt64ChangeEvent = procedure( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean ) of object;
-type TOWInt64PinNotificationEvent = function(Handler : IOWInt64Stream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
+type TOWBasicPinNotificationEvent = reference to function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 
-type TOWRealChangeEvent = procedure( Sender : TOWPin; AValue : Real; AOnConnect : Boolean ) of object;
-type TOWRealPinNotificationEvent = function( Handler : IOWRealStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
-
-type TOWRealComplexChangeEvent = procedure( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean ) of object;
-type TOWRealComplexPinNotificationEvent = function( Handler : IOWRealComplexStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
-
-type TOWIntValueRangeChangeEvent = procedure( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean ) of object;
-type TOWInt64ValueRangeChangeEvent = procedure( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean ) of object;
-type TOWRealValueRangeChangeEvent = procedure( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean ) of object;
-
-type TOWIntRangeChangeEvent = procedure( Sender : TOWPin; AMin, AMax : Integer; AOnConnect : Boolean ) of object;
-type TOWInt64RangeChangeEvent = procedure( Sender : TOWPin; AMin, AMax : Int64; AOnConnect : Boolean ) of object;
-type TOWRealRangeChangeEvent = procedure( Sender : TOWPin; AMin, AMax : Real; AOnConnect : Boolean ) of object;
-
-type TOWDateTimeChangeEvent = procedure( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean ) of object;
-type TOWDateTimePinNotificationEvent = function( Handler : IOWDateTimeStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
-
-type TOWInt64DateTimeValueRangeChangeEvent = procedure( Sender : TOWPin; AValue, AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; ARangesFilled : Boolean; AOnConnect : Boolean ) of object;
-type TOWInt64DateTimeRangeChangeEvent = procedure( Sender : TOWPin; AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; AOnConnect : Boolean ) of object;
-
-type TOWPinNotificationEvent = function( Handler : IOWDataStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
-type TOWPinDispatchEvent = function( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult of object;
-
-type TOWClockPinNotificationEvent = function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult of object;
+type TOWDataChangeEvent<T_Data> = reference to procedure( Sender : TOWPin; AValue : T_Data; AOnConnect : Boolean );
+type TOWRealChangeEvent = TOWDataChangeEvent<Real>;
+//---------------------------------------------------------------------------
 
 type
   TOWPumpType = ( ptNone, ptSlave, ptMaster, ptHardware );
 //---------------------------------------------------------------------------
   TOWClockOperation = class( TOWNotifyOperation )
+  public
+    Samples : Integer;
+
+  public
+    constructor Create( ASamples : Integer );
+
   end;
 //---------------------------------------------------------------------------
-  TOWClockQueryOperation = class( TOWNotifyOperation )
-  end;
+  TOWClockQueryOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
   TOWClockNeededOperation = class( TOWNotifyOperation )
   public
@@ -164,15 +153,13 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWClearContentOperation = class( TOWNotifyOperation )
-  end;
+  TOWClearContentOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWSuppliedOperation = class( TOWClockOperation )
-  end;
+  TOWSuppliedOperation = class( TOWClockOperation );
 //---------------------------------------------------------------------------
   TOWMasterPumpOperation = class( TOWNotifyOperation )
   public
-    Pump      : TObject;
+    Pump  : TObject;
 
   public
     constructor Create( APump : TObject );
@@ -183,96 +170,78 @@ type
   public
     Pump         : TObject;
     PumpType     : TOWPumpType;
-    PumpPriority : Integer;     // Priority level for this group.
+    PumpPriority : Cardinal;     // Priority level for this group.
 
-    DesiredRate  : Single;      // If different than 0 there has been a rate request.
+    DesiredRate  : Real;      // If different than 0 there has been a rate request.
 
   public
     constructor Create();
-    constructor CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Integer; ADesiredRate : Single );
+    constructor CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; ADesiredRate : Real );
 
   end;
 //---------------------------------------------------------------------------
   TOWStartPumpOperation = class( TOWNotifyOperation )
   public
-    Pump         : TObject;
+    Pump  : TObject;
 
   public
     constructor Create( APump : TObject );
 
   end;
 //---------------------------------------------------------------------------
-  TOWStartOperation = class( TOWNotifyOperation )
-  end;
+  TOWStartOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
   TOWStartRateOperation = class( TOWStartOperation )
   public
-    Rate : Single;
+    Rate : Real;
 
   public
-    constructor Create( ARate : Single );
+    constructor Create( ARate : Real );
 
   end;
 //---------------------------------------------------------------------------
-  TOWStopOperation = class( TOWNotifyOperation )
-  end;
+  TOWStopOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWEndStopOperation = class( TOWStopOperation )
-  end;
+  TOWEndStopOperation = class( TOWStopOperation );
 //---------------------------------------------------------------------------
-  TOWFileEndNoStopOperation = class( TOWNotifyOperation )
-  end;
+  TOWFileEndNoStopOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWSuppliedMulticastOperation = class( TOWSuppliedOperation )
-  end;
+  TOWSuppliedMulticastOperation = class( TOWSuppliedOperation );
 //---------------------------------------------------------------------------
-  TOWQueryStreamOperation = class( TOWNotifyOperation )
-  end;
+  TOWQueryStreamOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWIgnoreStreamOperation = class( TOWNotifyOperation )
-  end;
+  TOWIgnoreStreamOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWActivateStreamOperation = class( TOWNotifyOperation )
-  end;
+  TOWActivateStreamOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWFlushStreamOperation = class( TOWNotifyOperation )
-  end;
+  TOWFlushStreamOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
-  TOWSuppliedSingleOperation = class( TOWSuppliedOperation )
+  TOWTypedSuppliedOperation<T> = class( TOWSuppliedOperation )
   public
-    Value : Single;
+    Value : T;
 
   public
-    constructor Create( AValue : Single );
+    constructor Create( AValue : T );
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedBoolOperation = class( TOWSuppliedOperation )
+  TOWTypedSuppliedRangeOperation<T> = class( TOWSuppliedOperation )
   public
-    Value : Boolean;
+    Min : T;
+    Max : T;
 
   public
-    constructor Create( AValue : Boolean );
-
-  end;
-//---------------------------------------------------------------------------
-  TOWSuppliedCharOperation = class( TOWSuppliedOperation )
-  public
-    Value : Char;
-
-  public
-    constructor Create( AValue : Char );
+    constructor Create( AMin : T; AMax : T );
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedStringOperation = class( TOWSuppliedOperation )
-  public
-    Value : String;
-
-  public
-    constructor Create( AValue : String );
-
-  end;
+  TOWSuppliedSingleOperation = class( TOWTypedSuppliedOperation<Single> );
+//---------------------------------------------------------------------------
+  TOWSuppliedBoolOperation = class( TOWTypedSuppliedOperation<Boolean> );
+//---------------------------------------------------------------------------
+  TOWSuppliedCharOperation = class( TOWTypedSuppliedOperation<Char> );
+//---------------------------------------------------------------------------
+  TOWSuppliedStringOperation = class( TOWTypedSuppliedOperation<String> );
 //---------------------------------------------------------------------------
   TOWSuppliedStringListOperation = class( TOWSuppliedOperation )
   public
@@ -283,43 +252,21 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedRealOperation = class( TOWSuppliedOperation )
-  public
-    Value : Real;
-
-  public
-    constructor Create( AValue : Real );
-
-  end;
+  TOWSuppliedRealOperation = class( TOWTypedSuppliedOperation<Real> );
 //---------------------------------------------------------------------------
   TOWSuppliedRealValueRangeOperation = class( TOWSuppliedRealOperation )
   public
-    Min   : Real;
-    Max   : Real;
+    Min : Real;
+    Max : Real;
 
   public
     constructor Create( AValue : Real; AMin : Real; AMax : Real );
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedRealRangeOperation = class( TOWSuppliedOperation )
-  public
-    Min   : Real;
-    Max   : Real;
-
-  public
-    constructor Create( AMin : Real; AMax : Real );
-
-  end;
+  TOWSuppliedRealRangeOperation = class( TOWTypedSuppliedRangeOperation<Real> );
 //---------------------------------------------------------------------------
-  TOWSuppliedIntegerOperation = class( TOWSuppliedOperation )
-  public
-    Value : Integer;
-
-  public
-    constructor Create( AValue : Integer );
-
-  end;
+  TOWSuppliedIntegerOperation = class( TOWTypedSuppliedOperation<Integer> );
 //---------------------------------------------------------------------------
   TOWSuppliedIntValueRangeOperation = class( TOWSuppliedIntegerOperation )
   public
@@ -331,24 +278,9 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedIntRangeOperation = class( TOWSuppliedOperation )
-  public
-    Min : Integer;
-    Max : Integer;
-
-  public
-    constructor Create( AMinValue, AMaxValue : Integer );
-
-  end;
+  TOWSuppliedIntRangeOperation = class( TOWTypedSuppliedRangeOperation<Integer> );
 //---------------------------------------------------------------------------
-  TOWSuppliedInt64Operation = class( TOWSuppliedOperation )
-  public
-    Value : Int64;
-
-  public
-    constructor Create( AValue : Int64 );
-
-  end;
+  TOWSuppliedInt64Operation = class( TOWTypedSuppliedOperation<Int64> );
 //---------------------------------------------------------------------------
   TOWSuppliedInt64ValueRangeOperation = class( TOWSuppliedInt64Operation )
   public
@@ -360,33 +292,11 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedInt64RangeOperation = class( TOWSuppliedOperation )
-  public
-    Min : Int64;
-    Max : Int64;
-
-  public
-    constructor Create( AMinValue, AMaxValue : Int64 );
-
-  end;
+  TOWSuppliedInt64RangeOperation = class( TOWTypedSuppliedRangeOperation<Int64> );
 //---------------------------------------------------------------------------
-  TOWSuppliedRealComplexOperation = class( TOWSuppliedOperation )
-  public
-    Value : TOWRealComplex;
-
-  public
-    constructor Create( AValue : TOWRealComplex );
-
-  end;
+  TOWSuppliedRealComplexOperation = class( TOWTypedSuppliedOperation<TOWRealComplex> );
 //---------------------------------------------------------------------------
-  TOWSuppliedDateTimeOperation = class( TOWSuppliedOperation )
-  public
-    Value : TDateTime;
-
-  public
-    constructor Create( AValue : TDateTime );
-
-  end;
+  TOWSuppliedDateTimeOperation = class( TOWTypedSuppliedOperation<TDateTime> );
 //---------------------------------------------------------------------------
   TOWSuppliedDateTimeValueRangeOperation = class( TOWSuppliedDateTimeOperation )
   public
@@ -398,15 +308,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWSuppliedDateTimeRangeOperation = class( TOWSuppliedOperation )
-  public
-    Min : TDateTime;
-    Max : TDateTime;
-
-  public
-    constructor Create( AMinValue, AMaxValue : TDateTime );
-
-  end;
+  TOWSuppliedDateTimeRangeOperation = class( TOWTypedSuppliedRangeOperation<TDateTime> );
 //---------------------------------------------------------------------------
 {$IFDEF D16Up}
   TOWSuppliedStreamPersistOperation = class( TOWSuppliedOperation )
@@ -421,56 +323,103 @@ type
   end;
 {$ENDIF}
 //---------------------------------------------------------------------------
-  TOWClockSourcePin = class( TOWSourcePin, IOWClockStream )
+  TOWDispatchSourcePin = class( TOWSourcePin )
   protected
-    FPinNotificationEvent : TOWClockPinNotificationEvent;
+    FPinNotificationEvent : TOWBasicPinNotificationEvent;
 
   protected
-    function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    procedure Clock();
-
-  public
-    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
-
-end;
-//---------------------------------------------------------------------------
-  TOWClockSinkPin = class( TOWSinkPin, IOWClockStream )
-  protected
-    FOnPinNotificationEvent : TOWClockPinNotificationEvent;
-    FOnClock                : TOWClockEvent;
-
-  protected
-    function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AMaxConnections : Integer = -1; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
-  TOWClockMultiSinkPin = class( TOWMultiSinkPin, IOWClockStream )
+  TOWDispatchSinkPin = class( TOWSinkPin )
   protected
-    FOnPinNotificationEvent : TOWClockPinNotificationEvent;
-    FOnClock                : TOWClockEvent;
+    FPinNotificationEvent : TOWBasicPinNotificationEvent;
+
+  protected
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+
+  public
+    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+
+  end;
+//---------------------------------------------------------------------------
+  TOWDispatchMultiSinkPin = class( TOWMultiSinkPin )
+  protected
+    FPinNotificationEvent : TOWBasicPinNotificationEvent;
+
+  protected
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+
+  public
+    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+
+  end;
+//---------------------------------------------------------------------------
+  TOWDispatchStatePin = class( TOWStatePin )
+  protected
+    FPinNotificationEvent : TOWBasicPinNotificationEvent;
+
+  protected
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+
+  public
+    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWClockStream )]
+  TOWClockSourcePin = class( TOWDispatchSourcePin, IOWClockStream )
+  protected
+    function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+
+  public
+    procedure Clock( ASamples : Integer );
+
+  public
+    constructor Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+
+end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWClockStream )]
+  TOWClockSinkPin = class( TOWDispatchSinkPin, IOWClockStream )
+  protected
+    FOnClock  : TOWClockEvent;
 
   protected
     function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
-    constructor Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWClockStream )]
+  TOWClockMultiSinkPin = class( TOWDispatchMultiSinkPin, IOWClockStream )
+  protected
+    FOnClock  : TOWClockEvent;
+
+  protected
+    function ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+
+  protected
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
+
+  public
+    constructor Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -479,11 +428,15 @@ end;
     FOnDisconnect : TOWPinEvent;
 
   protected
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
+    function IntNotificationHandler( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+
+  protected
     procedure BeforeDisconnectFrom( APin : TOWBasicPin ); override;
 
   public
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -491,6 +444,10 @@ end;
   protected
     FOnDisconnect       : TOWPinEvent;
     FOnPinDispatchEvent : TOWPinDispatchEvent;
+
+  protected
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
+    function IntNotificationHandler( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   protected
     function TryCustomDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean;
@@ -530,376 +487,239 @@ end;
 
   end;
 //---------------------------------------------------------------------------
-  TOWFloatSourcePin = class( TOWStdSourcePin )
+  TOWTypedPinNotificationEvent<T_Interface : IInterface; T_Data> = reference to function( Handler : T_Interface; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+//---------------------------------------------------------------------------
+  TOWTypedSourcePin<T_Interface : IOWBasicStream; T_Data> = class( TOWStdSourcePin )
   protected
-    FPinNotificationEvent : TOWFloatPinNotificationEvent;
-    
-  protected
-    FValue  : Single;
+    FPinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>;
 
   protected
-    procedure SetValue( AValue : Single );
-    
-  public
-    procedure Send( AValue : Single );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWFloatPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
+    FValue    : T_Data;
+    FComparer : IComparer<T_Data>;
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
+
+  protected
+    function CreateNotifyOperation( AValue : T_Data ) : IOWNotifyOperation; virtual; abstract;
+
+  protected
+    procedure SetValue( AValue : T_Data );
+
   public
-    property Value : Single read FValue write SetValue;
+    procedure Send( AValue : T_Data );
+
+  public
+    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>; AOnDisconnect : TOWPinEvent = NIL );
+    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>; AOnDisconnect : TOWPinEvent = NIL );
+    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+
+  public
+    property Value : T_Data read FValue write SetValue;
 
   end;
 //---------------------------------------------------------------------------
-  TOWFloatSinkPin = class( TOWStdSinkPin, IOWFloatStream )
+  TOWTypedSinkPin<T_SuppliedOperation : TOWNotifyOperation; T_Data> = class( TOWStdSinkPin )
   protected
-    FOnDataChange : TOWFloatChangeEvent;
-    FValue        : Single;
+    FOnDataChange : TOWDataChangeEvent<T_Data>;
+    FValue        : T_Data;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function ExtractData( AOperation : T_SuppliedOperation ) : T_Data; virtual;
 
   public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor Create( AOwner : TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 
   public
-    property Value   : Single read FValue;
+    property Value  : T_Data read FValue;
 
   end;
 //---------------------------------------------------------------------------
-  TOWFloatMultiSinkPin = class( TOWStdMultiSinkPin, IOWFloatStream )
+  TOWTypedMultiSinkPin<T_SuppliedOperation : TOWNotifyOperation; T_Data> = class( TOWStdMultiSinkPin )
   protected
-    FOnDataChange : TOWFloatChangeEvent;
-    FValue        : Single;
+    FOnDataChange : TOWDataChangeEvent<T_Data>;
+    FValue        : T_Data;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function ExtractData( AOperation : T_SuppliedOperation ) : T_Data; virtual;
 
   public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor Create( AOwner : TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner : TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 
   public
-    property Value   : Single read FValue;
+    property Value  : T_Data read FValue;
 
   end;
 //---------------------------------------------------------------------------
-  TOWFloatStatePin = class( TOWStdStatePin, IOWFloatStream )
+  TOWTypedStatePin<T_Interface : IInterface; T_SuppliedOperation : TOWNotifyOperation; T_Data> = class( TOWStdStatePin )
   protected
-    FPinNotificationEvent : TOWFloatPinNotificationEvent;
-    FOnDataChange         : TOWFloatChangeEvent;
-    FValue                : Single;
+    FPinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>;
+    FOnDataChange         : TOWDataChangeEvent<T_Data>;
+    FValue                : T_Data;
+    FComparer             : IComparer<T_Data>;
 
   protected
-    procedure SetValue( AValue : Single );
+    procedure SetValue( AValue : T_Data );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
+    function CreateNotifyOperation( AValue : T_Data ) : IOWNotifyOperation; virtual; abstract;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function ExtractData( AOperation : T_SuppliedOperation ) : T_Data; virtual;
 
   public
-    procedure Send( AValue : Single );
+    procedure Send( AValue : T_Data );
 
   public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 
   public
-    property Value : Single read FValue write SetValue;
+    property Value : T_Data read FValue write SetValue;
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  TOWFloatSourcePin = class( TOWTypedSourcePin<IOWFloatStream, Single> )
+  protected
+    function CreateNotifyOperation( AValue : Single ) : IOWNotifyOperation; override;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWFloatSinkPin = class( TOWTypedSinkPin<TOWSuppliedSingleOperation, Single>, IOWFloatStream )
+  protected
+    function ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single; override;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWFloatMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedSingleOperation, Single>, IOWFloatStream )
+  protected
+    function ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single; override;
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  TOWFloatStatePin = class( TOWTypedStatePin<IOWFloatStream, TOWSuppliedSingleOperation, Single>, IOWFloatStream )
+  protected
+    function CreateNotifyOperation( AValue : Single ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single; override;
 
   end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-  TOWBoolSourcePin = class( TOWStdSourcePin )
+  [OWDataType( IOWBoolStream )]
+  TOWBoolSourcePin = class( TOWTypedSourcePin<IOWBoolStream, Boolean> )
   protected
-    FPinNotificationEvent : TOWBoolPinNotificationEvent;
-    
-  protected
-    FValue  : Boolean;
-
-  protected
-    procedure SetValue( AValue : Boolean );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    procedure Send( AValue : Boolean );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWBoolPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  public
-    property Value   : Boolean read FValue write SetValue;
+    function CreateNotifyOperation( AValue : Boolean ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWBoolSinkPin = class( TOWStdSinkPin, IOWBoolStream )
+  TOWBoolSinkPin = class( TOWTypedSinkPin<TOWSuppliedBoolOperation, Boolean>, IOWBoolStream )
   protected
-    FOnDataChange : TOWBoolChangeEvent;
-    FValue        : Boolean;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value  : Boolean read FValue;
+    function ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWBoolMultiSinkPin = class( TOWStdMultiSinkPin, IOWBoolStream )
+  TOWBoolMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedBoolOperation, Boolean>, IOWBoolStream )
   protected
-    FOnDataChange : TOWBoolChangeEvent;
-    FValue        : Boolean;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value  : Boolean read FValue;
+    function ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWBoolStatePin = class( TOWStdStatePin, IOWBoolStream )
+  [OWDataType( IOWBoolStream )]
+  TOWBoolStatePin = class( TOWTypedStatePin<IOWBoolStream, TOWSuppliedBoolOperation, Boolean>, IOWBoolStream )
   protected
-    FPinNotificationEvent : TOWBoolPinNotificationEvent;
-    FOnDataChange         : TOWBoolChangeEvent;
-    FValue                : Boolean;
-
-  protected
-    procedure SetValue( AValue : Boolean );
-
-  protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  protected
-    function  DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    procedure Send( AValue : Boolean );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value  : Boolean read FValue write SetValue;
+    function CreateNotifyOperation( AValue : Boolean ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWCharSourcePin = class( TOWStdSourcePin )
-  protected
-    FPinNotificationEvent : TOWCharPinNotificationEvent;
-
-  protected
-    FValue  : Char;
-
+  TOWBoolClockSinkPin = class( TOWBoolSinkPin, IOWClockStream )
   public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWCharPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  protected
-    procedure SetValue( AValue : Char );
-
-  public
-    procedure Send( AValue : Char ); overload;
-    procedure Send( AText : String ); overload;
-
-  protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    property Value : Char read FValue write SetValue;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   end;
 //---------------------------------------------------------------------------
-  TOWCharSinkPin = class( TOWStdSinkPin, IOWCharStream )
+  [OWDataType( IOWCharStream )]
+  TOWCharSourcePin = class( TOWTypedSourcePin<IOWCharStream, Char> )
   protected
-    FOnDataChange : TOWCharChangeEvent;
-    FValue        : Char;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function CreateNotifyOperation( AValue : Char ) : IOWNotifyOperation; override;
 
   public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWCharChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWCharChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value  : Char read FValue;
+    procedure SendText( AText : String );
 
   end;
 //---------------------------------------------------------------------------
-  TOWCharStatePin = class( TOWStdStatePin, IOWCharStream )
+  TOWCharSinkPin = class( TOWTypedSinkPin<TOWSuppliedCharOperation, Char>, IOWCharStream )
   protected
-    FPinNotificationEvent : TOWCharPinNotificationEvent;
-    FOnDataChange         : TOWCharChangeEvent;
-    FValue                : Char;
-
-  protected
-    procedure SetValue( AValue : Char );
-
-  protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
-  protected
-    function  DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    procedure Send( AValue : Char );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWCharChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWCharChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Char read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedCharOperation ) : Char; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringSourcePin = class( TOWStdSourcePin )
+  [OWDataType( IOWCharStream )]
+  TOWCharStatePin = class( TOWTypedStatePin<IOWCharStream, TOWSuppliedCharOperation, Char>, IOWCharStream )
   protected
-    FPinNotificationEvent : TOWStringPinNotificationEvent;
-
-  protected
-    FValue  : String;
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWStringPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  protected
-    procedure SetValue( AValue : String );
-
-  public
-    procedure Send( AText : String );
-
-  protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    property Value : String read FValue write SetValue;
+    function CreateNotifyOperation( AValue : Char ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedCharOperation ) : Char; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringSinkPin = class( TOWStdSinkPin, IOWStringStream )
+  [OWDataType( IOWStringStream )]
+  TOWStringSourcePin = class( TOWTypedSourcePin<IOWStringStream, String> )
   protected
-    FOnDataChange : TOWStringChangeEvent;
-    FValue        : String;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : String read FValue;
+    function CreateNotifyOperation( AValue : String ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringMultiSinkPin = class( TOWStdMultiSinkPin, IOWStringStream )
+  TOWStringSinkPin = class( TOWTypedSinkPin<TOWSuppliedStringOperation, String>, IOWStringStream )
   protected
-    FOnDataChange : TOWStringChangeEvent;
-    FValue        : String;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value  : String read FValue;
+    function ExtractData( AOperation : TOWSuppliedStringOperation ) : String; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringStatePin = class( TOWStdStatePin, IOWStringStream )
+  TOWStringMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedStringOperation, String>, IOWStringStream )
   protected
-    FPinNotificationEvent : TOWStringPinNotificationEvent;
-    FOnDataChange         : TOWStringChangeEvent;
-    FValue                : String;
-
-  protected
-    procedure SetValue( AValue : String );
-
-  protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  protected
-    function  DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    procedure Send( AText : String );
-
-  public
-    property Value : String read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedStringOperation ) : String; override;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWStringStream )]
+  TOWStringStatePin = class( TOWTypedStatePin<IOWStringStream, TOWSuppliedStringOperation, String>, IOWStringStream )
+  protected
+    function CreateNotifyOperation( AValue : String ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedStringOperation ) : String; override;
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWStringListStream )]
   TOWStringListSourcePin = class( TOWStdSourcePin )
   protected
     FPinNotificationEvent : TOWStringListPinNotificationEvent;
 
-//  protected
-//    FValue  : TStrings;
-
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWStringListPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
     constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringListPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-//  protected
-//    procedure SetValue( AValue : TStrings );
 
   public
     procedure Send( AValue : TStrings );
 
   protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-//  public
-//    property Value : TStrings read FValue write SetValue;
+    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   end;
 //---------------------------------------------------------------------------
   TOWStringListSinkPin = class( TOWStdSinkPin, IOWStringListStream )
   protected
     FOnDataChange : TOWStringListChangeEvent;
-//    FValue        : TStrings;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -907,16 +727,12 @@ end;
   public
     constructor Create( AOwner: TComponent; AOnDataChange : TOWStringListChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringListChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-//  public
-//    property Value : TStrings read FValue;
 
   end;
 //---------------------------------------------------------------------------
   TOWStringListMultiSinkPin = class( TOWStdMultiSinkPin, IOWStringListStream )
   protected
     FOnDataChange : TOWStringListChangeEvent;
-//    FValue        : String;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -925,23 +741,17 @@ end;
     constructor Create( AOwner: TComponent; AOnDataChange : TOWStringListChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringListChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 
-//  public
-//    property Value  : String read FValue;
-
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWStringListStream )]
   TOWStringListStatePin = class( TOWStdStatePin, IOWStringListStream )
   protected
     FPinNotificationEvent : TOWStringListPinNotificationEvent;
     FOnDataChange         : TOWStringListChangeEvent;
     FOnGetDataEvent       : TOWStringListGetDataEvent;
-//    FValue                : String;
-
-//  protected
-//    procedure SetValue( AValue : String );
 
   protected
-    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function  Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   protected
     function  DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -953,187 +763,64 @@ end;
   public
     procedure Send( AValue : TStrings );
 
-//  public
-//    property Value : String read FValue write SetValue;
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWIntegerStream )]
+  TOWIntegerSourcePin = class( TOWTypedSourcePin<IOWIntegerStream, Integer> )
+  protected
+    function CreateNotifyOperation( AValue : Integer ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWIntegerSourcePin = class( TOWStdSourcePin )
+  TOWIntegerSinkPin = class( TOWTypedSinkPin<TOWSuppliedIntegerOperation, Integer>, IOWIntegerStream )
   protected
-    FPinNotificationEvent : TOWIntegerPinNotificationEvent;
-
-  protected
-    FValue  : Integer;
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  protected
-    procedure SetValue( AValue : Integer );
-
-  public
-    procedure Send( AValue : Integer );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWIntegerPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  public
-    property Value : Integer read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWIntegerSinkPin = class( TOWStdSinkPin, IOWIntegerStream )
+  TOWIntegerMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedIntegerOperation, Integer>, IOWIntegerStream )
   protected
-    FOnDataChange : TOWIntegerChangeEvent;
-    FValue        : Integer;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Integer read FValue;
+    function ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWIntegerMultiSinkPin = class( TOWStdMultiSinkPin, IOWIntegerStream )
+  [OWDataType( IOWIntegerStream )]
+  TOWIntegerStatePin = class( TOWTypedStatePin<IOWIntegerStream, TOWSuppliedIntegerOperation, Integer>, IOWIntegerStream )
   protected
-    FOnDataChange : TOWIntegerChangeEvent;
-    FValue        : Integer;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange  : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange  : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Integer read FValue;
+    function CreateNotifyOperation( AValue : Integer ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWIntegerStatePin = class( TOWStdStatePin, IOWIntegerStream )
+  [OWDataType( IOWInt64Stream )]
+  TOWInt64SourcePin = class( TOWTypedSourcePin<IOWInt64Stream, Int64> )
   protected
-    FPinNotificationEvent : TOWIntegerPinNotificationEvent;
-    FOnDataChange         : TOWIntegerChangeEvent;
-    FValue                : Integer;
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  protected
-    procedure SetValue( AValue : Integer );
-    
-  public
-    procedure Send( AValue : Integer );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWIntegerChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWIntegerChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Integer read FValue write SetValue;
+    function CreateNotifyOperation( AValue : Int64 ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWInt64SourcePin = class( TOWStdSourcePin )
+  TOWInt64SinkPin = class( TOWTypedSinkPin<TOWSuppliedInt64Operation, Int64>, IOWInt64Stream )
   protected
-    FPinNotificationEvent : TOWInt64PinNotificationEvent;
-
-  protected
-    FValue : Int64;
-
-  protected
-    procedure SetValue( AValue : Int64 );
-    
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    procedure Send( AValue : Int64 );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWInt64PinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  public
-    property Value : Int64 read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWInt64SinkPin = class( TOWStdSinkPin, IOWInt64Stream )
+  TOWInt64MultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedInt64Operation, Int64>, IOWInt64Stream )
   protected
-    FOnDataChange : TOWInt64ChangeEvent;
-    FValue        : Int64;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Int64 read FValue;
+    function ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWInt64MultiSinkPin = class( TOWStdMultiSinkPin, IOWInt64Stream )
+  [OWDataType( IOWInt64Stream )]
+  TOWInt64StatePin = class( TOWTypedStatePin<IOWInt64Stream, TOWSuppliedInt64Operation, Int64>, IOWInt64Stream )
   protected
-    FOnDataChange : TOWInt64ChangeEvent;
-    FValue        : Int64;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Int64 read FValue;
+    function CreateNotifyOperation( AValue : Int64 ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWInt64StatePin = class( TOWStdStatePin, IOWInt64Stream )
-  protected
-    FPinNotificationEvent : TOWInt64PinNotificationEvent;
-    FOnDataChange         : TOWInt64ChangeEvent;
-    FValue                : Int64;
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  protected
-    procedure SetValue( AValue : Int64 );
-    
-  public
-    procedure Send( AValue : Int64 );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Int64 read FValue write SetValue;
-
-  end;
-//---------------------------------------------------------------------------
+  [OWDataType( IOWInt64Stream )]
+  [OWDataType( IOWInt64RangedStream )]
   TOWInt64RangedSourcePin = class( TOWStdSourcePin )
   protected
     FMin    : Int64;
@@ -1212,6 +899,8 @@ end;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWInt64Stream )]
+  [OWDataType( IOWInt64RangedStream )]
   TOWInt64RangedStatePin = class( TOWStdStatePin, IOWInt64RangedStream, IOWInt64Stream )
   protected
     FOnDataChange   : TOWInt64ValueRangeChangeEvent;
@@ -1241,12 +930,14 @@ end;
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ValueRangeChangeEvent; AOnRangeChange : TOWInt64RangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 
   public
-    property Min    : Int64 read FMin write SetMin;
-    property Max    : Int64 read FMax write SetMax;
+    property Min    : Int64 read FMin   write SetMin;
+    property Max    : Int64 read FMax   write SetMax;
     property Value  : Int64 read FValue write SetRanged;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWRealStream )]
   TOWRealSourcePin = class( TOWStdSourcePin )
   protected
     FPinNotificationEvent : TOWPinNotificationEvent;
@@ -1260,54 +951,32 @@ end;
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
     constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 
   public
     procedure Send( AValue : Real );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   public
     property Value : Real read FValue write SetValue;
 
   end;
 //---------------------------------------------------------------------------
-  TOWRealSinkPin = class( TOWStdSinkPin, IOWFloatStream, IOWRealStream )
+  TOWRealSinkPin = class( TOWTypedSinkPin<TOWSuppliedRealOperation, Real>, IOWFloatStream, IOWRealStream )
   protected
-    FOnDataChange : TOWRealChangeEvent;
-    FValue        : Real;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Real read FValue;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   end;
 //---------------------------------------------------------------------------
-  TOWRealMultiSinkPin = class( TOWStdMultiSinkPin, IOWFloatStream, IOWRealStream )
+  TOWRealMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedRealOperation, Real>, IOWFloatStream, IOWRealStream )
   protected
-    FOnDataChange : TOWRealChangeEvent;
-    FValue        : Real;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Real read FValue;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWRealStream )]
   TOWRealStatePin = class( TOWStdStatePin, IOWFloatStream, IOWRealStream )
   protected
     FPinNotificationEvent : TOWPinNotificationEvent;
@@ -1318,7 +987,7 @@ end;
     procedure SetValue( AValue : Real );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -1335,6 +1004,9 @@ end;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWRealStream )]
+  [OWDataType( IOWRealRangedStream )]
   TOWRealRangedSourcePin = class( TOWStdSourcePin )
   protected
     FPinNotificationEvent : TOWPinNotificationEvent;
@@ -1352,15 +1024,14 @@ end;
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
     constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 
   public
     procedure SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
+    procedure SubmitValue( AValue : Real );
     procedure SubmitRange( AMin : Real; AMax : Real );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   public
     property Min    : Real read FMin    write SetMin;
@@ -1403,9 +1074,14 @@ end;
     FMax    : Real;
     FValue  : Real;
 
+    FRangePopulated : Boolean;
+
+  protected
+    function GetRangePopulated() : Boolean;
+
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-    
+
   public
     constructor Create( AOwner: TComponent; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
     constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange  : TOWRealValueRangeChangeEvent; AOnRangeChange : TOWRealRangeChangeEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
@@ -1415,8 +1091,12 @@ end;
     property Max    : Real read FMax;
     property Value  : Real read FValue;
 
+    property IsConnectedByRange : Boolean read GetRangePopulated;
+
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWRealStream )]
+  [OWDataType( IOWRealRangedStream )]
   TOWRealAndRangedStatePin = class( TOWStdStatePin, IOWRealRangedStream, IOWRealStream )
   protected
     FPinNotificationEvent : TOWPinNotificationEvent;
@@ -1438,7 +1118,7 @@ end;
     procedure SubmitRange( AMin : Real; AMax : Real );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
     
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -1454,10 +1134,11 @@ end;
 
   end;
 //---------------------------------------------------------------------------
-type
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWIntegerStream )]
   TOWFloatIntSourcePin = class( TOWStdSourcePin )
   protected
-    FValue               : Single;
+    FValue  : Single;
 
   protected
     procedure SetValue( AValue : Single );
@@ -1478,23 +1159,8 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWFloatIntSinkPin = class( TOWStdSinkPin, IOWFloatStream, IOWIntegerStream )
-  protected
-    FOnDataChange : TOWFloatChangeEvent;
-    FValue        : Single;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : Single read FValue;
-
-  end;
-//---------------------------------------------------------------------------
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWIntegerStream )]
   TOWFloatIntStatePin = class( TOWStdStatePin, IOWFloatStream, IOWIntegerStream )
   protected
     FFloatPinNotificationEvent    : TOWFloatPinNotificationEvent;
@@ -1508,7 +1174,7 @@ type
     procedure SetValue( AValue : Single );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
     
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -1525,163 +1191,71 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWComplexSourcePin = class( TOWStdSourcePin )
+  [OWDataType( IOWRealComplexStream )]
+  TOWComplexSourcePin = class( TOWTypedSourcePin<IOWRealComplexStream, TOWRealComplex> )
   protected
-    FPinNotificationEvent : TOWRealComplexPinNotificationEvent;
-    FValue                : TOWRealComplex;
-
-  protected
-    procedure SetValue( AValue : TOWRealComplex );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWRealComplexPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    procedure Send( AValue : TOWRealComplex );
-
-  public
-    property Value : TOWRealComplex read FValue write SetValue;
+    function CreateNotifyOperation( AValue : TOWRealComplex ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWComplexSinkPin = class( TOWStdSinkPin, IOWRealComplexStream )
+  TOWComplexSinkPin = class( TOWTypedSinkPin<TOWSuppliedRealComplexOperation, TOWRealComplex>, IOWRealComplexStream )
   protected
-    FOnDataChange : TOWRealComplexChangeEvent;
-    FValue        : TOWRealComplex;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWRealComplexChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealComplexChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : TOWRealComplex read FValue;
+    function ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWComplexStatePin = class( TOWStdStatePin, IOWRealComplexStream )
+  TOWComplexMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedRealComplexOperation, TOWRealComplex>, IOWRealComplexStream )
   protected
-    FPinNotificationEvent : TOWRealComplexPinNotificationEvent;
-    FOnDataChange         : TOWRealComplexChangeEvent;
-    FValue                : TOWRealComplex;
-
-  protected
-    procedure SetValue( AValue : TOWRealComplex );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    procedure Send( AValue : TOWRealComplex );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWRealComplexChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealComplexChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : TOWRealComplex read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWDateTimeSourcePin = class( TOWStdSourcePin )
+  [OWDataType( IOWRealComplexStream )]
+  TOWComplexStatePin = class( TOWTypedStatePin<IOWRealComplexStream, TOWSuppliedRealComplexOperation, TOWRealComplex>, IOWRealComplexStream )
   protected
-    FPinNotificationEvent : TOWPinNotificationEvent;
-
-  protected
-    FValue  : TDateTime;
-
-  protected
-    procedure SetValue( AValue : TDateTime );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-
-  public
-    procedure Send( AValue : TDateTime );
-
-  public
-    constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-
-  public
-    property Value : TDateTime read FValue write SetValue;
+    function CreateNotifyOperation( AValue : TOWRealComplex ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWDateTimeSinkPin = class( TOWStdSinkPin, IOWDateTimeStream )
+  [OWDataType( IOWDateTimeStream )]
+  TOWDateTimeSourcePin = class( TOWTypedSourcePin<IOWDateTimeStream, TDateTime> )
   protected
-    FOnDataChange : TOWDateTimeChangeEvent;
-    FValue        : TDateTime;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : TDateTime read FValue;
+    function CreateNotifyOperation( AValue : TDateTime ) : IOWNotifyOperation; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWDateTimeMultiSinkPin = class( TOWStdSinkPin, IOWDateTimeStream )
+  TOWDateTimeSinkPin = class( TOWTypedSinkPin<TOWSuppliedDateTimeOperation, TDateTime>, IOWDateTimeStream )
   protected
-    FOnDataChange : TOWDateTimeChangeEvent;
-    FValue        : TDateTime;
-
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : TDateTime read FValue;
+    function ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime; override;
 
   end;
 //---------------------------------------------------------------------------
-  TOWDateTimeStatePin = class( TOWStdStatePin, IOWDateTimeStream )
+  TOWDateTimeMultiSinkPin = class( TOWTypedMultiSinkPin<TOWSuppliedDateTimeOperation, TDateTime>, IOWDateTimeStream )
   protected
-    FPinNotificationEvent : TOWPinNotificationEvent;
-    FOnDataChange         : TOWDateTimeChangeEvent;
-    FValue                : TDateTime;
-
-  protected
-    procedure SetValue( AValue : TDateTime );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
-    
-  protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    procedure Send( AValue : TDateTime );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-
-  public
-    property Value : TDateTime read FValue write SetValue;
+    function ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime; override;
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWDateTimeStream )]
+  TOWDateTimeStatePin = class( TOWTypedStatePin<IOWDateTimeStream, TOWSuppliedDateTimeOperation, TDateTime>, IOWDateTimeStream )
+  protected
+    function CreateNotifyOperation( AValue : TDateTime ) : IOWNotifyOperation; override;
+    function ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime; override;
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWDateTimeStream )]
+  TOWDateTimeRealSourcePin = class( TOWRealSourcePin )
+  protected
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
+
+  end;
+//---------------------------------------------------------------------------
+  [OWDataType( IOWInt64Stream )]
+  [OWDataType( IOWInt64RangedStream )]
+  [OWDataType( IOWDateTimeStream )]
+  [OWDataType( IOWDateTimeRangedStream )]
   TOWInt64TimeRangedSourcePin = class( TOWStdSourcePin )
   protected
     FMinTime  : TDateTime;
@@ -1720,6 +1294,10 @@ type
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWInt64Stream )]
+  [OWDataType( IOWInt64RangedStream )]
+  [OWDataType( IOWDateTimeStream )]
+  [OWDataType( IOWDateTimeRangedStream )]
   TOWInt64TimeRangedStatePin = class( TOWStdStatePin, IOWInt64RangedStream, IOWInt64Stream, IOWDateTimeRangedStream, IOWDateTimeStream )
   protected
     FOnDataChange   : TOWInt64DateTimeValueRangeChangeEvent;
@@ -1763,6 +1341,11 @@ type
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWRealStream )]
+  [OWDataType( IOWFloatStream )]
+  [OWDataType( IOWIntegerStream )]
+  [OWDataType( IOWStringStream )]
+  [OWDataType( IOWBoolStream )]
   TOWStdComboSourcePin = class( TOWStdSourcePin )
   protected
     FValue               : Real;
@@ -1791,6 +1374,8 @@ type
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWIntegerStream )]
+  [OWDataType( IOWIntRangedStream )]
   TOWIntRangedSourcePin = class( TOWStdSourcePin )
   protected
     FMin    : Integer;
@@ -1869,10 +1454,12 @@ type
 
   end;
 //---------------------------------------------------------------------------
+  [OWDataType( IOWIntegerStream )]
+  [OWDataType( IOWIntRangedStream )]
   TOWIntRangedStatePin = class( TOWStdStatePin, IOWIntRangedStream, IOWIntegerStream )
   protected
-    FOnDataChange       : TOWIntValueRangeChangeEvent;
-    FOnRangeChange      : TOWIntRangeChangeEvent;
+    FOnDataChange   : TOWIntValueRangeChangeEvent;
+    FOnRangeChange  : TOWIntRangeChangeEvent;
 
   protected
     FMin    : Integer;
@@ -1905,6 +1492,7 @@ type
   end;
 //---------------------------------------------------------------------------
 {$IFDEF D16Up}
+  [OWDataType( IOWStreamPersistStream )]
   TOWStreamPersistSourcePin = class( TOWClockSourcePin )
   public
     FPinNotificationEvent : TOWPinNotificationEvent;
@@ -1912,14 +1500,12 @@ type
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent );
     constructor CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
-    constructor Create( AOwner: TComponent );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
 
   public
     procedure SubmitData( Value : TStream );
 
   protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   end;
 {$ENDIF}
@@ -1927,7 +1513,7 @@ type
 implementation
 
 uses
-  SysUtils;
+  SysUtils, TypInfo;
 //---------------------------------------------------------------------------
 function IncMilliSecond(const AValue: TDateTime;
   const ANumberOfMilliSeconds: Int64): TDateTime;
@@ -1938,16 +1524,39 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStdSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+constructor TOWStdSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOwner, APinNotificationEvent );
   FOnDisconnect := AOnDisconnect;
 end;
 //---------------------------------------------------------------------------
-constructor TOWStdSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+constructor TOWStdSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, APinNotificationEvent );
   FOnDisconnect := AOnDisconnect;
+end;
+//---------------------------------------------------------------------------
+function TOWStdSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+var
+  AGenInterf  : IOWDataStream;
+
+begin
+  Result := [];
+  if( not ( nsNewLink in State )) then
+    begin
+    if( Handler.QueryInterface( IOWDataStream, AGenInterf ) = 0 ) then
+      Result := AGenInterf.DispatchData( DataTypeID, Operation, State )
+
+    else
+      Result := IntNotificationHandler( Handler, DataTypeID, Operation, State );
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWStdSourcePin.IntNotificationHandler( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+begin
+  Result := [];
 end;
 //---------------------------------------------------------------------------
 procedure TOWStdSourcePin.BeforeDisconnectFrom( APin : TOWBasicPin );
@@ -1973,6 +1582,29 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, ACustomData );
   FOnDisconnect := AOnDisconnect;
   FOnPinDispatchEvent := AOnPinDispatchEvent;
+end;
+//---------------------------------------------------------------------------
+function TOWStdStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+var
+  AGenInterf  : IOWDataStream;
+
+begin
+  Result := [];
+  if( not ( nsNewLink in State )) then
+    begin
+    if( Handler.QueryInterface( IOWDataStream, AGenInterf ) = 0 ) then
+      Result := AGenInterf.DispatchData( DataTypeID, Operation, State )
+
+    else
+      Result := IntNotificationHandler( Handler, DataTypeID, Operation, State );
+
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWStdStatePin.IntNotificationHandler( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+begin
+  Result := [];
 end;
 //---------------------------------------------------------------------------
 function TOWStdStatePin.TryCustomDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean;
@@ -2058,23 +1690,121 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockSourcePin.Create(AOwner: TComponent; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+constructor TOWDispatchSourcePin.Create(AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOwner );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
 end;
 //---------------------------------------------------------------------------
-constructor TOWClockSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWClockPinNotificationEvent = NIL );
+constructor TOWDispatchSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AMaxConnections : Integer = -1; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
 end;
 //---------------------------------------------------------------------------
-procedure TOWClockSourcePin.Clock();
+function TOWDispatchSourcePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
-  Notify( TOWClockOperation.Create() );
+  if( Assigned( FPinNotificationEvent )) then
+    Result := FPinNotificationEvent( Self, DataTypeID, Operation, State )
+
+  else
+    Result := [];
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWDispatchSinkPin.Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+constructor TOWDispatchSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+function TOWDispatchSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+begin
+  if( Assigned( FPinNotificationEvent )) then
+    Result := FPinNotificationEvent( Self, DataTypeID, Operation, State )
+
+  else
+    Result := [];
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWDispatchMultiSinkPin.Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+constructor TOWDispatchMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+function TOWDispatchMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+begin
+  if( Assigned( FPinNotificationEvent )) then
+    Result := FPinNotificationEvent( Self, DataTypeID, Operation, State )
+
+  else
+    Result := [];
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWDispatchStatePin.Create( AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+constructor TOWDispatchStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, ACustomData );
+  FPinNotificationEvent := APinNotificationEvent;
+end;
+//---------------------------------------------------------------------------
+function TOWDispatchStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+begin
+  if( Assigned( FPinNotificationEvent )) then
+    Result := FPinNotificationEvent( Self, DataTypeID, Operation, State )
+
+  else
+    Result := [];
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWClockSourcePin.Create(AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+begin
+  inherited;
+  AddType( IOWClockStream, ClockNotification, True );
+end;
+//---------------------------------------------------------------------------
+constructor TOWClockSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, -1, APinNotificationEvent );
+  AddType( IOWClockStream, ClockNotification, True );
+end;
+//---------------------------------------------------------------------------
+procedure TOWClockSourcePin.Clock( ASamples : Integer );
+begin
+  Notify( TOWClockOperation.Create( ASamples ) );
 end;
 //---------------------------------------------------------------------------
 function TOWClockSourcePin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
@@ -2089,32 +1819,21 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWClockSourcePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWClockSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
-  Result := [];
-
-  if( Assigned( FPinNotificationEvent )) then
-    Result := FPinNotificationEvent( Self, DataTypeID, Operation, State );
-
+  inherited Create( AOwner, AOnPinNotificationEvent, ACustomData );
+  FOnClock := AOnClock;
+  AddType( IOWClockStream, ClockNotification, True );
 end;
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWClockSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWClockSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
-  inherited Create( AOwner, ACustomData );
+  inherited CreateLock( AOwner, AOwnerLock, AOnPinNotificationEvent, ACustomData );
   FOnClock := AOnClock;
-  FOnPinNotificationEvent := AOnPinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWClockSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, ACustomData );
-  FOnClock := AOnClock;
-  FOnPinNotificationEvent := AOnPinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
+  AddType( IOWClockStream, ClockNotification, True );
 end;
 //---------------------------------------------------------------------------
 function TOWClockSinkPin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
@@ -2131,8 +1850,8 @@ end;
 //---------------------------------------------------------------------------
 function TOWClockSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
-  if( Assigned( FOnPinNotificationEvent )) then
-    FOnPinNotificationEvent( Self, DataTypeID, Operation, State );
+  if( Assigned( FPinNotificationEvent )) then
+    FPinNotificationEvent( Self, DataTypeID, Operation, State );
 
   if( Assigned( FOnClock )) then
 //    if( not ( nsNewLink in State )) then
@@ -2147,56 +1866,168 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWFloatPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWFloatSourcePin.CreateNotifyOperation( AValue : Single ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
+  Result := TOWSuppliedSingleOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWTypedSinkPin<T_SuppliedOperation, T_Data>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
+end;
+//---------------------------------------------------------------------------
+constructor TOWTypedSinkPin<T_SuppliedOperation, T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
+end;
+//---------------------------------------------------------------------------
+function TOWTypedSinkPin<T_SuppliedOperation, T_Data>.ExtractData( AOperation : T_SuppliedOperation ) : T_Data;
+begin
+  Result := Default( T_Data );
+end;
+//---------------------------------------------------------------------------
+function TOWTypedSinkPin<T_SuppliedOperation, T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
+begin
+  Result := [];
 
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWFloatPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
+  if( Operation.Instance() is T_SuppliedOperation ) then
+    begin
+//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
+      begin
+      FValue := ExtractData( T_SuppliedOperation( Operation.Instance() ));
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
 
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-procedure TOWFloatSourcePin.SetValue( AValue : Single );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
+      end;
+    end
+
+  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
+    begin
+    if( Operation.Instance() is TOWClearContentOperation ) then
+      begin
+      FValue := Default( T_Data );
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
+
+      end;
+    end;
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWFloatSourcePin.Send( AValue : Single );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWTypedMultiSinkPin<T_SuppliedOperation, T_Data>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 begin
-  FValue := AValue;
-  Notify( TOWSuppliedSingleOperation.Create( FValue ));
+  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
 end;
 //---------------------------------------------------------------------------
-function TOWFloatSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+constructor TOWTypedMultiSinkPin<T_SuppliedOperation, T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
+end;
+//---------------------------------------------------------------------------
+function TOWTypedMultiSinkPin<T_SuppliedOperation, T_Data>.ExtractData( AOperation : T_SuppliedOperation ) : T_Data;
+begin
+  Result := Default( T_Data );
+end;
+//---------------------------------------------------------------------------
+function TOWTypedMultiSinkPin<T_SuppliedOperation, T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
+begin
+  Result := [];
+
+  if( Operation.Instance() is T_SuppliedOperation ) then
+    begin
+//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
+      begin
+      FValue := ExtractData( T_SuppliedOperation( Operation.Instance() ));
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
+
+      end;
+    end
+
+  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
+    begin
+    if( Operation.Instance() is TOWClearContentOperation ) then
+      begin
+      FValue := Default( T_Data );
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
+
+      end;
+    end;
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
+  FComparer := TComparer<T_Data>.Default;
+end;
+//---------------------------------------------------------------------------
+constructor TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+begin
+  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
+  FOnDataChange := AOnDataChange;
+  FComparer := TComparer<T_Data>.Default;
+end;
+//---------------------------------------------------------------------------
+function TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+begin
+  Result := [];
+
+  if( Operation.Instance() is T_SuppliedOperation ) then
+    begin
+//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
+      begin
+      FValue := ExtractData( T_SuppliedOperation( Operation.Instance() ));
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
+
+      end;
+    end
+
+  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
+    begin
+    if( Operation.Instance() is TOWClearContentOperation ) then
+      begin
+      FValue := Default( T_Data );
+      if( Assigned( FOnDataChange )) then
+        FOnDataChange( Self, FValue, nsNewLink in State );
+
+      end;
+    end;
+
+end;
+//---------------------------------------------------------------------------
+function TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.ExtractData( AOperation : T_SuppliedOperation ) : T_Data;
+begin
+  Result := Default( T_Data );
+end;
+//---------------------------------------------------------------------------
+function TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   Interf  : IOWFloatStream;
   Handled : Boolean;
 
 begin
-  Result := [];
+  if( Operation.Instance() is T_SuppliedOperation ) then
+    FValue := ExtractData( Operation.Instance() );
 
-  if( Handler.QueryInterface( IOWFloatStream, Interf ) = 0 ) then
+  if( Handler.QueryInterface( GetTypeData(TypeInfo(T_Interface))^.Guid, Interf) = 0 ) then
+//  if( Handler.QueryInterface(IOWFloatStream,Interf) = 0 ) then
     begin
     if( Assigned( FPinNotificationEvent )) then
       begin
@@ -2209,322 +2040,92 @@ begin
 
     if( nsNewLink in State ) then
       begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedSingleOperation.Create( Value ), State );
+      Interf.DispatchData( DataTypeID, CreateNotifyOperation( Value ), State );
       Exit;
       end;
 
     Interf.DispatchData( DataTypeID, Operation, State );
     end;
 
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWFloatSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWFloatSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
-begin
   Result := [];
-
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-         
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
 end;
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWFloatMultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWFloatMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else
-    TryCustomDispatch( DataTypeID, Operation, State, Result );
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWBoolPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWBoolPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWBoolSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+procedure TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.SetValue( AValue : T_Data );
 var
-  Interf  : IOWBoolStream;
-  Handled : Boolean;
+  AWriteLock  : IOWLockSection;
 
 begin
-  Result := [];
-  if( Handler.QueryInterface(IOWBoolStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedBoolOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWBoolSourcePin.SetValue( AValue : Boolean );
-begin
-  if( FValue <> AValue ) then
+  AWriteLock := WriteLock();
+  if( FComparer.Compare( FValue, AValue ) <> 0 ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWBoolSourcePin.Send( AValue : Boolean );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedBoolOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWBoolSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWBoolSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedBoolOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedBoolOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedBoolOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := False;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWBoolMultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWBoolMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedBoolOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedBoolOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedBoolOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else
-    TryCustomDispatch( DataTypeID, Operation, State, Result );
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWCharSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWCharPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWCharSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWCharPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWCharSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWCharStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWCharSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWCharStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWCharSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+procedure TOWTypedStatePin<T_Interface, T_SuppliedOperation, T_Data>.Send( AValue : T_Data );
 var
-  Interf  : IOWCharStream;
-  Handled : Boolean;
+  AWriteLock  : IOWLockSection;
 
 begin
-  Result := [];
-  if( Handler.QueryInterface(IOWCharStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedCharOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWCharSourcePin.SetValue( AValue : Char );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWCharSourcePin.Send( AValue : Char );
-begin
+  AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWSuppliedCharOperation.Create( FValue ));
+  Notify( CreateNotifyOperation( FValue ));
 end;
 //---------------------------------------------------------------------------
-procedure TOWCharSourcePin.Send( AText : String );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWFloatSinkPin.ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWFloatMultiSinkPin.ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWBoolSourcePin.CreateNotifyOperation( AValue : Boolean ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedBoolOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWBoolSinkPin.ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWBoolMultiSinkPin.ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWCharSourcePin.CreateNotifyOperation( AValue : Char ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedCharOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+procedure TOWCharSourcePin.SendText( AText : String );
 var
   I : Integer;
+  AWriteLock  : IOWLockSection;
 
 begin
+  AWriteLock := WriteLock();
   for I := 1 to Length( AText ) do
     begin
     FValue := AText[ I ];
@@ -2533,248 +2134,96 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-constructor TOWCharSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWCharChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
-constructor TOWCharSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWCharChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
-function TOWCharSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+//---------------------------------------------------------------------------
+function TOWCharSinkPin.ExtractData( AOperation : TOWSuppliedCharOperation ) : Char;
 begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedCharOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedCharOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedCharOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := #0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWStringPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWStringSourcePin.CreateNotifyOperation( AValue : String ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedStringOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWStringSinkPin.ExtractData( AOperation : TOWSuppliedStringOperation ) : String;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWStringMultiSinkPin.ExtractData( AOperation : TOWSuppliedStringOperation ) : String;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor TOWTypedSourcePin<T_Interface; T_Data>.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWStringStream, Notification );
+  FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+constructor TOWTypedSourcePin<T_Interface; T_Data>.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWStringStream, Notification );
+  FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
+constructor TOWTypedSourcePin<T_Interface; T_Data>.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWStringStream, Notification );
+  inherited;
+  FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-constructor TOWStringSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
+constructor TOWTypedSourcePin<T_Interface; T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWStringStream, Notification );
+  inherited;
+  FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-function TOWStringSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+procedure TOWTypedSourcePin<T_Interface; T_Data>.SetValue( AValue : T_Data );
 var
-  Interf  : IOWStringStream;
-  Handled : Boolean;
+  AWriteLock  : IOWLockSection;
 
 begin
-  Result := [];
-  if( Handler.QueryInterface(IOWStringStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedStringOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWStringSourcePin.SetValue( AValue : String );
-begin
-  if( FValue <> AValue ) then
-    begin
-    FValue := AValue;
-    Notify( TOWSuppliedStringOperation.Create( FValue ));
-    end;
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWStringSourcePin.Send( AText : String );
-begin
-  FValue := AText;
-  Notify( TOWSuppliedStringOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWStringSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWStringSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedStringOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedStringOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedStringOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := '';
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWStringMultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWStringMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedStringOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedStringOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedStringOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else
-    TryCustomDispatch( DataTypeID, Operation, State, Result );
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWIntegerPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWIntegerStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWIntegerPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWIntegerStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWIntegerStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWIntegerSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWIntegerStream, Notification );
-end;
-//---------------------------------------------------------------------------
-procedure TOWIntegerSourcePin.SetValue( AValue : Integer );
-begin
-  if( FValue <> AValue ) then
+  AWriteLock := WriteLock();
+  if( FComparer.Compare( FValue, AValue ) <> 0 ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWIntegerSourcePin.Send( AValue : Integer );
+procedure TOWTypedSourcePin<T_Interface; T_Data>.Send( AValue : T_Data );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWSuppliedIntegerOperation.Create( FValue ));
+  Notify( CreateNotifyOperation( FValue ));
 end;
 //---------------------------------------------------------------------------
-function TOWIntegerSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+function TOWTypedSourcePin<T_Interface; T_Data>.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
-  Interf  : IOWIntegerStream;
+  Interf  : IOWBasicStream;
   Handled : Boolean;
 
 begin
   Result := [];
-  if( Handler.QueryInterface(IOWIntegerStream,Interf) = 0 ) then
+  if( Handler.QueryInterface( GetTypeData(TypeInfo(T_Interface))^.Guid, Interf) = 0 ) then
     begin
     if( Assigned( FPinNotificationEvent )) then
       begin
@@ -2786,10 +2235,7 @@ begin
       end;
 
     if( nsNewLink in State ) then
-      begin
-      Result := Interf.DispatchData( DataTypeID, TOWSuppliedIntegerOperation.Create( Value ), State );
-      Exit;
-      end;
+      Exit( IOWBasicStream( Interf ).DispatchData( DataTypeID, CreateNotifyOperation( Value ), State ));
 
     Result := Interf.DispatchData( DataTypeID, Operation, State );
     end;
@@ -2799,228 +2245,49 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWIntegerSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWIntegerSourcePin.CreateNotifyOperation( AValue : Integer ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWIntegerSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWIntegerSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedIntegerOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedIntegerOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-         
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
+  Result := TOWSuppliedIntegerOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWIntegerMultiSinkPin.Create( AOwner: TComponent; AOnDataChange  : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWIntegerSinkPin.ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer;
 begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWIntegerMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWIntegerChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWIntegerMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedIntegerOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedIntegerOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else
-    TryCustomDispatch( DataTypeID, Operation, State, Result );
-
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWInt64PinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWIntegerMultiSinkPin.ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer;
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWInt64Stream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWInt64PinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWInt64Stream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWInt64Stream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWInt64SourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWInt64Stream, Notification );
-end;
-//---------------------------------------------------------------------------
-procedure TOWInt64SourcePin.SetValue( AValue : Int64 );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWInt64SourcePin.Send( AValue : Int64 );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedInt64Operation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-function TOWInt64SourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWInt64Stream;
-  Handled : Boolean;
-
-begin
-  Result := [];
-  if( Handler.QueryInterface(IOWInt64Stream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Result := Interf.DispatchData( DataTypeID, TOWSuppliedInt64Operation.Create( Value ), State );
-      Exit;
-      end;
-
-    Result := Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64SinkPin.Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWInt64SourcePin.CreateNotifyOperation( AValue : Int64 ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWInt64SinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWInt64SinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedInt64Operation ) then
-    begin
-//    if( FValue <> TOWSuppliedInt64Operation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedInt64Operation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-         
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
+  Result := TOWSuppliedInt64Operation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64MultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWInt64SinkPin.ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64;
 begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64MultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
-function TOWInt64MultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWInt64MultiSinkPin.ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64;
 begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedInt64Operation ) then
-    begin
-//    if( FValue <> TOWSuppliedInt64Operation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedInt64Operation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else
-    TryCustomDispatch( DataTypeID, Operation, State, Result );
-
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3030,43 +2297,31 @@ constructor TOWRealSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent
 begin
   inherited Create( AOwner, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWRealSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealSourcePin.SetValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealSourcePin.Send( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
   Notify( TOWSuppliedRealOperation.Create( AValue ));
 end;
@@ -3127,91 +2382,14 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWIntegerStatePin.Create( AOwner: TComponent; AOnDataChange : TOWIntegerChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWIntegerStatePin.CreateNotifyOperation( AValue : Integer ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWIntegerStream, Notification );
+  Result := TOWSuppliedIntegerOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-constructor TOWIntegerStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWIntegerChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWIntegerStatePin.ExtractData( AOperation : TOWSuppliedIntegerOperation ) : Integer;
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWIntegerStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWIntegerStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedIntegerOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedIntegerOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWIntegerStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWIntegerStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedIntegerOperation ) then
-    FValue := TOWSuppliedIntegerOperation( Operation.Instance() ).Value; 
-
-  if( Handler.QueryInterface(IOWIntegerStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedIntegerOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWIntegerStatePin.SetValue( AValue : Integer );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWIntegerStatePin.Send( AValue : Integer );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedIntegerOperation.Create( FValue ));
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3221,40 +2399,20 @@ constructor TOWRealRangedSourcePin.CreateEx( AOwner: TComponent; APinNotificatio
 begin
   inherited Create( AOwner, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-  AddType( IOWRealRangedStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWRealRangedSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-  AddType( IOWRealRangedStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealRangedSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-  AddType( IOWRealRangedStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
-  AddType( IOWRealRangedStream, Notification );
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealRangedSourcePin.SetValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -3264,7 +2422,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealRangedSourcePin.SetMin( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -3274,7 +2436,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealRangedSourcePin.SetMax( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -3284,15 +2450,33 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealRangedSourcePin.SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
   Notify( TOWSuppliedRealValueRangeOperation.Create( AValue, AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
-procedure TOWRealRangedSourcePin.SubmitRange( AMin : Real; AMax : Real );
+procedure TOWRealRangedSourcePin.SubmitValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
+  FValue := AValue;
+  Notify( TOWSuppliedRealOperation.Create( AValue ));
+end;
+//---------------------------------------------------------------------------
+procedure TOWRealRangedSourcePin.SubmitRange( AMin : Real; AMax : Real );
+var
+  AWriteLock  : IOWLockSection;
+
+begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedRealRangeOperation.Create( AMin, AMax ));
@@ -3307,7 +2491,27 @@ var
 
 begin
   Result := [];
-  if( Handler.QueryInterface(IOWRealStream,InterfReal) = 0 ) then
+  if( Handler.QueryInterface(IOWRealRangedStream,InterfRanged) = 0 ) then
+    begin
+    if( Assigned( FPinNotificationEvent )) then
+      begin
+      Handled := True;
+      Result := FPinNotificationEvent( InterfRanged, DataTypeID, Operation, State, Handled );
+      if( Handled ) then
+        Exit;
+
+      end;
+
+    if( nsNewLink in State ) then
+      begin
+      InterfRanged.DispatchData( DataTypeID, TOWSuppliedRealValueRangeOperation.Create( Value, Min, Max ), State );
+      Exit;
+      end;
+
+    InterfRanged.DispatchData( DataTypeID, Operation, State );
+    end
+
+  else if( Handler.QueryInterface(IOWRealStream,InterfReal) = 0 ) then
     begin
     if( Assigned( FPinNotificationEvent )) then
       begin
@@ -3348,44 +2552,12 @@ begin
       Operation := TOWSuppliedSingleOperation.Create( TOWSuppliedRealOperation( Operation.Instance() ).Value );
 
     InterfFloat.DispatchData( DataTypeID, Operation, State );
-    end
-
-  else if( Handler.QueryInterface(IOWRealRangedStream,InterfRanged) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( InterfRanged, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      InterfRanged.DispatchData( DataTypeID, TOWSuppliedRealValueRangeOperation.Create( Value, Min, Max ), State );
-      Exit;
-      end;
-
-    InterfRanged.DispatchData( DataTypeID, Operation, State );
     end;
 
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWRealSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
 function TOWRealSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
@@ -3404,7 +2576,7 @@ begin
 
   else if( Operation.Instance() is TOWSuppliedSingleOperation ) then
     begin
-//    if( FValue <> TOWSuppliedRealOperation( Operation.Instance() ).Value ) then
+//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
       begin
       FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value;
       if( Assigned( FOnDataChange )) then
@@ -3428,18 +2600,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWRealMultiSinkPin.Create( AOwner: TComponent; AOnDataChange  : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
 function TOWRealMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
@@ -3479,16 +2639,12 @@ constructor TOWRealStatePin.Create( AOwner: TComponent; AOnDataChange : TOWRealC
 begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWRealStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
 end;
 //---------------------------------------------------------------------------
 function TOWRealStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -3590,14 +2746,22 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealStatePin.SetValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealStatePin.Send( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
   Notify( TOWSuppliedRealOperation.Create( FValue ));
 end;
@@ -3605,261 +2769,91 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWRealComplexPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWComplexSourcePin.CreateNotifyOperation( AValue : TOWRealComplex ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWRealComplexPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-procedure TOWComplexSourcePin.SetValue( AValue : TOWRealComplex );
-begin
-  if( ( FValue.Real <> AValue.Real ) or ( FValue.Imaginary <> AValue.Imaginary )) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWComplexSourcePin.Send( AValue : TOWRealComplex );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedRealComplexOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-function TOWComplexSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWRealComplexStream;
-  Handled : Boolean;
-
-begin
-  Result := [];
-
-  if( Handler.QueryInterface(IOWRealComplexStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedRealComplexOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWRealComplexChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealComplexChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWComplexSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedRealComplexOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedRealComplexOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue.Real := 0;
-      FValue.Imaginary := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
+  Result := TOWSuppliedRealComplexOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWComplexStatePin.Create( AOwner: TComponent; AOnDataChange : TOWRealComplexChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWComplexSinkPin.ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex;
 begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWComplexStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWRealComplexChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWRealComplexStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWComplexStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedRealComplexOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue.Real := 0;
-      FValue.Imaginary := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWComplexStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWRealComplexStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    FValue := TOWSuppliedRealComplexOperation( Operation.Instance() ).Value;
-
-  if( Handler.QueryInterface(IOWRealComplexStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedRealComplexOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWComplexStatePin.SetValue( AValue : TOWRealComplex );
-begin
-  if( ( FValue.Real <> AValue.Real ) or ( FValue.Imaginary <> AValue.Imaginary ) ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWComplexStatePin.Send( AValue : TOWRealComplex );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedRealComplexOperation.Create( FValue ));
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWComplexMultiSinkPin.ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex;
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWDateTimeStream, Notification );
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWComplexStatePin.CreateNotifyOperation( AValue : TOWRealComplex ) : IOWNotifyOperation;
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWDateTimeStream, Notification );
+  Result := TOWSuppliedRealComplexOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
+function TOWComplexStatePin.ExtractData( AOperation : TOWSuppliedRealComplexOperation ) : TOWRealComplex;
 begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWDateTimeStream, Notification );
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-constructor TOWDateTimeSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeSourcePin.CreateNotifyOperation( AValue : TDateTime ) : IOWNotifyOperation;
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWDateTimeStream, Notification );
+  Result := TOWSuppliedDateTimeOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-procedure TOWDateTimeSourcePin.SetValue( AValue : TDateTime );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeSinkPin.ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime;
 begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-procedure TOWDateTimeSourcePin.Send( AValue : TDateTime );
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeMultiSinkPin.ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime;
 begin
-  FValue := AValue;
-  Notify( TOWSuppliedDateTimeOperation.Create( FValue ));
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-function TOWDateTimeSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeStatePin.CreateNotifyOperation( AValue : TDateTime ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedDateTimeOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+function TOWDateTimeStatePin.ExtractData( AOperation : TOWSuppliedDateTimeOperation ) : TDateTime;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeRealSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   InterfDateTime  : IOWDateTimeStream;
   Handled         : Boolean;
+  ADateTime       : TDateTime;
+  ATimeStamp      : TTimeStamp;
+  AMSec           : Integer;
 
 begin
   Result := [];
-  if( Handler.QueryInterface(IOWDateTimeStream,InterfDateTime) = 0 ) then
+  if( Handler.QueryInterface( IOWDateTimeStream, InterfDateTime ) = 0 ) then
     begin
     if( Assigned( FPinNotificationEvent )) then
       begin
@@ -3870,191 +2864,29 @@ begin
 
       end;
 
-    if( nsNewLink in State ) then
+    AMSec := Round( Value * 1000 );
+    if( AMSec = 0 ) then
+      ADateTime := 0
+
+    else
       begin
-      InterfDateTime.DispatchData( DataTypeID, TOWSuppliedDateTimeOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    InterfDateTime.DispatchData( DataTypeID, Operation, State );
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWDateTimeSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWDateTimeSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWDateTimeSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedDateTimeOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedDateTimeOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedDateTimeOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWDateTimeMultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWDateTimeMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWDateTimeMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedDateTimeOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedDateTimeOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedDateTimeOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWDateTimeStatePin.Create( AOwner: TComponent; AOnDataChange : TOWDateTimeChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWDateTimeStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWDateTimeStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWDateTimeChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWDateTimeStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWDateTimeStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedDateTimeOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedDateTimeOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedDateTimeOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWDateTimeStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  InterfDateTime  : IOWDateTimeStream;
-  Handled         : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedDateTimeOperation ) then
-    FValue := TOWSuppliedDateTimeOperation( Operation.Instance() ).Value;
-
-  Result := [];
-  if( Handler.QueryInterface(IOWDateTimeStream,InterfDateTime) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( InterfDateTime, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
+      ATimeStamp := MSecsToTimeStamp( Round( Value * 1000 ));
+      ATimeStamp.Date := 1;
+      ADateTime := TimeStampToDateTime( ATimeStamp );
       end;
 
     if( nsNewLink in State ) then
       begin
-      InterfDateTime.DispatchData( DataTypeID, TOWSuppliedDateTimeOperation.Create( Value ), State );
+      InterfDateTime.DispatchData( DataTypeID, TOWSuppliedDateTimeOperation.Create( ADateTime ), State );
       Exit;
       end;
 
-    InterfDateTime.DispatchData( DataTypeID, Operation, State );
-    end;
-    
-end;
-//---------------------------------------------------------------------------
-procedure TOWDateTimeStatePin.SetValue( AValue : TDateTime );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
+    InterfDateTime.DispatchData( DataTypeID, TOWSuppliedDateTimeOperation.Create( ADateTime ), State );
+    end
 
-end;
-//---------------------------------------------------------------------------
-procedure TOWDateTimeStatePin.Send( AValue : TDateTime );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedDateTimeOperation.Create( FValue ));
+  else
+    Result := inherited;
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -4063,27 +2895,29 @@ end;
 constructor TOWInt64TimeRangedSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
-  AddType( IOWDateTimeStream, TimeNotification );
-  AddType( IOWDateTimeRangedStream, TimeRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
+  AddType( IOWDateTimeStream, TimeNotification, True );
+  AddType( IOWDateTimeRangedStream, TimeRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWInt64TimeRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
-  AddType( IOWDateTimeStream, TimeNotification );
-  AddType( IOWDateTimeRangedStream, TimeRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
+  AddType( IOWDateTimeStream, TimeNotification, True );
+  AddType( IOWDateTimeRangedStream, TimeRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
 var
   AMiliSecondsPeriod  : Int64; 
   ATimeValue  : TDateTime;
-  
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FMinTime := AMinTime;
@@ -4101,7 +2935,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SubmitRange( AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FMinTime := AMinTime;
@@ -4111,7 +2949,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetMin( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -4121,7 +2963,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetMax( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -4131,7 +2977,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetValue( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -4141,7 +2991,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetMinTime( AValue : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMinTime <> AValue ) then
     begin
     FMinTime := AValue;
@@ -4151,7 +3005,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetMaxTime( AValue : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMaxTime <> AValue ) then
     begin
     FMaxTime := AValue;
@@ -4228,9 +3086,9 @@ end;
 //---------------------------------------------------------------------------
 function TOWInt64TimeRangedSourcePin.TimeRangedNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
-  Interf : IOWDateTimeRangedStream;
+  Interf              : IOWDateTimeRangedStream;
   AMiliSecondsPeriod  : Int64;
-  ATimeValue  : TDateTime;
+  ATimeValue          : TDateTime;
 
 begin
   Result := [];
@@ -4262,10 +3120,10 @@ begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
-  AddType( IOWDateTimeStream, TimeNotification );
-  AddType( IOWDateTimeRangedStream, TimeRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
+  AddType( IOWDateTimeStream, TimeNotification, True );
+  AddType( IOWDateTimeRangedStream, TimeRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWInt64TimeRangedStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64DateTimeValueRangeChangeEvent; AOnRangeChange : TOWInt64DateTimeRangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
@@ -4273,10 +3131,10 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
-  AddType( IOWDateTimeStream, TimeNotification );
-  AddType( IOWDateTimeRangedStream, TimeRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
+  AddType( IOWDateTimeStream, TimeNotification, True );
+  AddType( IOWDateTimeRangedStream, TimeRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 function TOWInt64TimeRangedStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -4336,8 +3194,10 @@ procedure TOWInt64TimeRangedStatePin.SubmitValueRange( AValue : Int64; AMin : In
 var
   AMiliSecondsPeriod  : Int64; 
   ATimeValue          : TDateTime;
-  
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FMinTime := AMinTime;
@@ -4355,7 +3215,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SubmitRange( AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FMinTime := AMinTime;
@@ -4365,7 +3229,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetMin( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -4375,7 +3243,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetMax( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -4385,7 +3257,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetValue( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -4395,7 +3271,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetMinTime( AValue : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMinTime <> AValue ) then
     begin
     FMinTime := AValue;
@@ -4405,7 +3285,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetMaxTime( AValue : TDateTime );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMaxTime <> AValue ) then
     begin
     FMaxTime := AValue;
@@ -4482,9 +3366,9 @@ end;
 //---------------------------------------------------------------------------
 function TOWInt64TimeRangedStatePin.TimeRangedNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
-  Interf : IOWDateTimeRangedStream;
+  Interf              : IOWDateTimeRangedStream;
   AMiliSecondsPeriod  : Int64;
-  ATimeValue  : TDateTime;
+  ATimeValue          : TDateTime;
 
 begin
   Result := [];
@@ -4511,451 +3395,89 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64StatePin.Create( AOwner: TComponent; AOnDataChange : TOWInt64ChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWInt64StatePin.CreateNotifyOperation( AValue : Int64 ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, Notification );
+  Result := TOWSuppliedInt64Operation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-constructor TOWInt64StatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWInt64StatePin.ExtractData( AOperation : TOWSuppliedInt64Operation ) : Int64;
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, Notification );
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
-function TOWInt64StatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWFloatStatePin.CreateNotifyOperation( AValue : Single ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedSingleOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+function TOWFloatStatePin.ExtractData( AOperation : TOWSuppliedSingleOperation ) : Single;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWBoolStatePin.CreateNotifyOperation( AValue : Boolean ) : IOWNotifyOperation;
+begin
+  Result := TOWSuppliedBoolOperation.Create( FValue );
+end;
+//---------------------------------------------------------------------------
+function TOWBoolStatePin.ExtractData( AOperation : TOWSuppliedBoolOperation ) : Boolean;
+begin
+  Result := AOperation.Value;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWBoolClockSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 begin
   Result := [];
-
-  if( Operation.Instance() is TOWSuppliedInt64Operation ) then
+  if( ( not ( IsEqualGUID( PGUID( DataTypeID )^, IOWBoolStream ))) and ( Operation.Instance() is TOWClockOperation )) then
     begin
-//    if( FValue <> TOWSuppliedInt64Operation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedInt64Operation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
+    FValue := not FValue;
+    if( Assigned( FOnDataChange )) then
+      FOnDataChange( Self, FValue, nsNewLink in State );
 
-      end;
+    FValue := not FValue;
+    if( Assigned( FOnDataChange )) then
+      FOnDataChange( Self, FValue, nsNewLink in State );
+
     end
 
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
+  else
+    Result := inherited DispatchData( DataTypeID, Operation, State );
 
 end;
 //---------------------------------------------------------------------------
-function TOWInt64StatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWInt64Stream;
-  Handled : Boolean;
-
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWCharStatePin.CreateNotifyOperation( AValue : Char ) : IOWNotifyOperation;
 begin
-  if( Operation.Instance() is TOWSuppliedInt64Operation ) then
-    FValue := TOWSuppliedInt64Operation( Operation.Instance() ).Value; 
-
-  if( Handler.QueryInterface(IOWInt64Stream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedInt64Operation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
+  Result := TOWSuppliedCharOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-procedure TOWInt64StatePin.SetValue( AValue : Int64 );
+function TOWCharStatePin.ExtractData( AOperation : TOWSuppliedCharOperation ) : Char;
 begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWInt64StatePin.Send( AValue : Int64 );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedInt64Operation.Create( FValue ));
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWFloatStatePin.Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWStringStatePin.CreateNotifyOperation( AValue : String ) : IOWNotifyOperation;
 begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
+  Result := TOWSuppliedStringOperation.Create( FValue );
 end;
 //---------------------------------------------------------------------------
-constructor TOWFloatStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
+function TOWStringStatePin.ExtractData( AOperation : TOWSuppliedStringOperation ) : String;
 begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWFloatStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWFloatStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWFloatStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value; 
-
-  if( Handler.QueryInterface(IOWFloatStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedSingleOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWFloatStatePin.SetValue( AValue : Single );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWFloatStatePin.Send( AValue : Single );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedSingleOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWBoolStatePin.Create( AOwner: TComponent; AOnDataChange : TOWBoolChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWBoolStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWBoolChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWBoolStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWBoolStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedBoolOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedBoolOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedBoolOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := False;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWBoolStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWBoolStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedBoolOperation ) then
-    FValue := TOWSuppliedBoolOperation( Operation.Instance() ).Value;
-
-  if( Handler.QueryInterface(IOWBoolStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedBoolOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWBoolStatePin.SetValue( AValue : Boolean );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWBoolStatePin.Send( AValue : Boolean );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedBoolOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWCharStatePin.Create( AOwner: TComponent; AOnDataChange : TOWCharChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWCharStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWCharStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWCharChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWCharStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWCharStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedCharOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedCharOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedCharOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := #0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWCharStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWCharStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedCharOperation ) then
-    FValue := TOWSuppliedCharOperation( Operation.Instance() ).Value;
-
-  if( Handler.QueryInterface(IOWCharStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedCharOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWCharStatePin.SetValue( AValue : Char );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWCharStatePin.Send( AValue : Char );
-begin
-  FValue := AValue;
-  Notify( TOWSuppliedCharOperation.Create( FValue ));
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWStringStatePin.Create( AOwner: TComponent; AOnDataChange : TOWStringChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWStringStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-  AddType( IOWStringStream, Notification );
-end;
-//---------------------------------------------------------------------------
-function TOWStringStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedStringOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedStringOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedStringOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := '';
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end;
-
-end;
-//---------------------------------------------------------------------------
-function TOWStringStatePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
-var
-  Interf  : IOWStringStream;
-  Handled : Boolean;
-
-begin
-  if( Operation.Instance() is TOWSuppliedStringOperation ) then
-    FValue := TOWSuppliedStringOperation( Operation.Instance() ).Value;
-
-  if( Handler.QueryInterface(IOWStringStream,Interf) = 0 ) then
-    begin
-    if( Assigned( FPinNotificationEvent )) then
-      begin
-      Handled := True;
-      Result := FPinNotificationEvent( Interf, DataTypeID, Operation, State, Handled );
-      if( Handled ) then
-        Exit;
-
-      end;
-
-    if( nsNewLink in State ) then
-      begin
-      Interf.DispatchData( DataTypeID, TOWSuppliedStringOperation.Create( Value ), State );
-      Exit;
-      end;
-
-    Interf.DispatchData( DataTypeID, Operation, State );
-    end;
-
-  Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWStringStatePin.SetValue( AValue : String );
-begin
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWStringStatePin.Send( AText : String );
-begin
-  FValue := AText;
-  Notify( TOWSuppliedStringOperation.Create( FValue ));
+  Result := AOperation.Value;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -4965,26 +3487,12 @@ constructor TOWStringListSourcePin.CreateEx( AOwner: TComponent; APinNotificatio
 begin
   inherited Create( AOwner, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWStringListStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWStringListSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWStringListPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
-  AddType( IOWStringListStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringListSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWStringListStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringListSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWStringListStream, Notification );
 end;
 //---------------------------------------------------------------------------
 function TOWStringListSourcePin.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
@@ -5031,7 +3539,6 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStringListSourcePin.Send( AValue : TStrings );
 begin
-//  FValue := AText;
   Notify( TOWSuppliedStringListOperation.Create( AValue ));
 end;
 //---------------------------------------------------------------------------
@@ -5130,7 +3637,6 @@ begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
   FOnGetDataEvent := AOnGetDataEvent;
-  AddType( IOWStringListStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWStringListStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWStringListChangeEvent; AOnGetDataEvent : TOWStringListGetDataEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
@@ -5138,7 +3644,6 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
   FOnGetDataEvent := AOnGetDataEvent;
-  AddType( IOWStringListStream, Notification );
 end;
 //---------------------------------------------------------------------------
 function TOWStringListStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -5230,7 +3735,6 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStringListStatePin.Send( AValue : TStrings );
 begin
-//  FValue := AText;
   Notify( TOWSuppliedStringListOperation.Create( AValue ));
 end;
 //---------------------------------------------------------------------------
@@ -5240,26 +3744,34 @@ end;
 constructor TOWFloatIntSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWFloatStream, FloatNotification );
-  AddType( IOWIntegerStream, IntegerNotification );
+  AddType( IOWFloatStream, FloatNotification, True );
+  AddType( IOWIntegerStream, IntegerNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWFloatIntSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWFloatStream, FloatNotification );
-  AddType( IOWIntegerStream, IntegerNotification );
+  AddType( IOWFloatStream, FloatNotification, True );
+  AddType( IOWIntegerStream, IntegerNotification, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWFloatIntSourcePin.SetValue( AValue : Single );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
 procedure TOWFloatIntSourcePin.Send( AValue : Single );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
   Notify( TOWSuppliedSingleOperation.Create( FValue ));
 end;
@@ -5303,60 +3815,6 @@ begin
     else
       Result := Interf.DispatchData( DataTypeID, Operation, State )
 
-    end;
-
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWFloatIntSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWFloatIntSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent, ACustomData );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-function TOWFloatIntSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
-begin
-  Result := [];
-
-  if( Operation.Instance() is TOWSuppliedIntegerOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedIntegerOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( Operation.Instance() is TOWSuppliedSingleOperation ) then
-    begin
-//    if( FValue <> TOWSuppliedSingleOperation( Operation.Instance() ).Value ) then
-      begin
-      FValue := TOWSuppliedSingleOperation( Operation.Instance() ).Value;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
-    end
-
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
-    begin
-    if( Operation.Instance() is TOWClearContentOperation ) then
-      begin
-      FValue := 0;
-      if( Assigned( FOnDataChange )) then
-        FOnDataChange( Self, FValue, nsNewLink in State );
-
-      end;
     end;
 
 end;
@@ -5462,6 +3920,11 @@ begin
   FOnDataChange := AOnDataChange;
 end;
 //---------------------------------------------------------------------------
+function TOWRealAndRangedSinkPin.GetRangePopulated() : Boolean;
+begin
+  Result := ( IsConnected() and FRangePopulated );
+end;
+//---------------------------------------------------------------------------
 function TOWRealAndRangedSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   Result := [];
@@ -5470,6 +3933,7 @@ begin
     begin
 //    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
       begin
+      FRangePopulated := True;
       FMin := TOWSuppliedRealValueRangeOperation( Operation.Instance() ).Min;
       FMax := TOWSuppliedRealValueRangeOperation( Operation.Instance() ).Max;
       FValue := TOWSuppliedRealValueRangeOperation( Operation.Instance() ).Value;
@@ -5483,6 +3947,7 @@ begin
     begin
 //    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
       begin
+      FRangePopulated := True;
       FMin := TOWSuppliedRealRangeOperation( Operation.Instance() ).Min;
       FMax := TOWSuppliedRealRangeOperation( Operation.Instance() ).Max;
       if( Assigned( FOnRangeChange )) then
@@ -5495,6 +3960,7 @@ begin
     begin
 //    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
       begin
+      FRangePopulated := True;
       FMin := TOWSuppliedIntValueRangeOperation( Operation.Instance() ).Min;
       FMax := TOWSuppliedIntValueRangeOperation( Operation.Instance() ).Max;
       FValue := TOWSuppliedIntValueRangeOperation( Operation.Instance() ).Value;
@@ -5508,6 +3974,7 @@ begin
     begin
 //    if( FValue <> TOWSuppliedIntegerOperation( Operation.Instance() ).Value ) then
       begin
+      FRangePopulated := True;
       FMin := TOWSuppliedIntRangeOperation( Operation.Instance() ).Min;
       FMax := TOWSuppliedIntRangeOperation( Operation.Instance() ).Max;
       if( Assigned( FOnRangeChange )) then
@@ -5559,8 +4026,6 @@ begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -5571,15 +4036,17 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWRealStream, Notification );
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealAndRangedStatePin.SubmitValueRange( AValue : Real; AMin : Real; AMax : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -5587,7 +4054,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealAndRangedStatePin.SubmitRange( AMin : Real; AMax : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedRealRangeOperation.Create( AMin, AMax ));
@@ -5757,7 +4228,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealAndRangedStatePin.SetValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -5767,7 +4242,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealAndRangedStatePin.SetMin( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -5777,7 +4256,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWRealAndRangedStatePin.SetMax( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -5793,16 +4276,12 @@ constructor TOWFloatIntStatePin.Create( AOwner: TComponent; AOnDataChange : TOWF
 begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWIntegerStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWFloatIntStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWFloatChangeEvent; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnDataChange := AOnDataChange;
-  AddType( IOWFloatStream, Notification );
-  AddType( IOWIntegerStream, Notification );
 end;
 //---------------------------------------------------------------------------
 function TOWFloatIntStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -5845,16 +4324,24 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWFloatIntStatePin.SetValue( AValue : Single );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
 procedure TOWFloatIntStatePin.Send( AValue : Single );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWSuppliedMulticastOperation.Create() );
+  Notify( TOWSuppliedMulticastOperation.Create( 1 ) );
 //  Notify( TOWSuppliedIntegerOperation.Create( FValue ));
 end;
 //---------------------------------------------------------------------------
@@ -5926,7 +4413,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -5938,7 +4425,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWIntToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedRealOperation.Create( AValue ) );
+  TOWRealSourcePin( FOutputPin ).Send( AValue );
 end;
 //------------------------------------------------------------------------------
 function TOWIntToRealFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -5959,7 +4446,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -5971,7 +4458,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWIntToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedSingleOperation.Create( AValue ) );
+  TOWFloatSourcePin( FOutputPin ).Send( AValue );
 end;
 //------------------------------------------------------------------------------
 function TOWIntToFloatFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -5992,7 +4479,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6004,7 +4491,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWIntToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedStringOperation.Create( IntToStr( AValue )) );
+  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 function TOWIntToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6025,7 +4512,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6037,7 +4524,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWFloatToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedRealOperation.Create( AValue ) );
+  TOWRealSourcePin( FOutputPin ).Send( AValue );
 end;
 //------------------------------------------------------------------------------
 function TOWFloatToRealFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6058,7 +4545,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6070,7 +4557,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWFloatToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedStringOperation.Create( FloatToStr( AValue )));
+  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 function TOWFloatToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6091,7 +4578,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Real; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6103,7 +4590,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWRealToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Real; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedStringOperation.Create( FloatToStr( AValue )));
+  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 function TOWRealToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6124,7 +4611,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6136,7 +4623,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedRealOperation.Create( AValue ) );
+  TOWRealSourcePin( FOutputPin ).Send( AValue );
 end;
 //------------------------------------------------------------------------------
 function TOWInt64ToRealFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6157,7 +4644,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6169,7 +4656,7 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedSingleOperation.Create( AValue ) );
+  TOWFloatSourcePin( FOutputPin ).Send( AValue );
 end;
 //------------------------------------------------------------------------------
 function TOWInt64ToFloatFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
@@ -6190,7 +4677,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6202,10 +4689,215 @@ end;
 //------------------------------------------------------------------------------
 procedure TOWInt64ToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  FOutputPin.Notify( TOWSuppliedStringOperation.Create( IntToStr( AValue )));
+  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 function TOWInt64ToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type TOWBoolToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWBoolToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWBoolSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWBoolToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean );
+const
+  Values : array [Boolean] of String =
+    (
+      'False',
+      'True'
+    );
+
+begin
+  TOWStringSourcePin( FOutputPin ).Send( Values[ AValue ]);
+end;
+//------------------------------------------------------------------------------
+function TOWBoolToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type TOWRealComplexToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure SinkOperationEvent( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWRealComplexToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWComplexSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWRealComplexToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean );
+begin
+  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue.Real ) + ' I:' + FloatToStr( AValue.Imaginary ));
+end;
+//------------------------------------------------------------------------------
+function TOWRealComplexToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type TOWTimeToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure DoTimeChange( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWTimeToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWDateTimeSinkPin.CreateLock( Self, FLock, DoTimeChange, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//---------------------------------------------------------------------------
+procedure TOWTimeToStringFormatConverter.DoTimeChange( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean );
+begin
+  TOWStringSourcePin( FOutputPin ).Send( DateTimeToStr( AValue ) );
+end;
+//---------------------------------------------------------------------------
+function TOWTimeToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+type TOWIntRangedToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWIntRangedToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWIntRangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
+begin
+  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
+end;
+//------------------------------------------------------------------------------
+function TOWIntRangedToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type TOWInt64RangedToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWInt64RangedToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWInt64RangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
+begin
+  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
+end;
+//------------------------------------------------------------------------------
+function TOWInt64RangedToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+begin
+  if( not ( Operation.Instance() is TOWSuppliedOperation )) then
+    FOutputPin.Notify( Operation )
+
+  else
+    Handled := False;
+
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type TOWRealRangedToStringFormatConverter = class( TOWFormatConverter )
+protected
+  procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean );
+  function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+public
+  constructor Create(); override;
+
+end;
+//---------------------------------------------------------------------------
+constructor TOWRealRangedToStringFormatConverter.Create();
+begin
+  inherited CreateEx( TOWRealAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWRealRangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean );
+begin
+  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ) + ' [' + FloatToStr( AMin ) + ' - ' + FloatToStr( AMax ) + ']' );
+end;
+//------------------------------------------------------------------------------
+function TOWRealRangedToStringFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 begin
   if( not ( Operation.Instance() is TOWSuppliedOperation )) then
     FOutputPin.Notify( Operation )
@@ -6223,7 +4915,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6236,10 +4928,10 @@ end;
 procedure TOWIntToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
   if( ARangesFilled ) then
-    FOutputPin.Notify( TOWSuppliedRealValueRangeOperation.Create( AValue, AMin, AMax ) )
+    TOWRealRangedSourcePin( FOutputPin ).SubmitValueRange( AValue, AMin, AMax )
     
   else
-     FOutputPin.Notify( TOWSuppliedSingleOperation.Create( AValue ) );
+     TOWRealRangedSourcePin( FOutputPin ).SubmitValue( AValue );
      
 end;
 //------------------------------------------------------------------------------
@@ -6261,7 +4953,7 @@ protected
   procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
   function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
-protected
+public
   constructor Create(); override;
 
 end;
@@ -6274,10 +4966,10 @@ end;
 procedure TOWInt64ToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
   if( ARangesFilled ) then
-    FOutputPin.Notify( TOWSuppliedRealValueRangeOperation.Create( AValue, AMin, AMax ) )
+    TOWRealRangedSourcePin( FOutputPin ).SubmitValueRange( AValue, AMin, AMax )
 
   else
-     FOutputPin.Notify( TOWSuppliedSingleOperation.Create( AValue ) );
+    TOWRealRangedSourcePin( FOutputPin ).SubmitValue( AValue );
 
 end;
 //------------------------------------------------------------------------------
@@ -6312,33 +5004,41 @@ constructor TOWStdComboSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOW
 begin
   inherited Create( AOwner, AOnDisconnect );
   FNotifyOnChangeOnly := True;
-  AddType( IOWRealStream,    RealNotification );
-  AddType( IOWFloatStream,   FloatNotification );
-  AddType( IOWIntegerStream, IntegerNotification );
-  AddType( IOWStringStream,  StringNotification );
-  AddType( IOWBoolStream,    BoolNotification );
+  AddType( IOWRealStream,    RealNotification, True );
+  AddType( IOWFloatStream,   FloatNotification, True );
+  AddType( IOWIntegerStream, IntegerNotification, True );
+  AddType( IOWStringStream,  StringNotification, True );
+  AddType( IOWBoolStream,    BoolNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWStdComboSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
   FNotifyOnChangeOnly := True;
-  AddType( IOWRealStream,    RealNotification );
-  AddType( IOWFloatStream,   FloatNotification );
-  AddType( IOWIntegerStream, IntegerNotification );
-  AddType( IOWStringStream,  StringNotification );
-  AddType( IOWBoolStream,    BoolNotification );
+  AddType( IOWRealStream,    RealNotification, True );
+  AddType( IOWFloatStream,   FloatNotification, True );
+  AddType( IOWIntegerStream, IntegerNotification, True );
+  AddType( IOWStringStream,  StringNotification, True );
+  AddType( IOWBoolStream,    BoolNotification, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWStdComboSourcePin.SetValue( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( ( not FNotifyOnChangeOnly ) or ( FValue <> AValue )) then
     Send( AValue );
 
 end;
 //---------------------------------------------------------------------------
 procedure TOWStdComboSourcePin.Send( AValue : Real );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FValue := AValue;
   Notify( TOWSuppliedRealOperation.Create( FValue ));
 end;
@@ -6464,19 +5164,23 @@ end;
 constructor TOWIntRangedSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWIntegerStream, IntNotification );
-  AddType( IOWIntRangedStream, IntRangedNotification );
+  AddType( IOWIntegerStream, IntNotification, True );
+  AddType( IOWIntRangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWIntRangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWIntegerStream, IntNotification );
-  AddType( IOWIntRangedStream, IntRangedNotification );
+  AddType( IOWIntegerStream, IntNotification, True );
+  AddType( IOWIntRangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedSourcePin.SubmitValueRange( AValue : Integer; AMin : Integer; AMax : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -6484,14 +5188,22 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedSourcePin.SubmitRange( AMin : Integer; AMax : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedIntRangeOperation.Create( AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedSourcePin.SetMin( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -6501,7 +5213,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedSourcePin.SetMax( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -6511,7 +5227,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedSourcePin.SetValue( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -6695,8 +5415,8 @@ begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWIntegerStream, IntNotification );
-  AddType( IOWIntRangedStream, IntRangedNotification );
+  AddType( IOWIntegerStream, IntNotification, True );
+  AddType( IOWIntRangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWIntRangedStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange  : TOWIntValueRangeChangeEvent; AOnRangeChange : TOWIntRangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
@@ -6704,8 +5424,8 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWIntegerStream, IntNotification );
-  AddType( IOWIntRangedStream, IntRangedNotification );
+  AddType( IOWIntegerStream, IntNotification, True );
+  AddType( IOWIntRangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 function TOWIntRangedStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -6800,7 +5520,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedStatePin.SetMin( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -6810,7 +5534,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedStatePin.SetMax( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -6820,7 +5548,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedStatePin.SetRanged( AValue : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -6830,7 +5562,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedStatePin.SubmitValueRange( AValue : Integer; AMin : Integer; AMax : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -6838,7 +5574,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWIntRangedStatePin.SubmitRange( AMin : Integer; AMax : Integer );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedIntRangeOperation.Create( AMin, AMax ));
@@ -6850,19 +5590,23 @@ end;
 constructor TOWInt64RangedSourcePin.Create( AOwner: TComponent; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect );
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWInt64RangedSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock, AOnDisconnect );
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedSourcePin.SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -6870,14 +5614,22 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedSourcePin.SubmitRange( AMin : Int64; AMax : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedInt64RangeOperation.Create( AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedSourcePin.SetMin( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -6887,7 +5639,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedSourcePin.SetMax( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -6897,7 +5653,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedSourcePin.SetValue( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -7070,8 +5830,8 @@ begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 constructor TOWInt64RangedStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnDataChange : TOWInt64ValueRangeChangeEvent; AOnRangeChange : TOWInt64RangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL; ACustomData : TObject = NIL );
@@ -7079,8 +5839,8 @@ begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent, ACustomData );
   FOnRangeChange := AOnRangeChange;
   FOnDataChange := AOnDataChange;
-  AddType( IOWInt64Stream, IntNotification );
-  AddType( IOWInt64RangedStream, IntRangedNotification );
+  AddType( IOWInt64Stream, IntNotification, True );
+  AddType( IOWInt64RangedStream, IntRangedNotification, True );
 end;
 //---------------------------------------------------------------------------
 function TOWInt64RangedStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
@@ -7177,7 +5937,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedStatePin.SetMin( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMin <> AValue ) then
     begin
     FMin := AValue;
@@ -7187,7 +5951,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedStatePin.SetMax( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FMax <> AValue ) then
     begin
     FMax := AValue;
@@ -7197,7 +5965,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedStatePin.SetRanged( AValue : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   if( FValue <> AValue ) then
     begin
     FValue := AValue;
@@ -7207,7 +5979,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedStatePin.SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
@@ -7215,7 +5991,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64RangedStatePin.SubmitRange( AMin : Int64; AMax : Int64 );
+var
+  AWriteLock  : IOWLockSection;
+
 begin
+  AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
   Notify( TOWSuppliedInt64RangeOperation.Create( AMin, AMax ));
@@ -7224,20 +6004,18 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockMultiSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWClockMultiSinkPin.Create( AOwner: TComponent; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
-  inherited Create( AOwner );
+  inherited Create( AOwner, AOnPinNotificationEvent );
   FOnClock := AOnClock;
-  FOnPinNotificationEvent := AOnPinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
+  AddType( IOWClockStream, ClockNotification, True );
 end;
 //---------------------------------------------------------------------------
-constructor TOWClockMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWClockPinNotificationEvent = NIL; ACustomData : TObject = NIL );
+constructor TOWClockMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL; ACustomData : TObject = NIL );
 begin
-  inherited CreateLock( AOwner, AOwnerLock );
+  inherited CreateLock( AOwner, AOwnerLock, AOnPinNotificationEvent );
   FOnClock := AOnClock;
-  FOnPinNotificationEvent := AOnPinNotificationEvent;
-  AddType( IOWClockStream, ClockNotification );
+  AddType( IOWClockStream, ClockNotification, True );
 end;
 //---------------------------------------------------------------------------
 function TOWClockMultiSinkPin.ClockNotification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
@@ -7256,8 +6034,8 @@ function TOWClockMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation 
 begin
   Result := [];
 
-  if( Assigned( FOnPinNotificationEvent )) then
-    FOnPinNotificationEvent( Self, DataTypeID, Operation, State );
+  if( Assigned( FPinNotificationEvent )) then
+    FPinNotificationEvent( Self, DataTypeID, Operation, State );
 
   if( Assigned( FOnClock )) then
 //    if( not ( nsNewLink in State )) then
@@ -7277,28 +6055,12 @@ constructor TOWStreamPersistSourcePin.CreateEx( AOwner: TComponent; APinNotifica
 begin
   inherited Create( AOwner );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWStreamPersistStream, Notification );
 end;
 //---------------------------------------------------------------------------
 constructor TOWStreamPersistSourcePin.CreateLockEx( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock; APinNotificationEvent : TOWPinNotificationEvent );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
-
-  AddType( IOWStreamPersistStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWStreamPersistSourcePin.Create( AOwner: TComponent );
-begin
-  inherited Create( AOwner );
-  AddType( IOWStreamPersistStream, Notification );
-end;
-//---------------------------------------------------------------------------
-constructor TOWStreamPersistSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IOWLock; AInputOwnerLock : IOWLock );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
-  AddType( IOWStreamPersistStream, Notification );
 end;
 //---------------------------------------------------------------------------
 procedure TOWStreamPersistSourcePin.SubmitData( Value : TStream );
@@ -7340,7 +6102,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStartRateOperation.Create( ARate : Single );
+constructor TOWStartRateOperation.Create( ARate : Real );
 begin
   inherited Create;
   Rate := ARate;
@@ -7349,37 +6111,20 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSuppliedSingleOperation.Create( AValue : Single );
+constructor TOWTypedSuppliedOperation<T>.Create( AValue : T );
 begin
-  inherited Create;
+  inherited Create( 1 );
   Value := AValue;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSuppliedBoolOperation.Create( AValue : Boolean );
+constructor TOWTypedSuppliedRangeOperation<T>.Create( AMin : T; AMax : T );
 begin
-  inherited Create;
-  Value := AValue;
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedCharOperation.Create( AValue : Char );
-begin
-  inherited Create;
-  Value := AValue;
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedStringOperation.Create( AValue : String );
-begin
-  inherited Create;
-  Value := AValue;
+  inherited Create( 1 );
+  Min := AMin;
+  Max := AMax;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -7387,16 +6132,7 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWSuppliedStringListOperation.Create( AValue : TStrings );
 begin
-  inherited Create;
-  Value := AValue;
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedRealOperation.Create( AValue : Real );
-begin
-  inherited Create;
+  inherited Create( AValue.Count );
   Value := AValue;
 end;
 //---------------------------------------------------------------------------
@@ -7410,21 +6146,8 @@ begin
   Max := AMax;
 end;
 //---------------------------------------------------------------------------
-constructor TOWSuppliedRealRangeOperation.Create( AMin : Real; AMax : Real );
-begin
-  inherited Create();
-  Min := AMin;
-  Max := AMax;
-end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedIntegerOperation.Create( AValue : Integer );
-begin
-  inherited Create;
-  Value := AValue;
-end;
 //---------------------------------------------------------------------------
 constructor TOWSuppliedIntValueRangeOperation.Create( AValue, AMinValue, AMaxValue : Integer );
 begin
@@ -7433,53 +6156,14 @@ begin
   Max := AMaxValue;
 end;
 //---------------------------------------------------------------------------
-constructor TOWSuppliedIntRangeOperation.Create( AMinValue, AMaxValue : Integer );
-begin
-  inherited Create();
-  Min := AMinValue;
-  Max := AMaxValue;
-end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedInt64Operation.Create( AValue : Int64 );
-begin
-  inherited Create;
-  Value := AValue;
-end;
 //---------------------------------------------------------------------------
 constructor TOWSuppliedInt64ValueRangeOperation.Create( AValue, AMinValue, AMaxValue : Int64 );
 begin
   inherited Create( AValue );
   Min := AMinValue;
   Max := AMaxValue;
-end;
-//---------------------------------------------------------------------------
-constructor TOWSuppliedInt64RangeOperation.Create( AMinValue, AMaxValue : Int64 );
-begin
-  inherited Create();
-  Min := AMinValue;
-  Max := AMaxValue;
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedRealComplexOperation.Create( AValue : TOWRealComplex );
-begin
-  inherited Create;
-
-  Value := AValue;
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWSuppliedDateTimeOperation.Create( AValue : TDateTime );
-begin
-  inherited Create();
-  Value := AValue;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -7492,26 +6176,19 @@ begin
   Max := AMaxValue;
 end;
 //---------------------------------------------------------------------------
-constructor TOWSuppliedDateTimeRangeOperation.Create( AMinValue, AMaxValue : TDateTime );
-begin
-  inherited Create();
-  Min := AMinValue;
-  Max := AMaxValue;
-end;
-//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 {$IFDEF D16Up}
 constructor TOWSuppliedStreamPersistOperation.Create();
 begin
-  inherited Create();
+  inherited Create( 1 );
   Value := TMemoryStream.Create();
 end;
 //---------------------------------------------------------------------------
 constructor TOWSuppliedStreamPersistOperation.Create( AValue : TStream );
 begin
-  inherited Create();
+  inherited Create( 1 );
   Value := TMemoryStream.Create();
   TMemoryStream( Value ).LoadFromStream( AValue );
 end;
@@ -7531,7 +6208,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-constructor TOWPumpRequestOperation.CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Integer; ADesiredRate : Single );
+constructor TOWPumpRequestOperation.CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; ADesiredRate : Real );
 begin
   inherited Create();
   Pump := APump;
@@ -7567,6 +6244,12 @@ begin
   Enabled := AEnabled;
 end;
 //---------------------------------------------------------------------------
+constructor TOWClockOperation.Create( ASamples : Integer );
+begin
+  inherited Create();
+  Samples := ASamples;
+end;
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -7584,7 +6267,7 @@ initialization
   OWRegisterStream( IOWInt64RangedStream, 'Ranged 64 bit Integer' );
   OWRegisterStream( IOWRealRangedStream,  'Ranged Real' );
   OWRegisterStream( IOWDateTimeStream,    'Date/Time' );
-  
+
   OWRegisterDefaultHandler( IOWDataStream, OWDefaultDataNotificationHandler );
 
   OWRegisterTypeConverter( IOWIntegerStream,      IOWFloatStream,       TOWIntToFloatFormatConverter );
@@ -7598,5 +6281,11 @@ initialization
   OWRegisterTypeConverter( IOWRealStream,         IOWStringStream,      TOWRealToStringFormatConverter );
   OWRegisterTypeConverter( IOWIntRangedStream,    IOWRealRangedStream,  TOWIntToRealRangedFormatConverter );
   OWRegisterTypeConverter( IOWInt64RangedStream,  IOWRealRangedStream,  TOWInt64ToRealRangedFormatConverter );
+  OWRegisterTypeConverter( IOWIntRangedStream,    IOWStringStream,      TOWIntRangedToStringFormatConverter );
+  OWRegisterTypeConverter( IOWInt64RangedStream,  IOWStringStream,      TOWInt64RangedToStringFormatConverter );
+  OWRegisterTypeConverter( IOWRealRangedStream,   IOWStringStream,      TOWRealRangedToStringFormatConverter );
+  OWRegisterTypeConverter( IOWBoolStream,         IOWStringStream,      TOWBoolToStringFormatConverter );
+  OWRegisterTypeConverter( IOWRealComplexStream,  IOWStringStream,      TOWRealComplexToStringFormatConverter );
+  OWRegisterTypeConverter( IOWDateTimeStream,     IOWStringStream,      TOWTimeToStringFormatConverter );
 
 end.

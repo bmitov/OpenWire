@@ -17,7 +17,7 @@ uses
 {$IFDEF FMX}
   FMX.Types, FMX.Controls,
 {$ELSE}
-  Controls, Forms, StdCtrls, ExtCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
 {$ENDIF}
   OWStdTypes, OWPins;
 
@@ -179,8 +179,8 @@ constructor TOWLAdd.Create(AOwner: TComponent);
 begin
   inherited;
   FOutputPin := TOWFloatSourcePin.CreateEx( Self, PinNotification );
-  FPositiveInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreatePositivePin, DestroyPositivePin );
-  FNegativeInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreateNegativePin, DestroyNegativePin );
+  FPositiveInputPins := TOWPinListOwner.CreateEx( Self, 1, [pcSink], 1, 100, CreatePositivePin, DestroyPositivePin );
+  FNegativeInputPins := TOWPinListOwner.CreateEx( Self, 1, [pcSink], 1, 100, CreateNegativePin, DestroyNegativePin );
 end;
 //---------------------------------------------------------------------------
 destructor  TOWLAdd.Destroy();
@@ -256,7 +256,6 @@ procedure TOWLAdd.SendNegativeData ( Sender : TOWPin; AValue : Single; AOnConnec
 begin
   FNegativeDataArray[ Integer( Sender.CustomData ) ] := AValue;
   FOutputPin.Notify( TOWNotifyOperation.Create() );
-    
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -269,7 +268,7 @@ var
 begin
   inherited;
   FOutputPin := TOWFloatSourcePin.CreateEx( Self, PinNotification );
-  FInputPins := TOWPinListOwner.CreateEx( Self, 1, 100, CreateInputPin, DestroyInputPin );
+  FInputPins := TOWPinListOwner.CreateEx( Self, 1, [pcSink], 1, 100, CreateInputPin, DestroyInputPin );
   for I := 0 to FInputPins.Count - 1 do
     FInputPins[ I ].CustomData := Pointer( I );
     

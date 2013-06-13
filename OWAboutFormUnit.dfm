@@ -23,7 +23,7 @@ object OWAboutForm: TOWAboutForm
     Top = 272
     Width = 157
     Height = 13
-    Caption = 'Copyright 1999-2012 Boian Mitov'
+    Caption = 'Copyright 1999-2013 Boian Mitov'
   end
   object OWLabel: TLabel
     Left = 120
@@ -63,7 +63,7 @@ object OWAboutForm: TOWAboutForm
         Left = 1
         Top = 1
         Width = 300
-        Height = 225
+        Height = 224
         Align = alClient
         AutoSize = True
         Center = True
@@ -2203,6 +2203,7 @@ object OWAboutForm: TOWAboutForm
           6464646464646464646464646464646464646464646464646464646464646464
           6464646464646464646464646464646464646464646464646464646464646464
           6464}
+        ExplicitHeight = 225
       end
     end
   end

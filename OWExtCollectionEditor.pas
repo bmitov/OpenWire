@@ -41,6 +41,10 @@ interface
 {$DEFINE D6}
 {$ENDIF}
 
+{$IFDEF VER250} // Delphi 18.0
+{$DEFINE D6}
+{$ENDIF}
+
   uses
     SysUtils, Classes,
 {$IFDEF D6}
@@ -113,6 +117,9 @@ uses
   , ColnEdit
 {$ENDIF}
 {$IFDEF VER240} // Delphi 17.0
+  , ColnEdit
+{$ENDIF}
+{$IFDEF VER250} // Delphi 18.0
   , ColnEdit
 {$ENDIF}
   ;

@@ -10,7 +10,8 @@ unit OWLStateComps;
 
 interface
 
-uses Classes, ComCtrls, OWStdTypes, OWPins;
+uses
+  Classes, Vcl.ComCtrls, OWStdTypes, OWPins;
 
 type
   TOWLTrackBar = class( TTrackBar )

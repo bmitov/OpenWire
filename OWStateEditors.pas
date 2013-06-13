@@ -54,9 +54,8 @@ uses
 {$ELSE}
   Windows, 
 {$ENDIF}
-  Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, ImgList, StdCtrls, ExtCtrls, Buttons, Contnrs,
-  OWPins, OWDesignTypes, ActnList;
+  Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
+  Vcl.ImgList, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, Contnrs, OWPins, OWDesignTypes, Vcl.ActnList;
 
 type
   TOWStatePinForm = class(TForm)
@@ -166,7 +165,7 @@ uses
 {$IFDEF BDS2005_OR_2006_BUG}
   ToolsAPI,
 {$ENDIF}
-  OWAboutFormUnit;
+  System.UITypes, OWAboutFormUnit;
 
 type TOWExposedStatePin = class(TOWStatePin);
 //type TOWExposedPin = class(TOWPin);

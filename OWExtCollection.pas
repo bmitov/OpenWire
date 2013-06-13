@@ -154,7 +154,7 @@ begin
   inherited;
 end;
 //------------------------------------------------------------------------------
-function  TOWExtCollection.GetOwner() : TPersistent;
+function TOWExtCollection.GetOwner() : TPersistent;
 begin
   Result := FOwner;
 end;
