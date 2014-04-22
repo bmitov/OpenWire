@@ -1,61 +1,13 @@
 unit OWExtCollection;
 
-{$IFDEF fpc}
-{$MODE DELPHI}{$H+}
-{$ENDIF}
-
 interface
 
 uses Classes;
 
-{$IFDEF VER140} // Delphi 6.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE D6}
-{$ENDIF}
-
 type
   TOWExtCollectionItem = class(TCollectionItem)
   protected
-    CurrentEditorPtr : ^TCollectionItem;
-
-{$IFNDEF D6}
-    FInitialized     : Boolean;
-{$ENDIF}
+    FCurrentEditorPtr : ^TCollectionItem;
 
   public
     destructor  Destroy(); override;
@@ -64,9 +16,10 @@ type
 //------------------------------------------------------------------------------
   TOWExtCollection = class(TCollection)
   protected
-    LastIndicatedCount : Integer;
+    FLastIndicatedCount : Integer;
     
   protected
+    [Weak]
     FOwner : TPersistent;
 
   protected
@@ -85,11 +38,7 @@ type
 
   protected
     procedure NewItemCreated( Item: TCollectionItem ); virtual;
-{$IFDEF D6}
     procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
-{$ELSE}
-    procedure SetItemName(Item: TCollectionItem); override;
-{$ENDIF}
 
   end;
 //------------------------------------------------------------------------------
@@ -127,11 +76,11 @@ begin
   ACollection.FNotifyList.Remove( ANotifyItem );
 end;
 //---------------------------------------------------------------------------
-destructor  TOWExtCollectionItem.Destroy();
+destructor TOWExtCollectionItem.Destroy();
 begin
   inherited;
-  if( CurrentEditorPtr <> NIL )then
-    CurrentEditorPtr^ := NIL;
+  if( FCurrentEditorPtr <> NIL )then
+    FCurrentEditorPtr^ := NIL;
 
 end;
 //------------------------------------------------------------------------------
@@ -189,7 +138,7 @@ begin
       IOWCollectionNotifier( FNotifyList.Items[ I ] ).ItemDestroyed( Self, Item );
 
     except;
-    end;
+      end;
 
 end;
 //------------------------------------------------------------------------------
@@ -197,7 +146,6 @@ procedure TOWExtCollection.NewItemCreated( Item: TCollectionItem );
 begin
 end;
 //------------------------------------------------------------------------------
-{$IFDEF D6}
 procedure TOWExtCollection.Notify(Item: TCollectionItem; Action: TCollectionNotification);
 begin
   inherited;
@@ -210,20 +158,7 @@ begin
   else if( ( Action = cnDeleting ) or ( Action = cnExtracting ) ) then
     AfterNewItemDestroyed( Item );
 
-  LastIndicatedCount := -1;
+  FLastIndicatedCount := -1;
 end;
-{$ELSE}
-procedure TOWExtCollection.SetItemName(Item: TCollectionItem);
-begin
-  inherited SetItemName( Item );
-  if( not TOWExtCollectionItem( Item ).FInitialized ) then
-    begin
-    TOWExtCollectionItem( Item ).FInitialized := True;
-    NewItemCreated( Item );
-    AfterNewItemCreated( Item );
-    end;
-    
-end;
-{$ENDIF}
+//------------------------------------------------------------------------------
 end.
-

@@ -1,6 +1,7 @@
-package OpenWirePkgD17;
+package OpenWireLabPkgD19;
 
 {$R *.res}
+{$R '..\OWLComps.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -23,18 +24,19 @@ package OpenWirePkgD17;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $00400000}
-{$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'OpenWire Project'}
-{$RUNONLY}
+{$DESCRIPTION 'OpenWire DemoLab demonstration package'}
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl;
+  rtl,
+  vcl,
+  vclx,
+  OpenWirePkgD19;
 
 contains
-  OWPins in '..\OWPins.pas',
-  OWStdTypes in '..\OWStdTypes.pas',
-  OWExtCollection in '..\OWExtCollection.pas';
+  OWLStateComps in '..\OWLStateComps.pas',
+  OWLComps in '..\OWLComps.pas';
 
 end.
+

@@ -1,4 +1,4 @@
-package OpenWireLabPkgD16;
+package OpenWireLabPkgDXE6;
 
 {$R *.res}
 {$R '..\OWLComps.dcr'}
@@ -32,7 +32,7 @@ requires
   rtl,
   vcl,
   vclx,
-  OpenWirePkgD16;
+  OpenWirePkgDXE6;
 
 contains
   OWLStateComps in '..\OWLStateComps.pas',

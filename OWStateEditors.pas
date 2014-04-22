@@ -1,61 +1,14 @@
 unit OWStateEditors;
 
-{$IFDEF FPC}
-{$MODE DELPHI}{$H+}
-{$ENDIF}
-
-{$IFDEF VER140} // Delphi 6.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D6}
-{$DEFINE BDS2005_OR_2006_BUG}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D6}
-{$DEFINE BDS2005_OR_2006_BUG}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE D6}
-{$ENDIF}
+{$DEFINE BDS2005_OR_2006_BUG} // ????
 
 interface
 
 uses
-{$IFDEF FPC}
-  LCLIntf, LResources, PropEdits,
-{$ELSE}
-  Windows, 
-{$ENDIF}
+  Windows,
   Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  Vcl.ImgList, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, Contnrs, OWPins, OWDesignTypes, Vcl.ActnList;
+  Vcl.ImgList, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, Contnrs, OWPins, OWDesignTypes, Vcl.ActnList,
+  System.Actions;
 
 type
   TOWStatePinForm = class(TForm)
@@ -153,22 +106,14 @@ function OWStatePinEdit( Designer : TOWPropertyDesigner; StatePin : TOWStatePin 
 
 implementation
 
-{$IFNDEF FPC}
 {$R *.DFM}
-{$ENDIF}
 
 uses
 
-{$IFDEF FPC}
-  LMessages,
-{$ENDIF}
 {$IFDEF BDS2005_OR_2006_BUG}
   ToolsAPI,
 {$ENDIF}
   System.UITypes, OWAboutFormUnit;
-
-type TOWExposedStatePin = class(TOWStatePin);
-//type TOWExposedPin = class(TOWPin);
 
 {$IFDEF BCB}
 const
@@ -218,8 +163,6 @@ var
 
 begin
   FormNames := TOWModulesColection.Create;
-{$IFNDEF FPC}
-
 {$IFNDEF BDS2005_OR_2006_BUG}
   Designer.GetProjectModules( FormNames.GetModules );
 
@@ -234,7 +177,6 @@ begin
       FormNames.GetModules( ModuleInfo.FileName, ModuleInfo.Name, ModuleInfo.FormName, ModuleInfo.DesignClass, NIL );
       end;
 
-{$ENDIF}
 {$ENDIF}
 
   FormsComboBox.Items.Clear();
@@ -359,11 +301,7 @@ function  TOWStatePinForm.ExecuteForState( ADesigner : TOWPropertyDesigner; ASta
 begin
   Designer := ADesigner;
   StatePin := AStatePin;
-{$IFDEF FPC}
-  Root := OWGetMainDesignOwner( AStatePin.Owner );
-{$ELSE}
   Root := ADesigner.GetRoot();
-{$ENDIF}
 
 //  LinkAllButton.Visible := True;
 //  UnlinkAllButton.Visible := True;
@@ -520,7 +458,7 @@ begin
           
         Entry := EntryFromDispatcher( Dispatcher );
         Node := TreeView.Items.AddObject( NIL, Dispatcher.Name, Entry );
-        if( TOWExposedStatePin( StatePin ).FDispatcher = Dispatcher ) then
+        if( StatePin.IsConnectedToState( Dispatcher )) then
           begin
           Node.StateIndex := siRadioCheck;
           Entry.SavedChecked := True;
@@ -590,7 +528,7 @@ begin
           SubNode.SelectedIndex := SubNode.ImageIndex;
           end;
 }
-        if( TOWExposedStatePin( StatePin ).FDispatcher = Dispatcher ) then
+        if( StatePin.IsConnectedToState( Dispatcher )) then
           begin
           Node.Expand( False );
           Node.ImageIndex := siLinkMinus;
@@ -1175,9 +1113,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 initialization
-{$IFDEF FPC}
-  {$i OWStateEditors.lrs}
-{$ENDIF}
   GOWStatePinEditorForm := TOWStatePinForm.Create( Application );
 
 finalization

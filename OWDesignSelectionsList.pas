@@ -1,89 +1,31 @@
 unit OWDesignSelectionsList;
 
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER250} // Delphi 18.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER130}
-{$DEFINE D5}
-{$ENDIF}
-
 interface
   uses
-{$IFNDEF D5}
 {$IFDEF __VSDESIGN__}
     Mitov.Design
 {$ELSE}
     DesignIntf
 {$ENDIF}
-{$ELSE}
-    DsgnIntf
-{$ENDIF}
     , Classes;
 { TOWDesignerSelectionList }
 {   Used to transport VCL component selections between property editors }
 type
-  {$IFDEF D5}
-    TOWDesignerSelectionList = class(TDesignerSelectionList, IDesignerSelections)
-  {$ELSE}
-    TOWDesignerSelectionList = class(TInterfacedObject, IDesignerSelections)
-  {$ENDIF}
+  TOWDesignerSelectionList = class(TInterfacedObject, IDesignerSelections)
   private
     FList: TList;
     { IDesignSelections }
     function IDesignerSelections.Add = Intf_Add;
-    {$IFDEF D5}
-      function Intf_Add(const Item: IPersistent): Integer;
-    {$ELSE}
-      function Intf_Add(const Item: TPersistent): Integer;
-    {$ENDIF}
+    function Intf_Add(const Item: TPersistent): Integer;
     function IDesignerSelections.Equals = Intf_Equals;
     function Intf_Equals(const List: IDesignerSelections): Boolean;
     function IDesignerSelections.Get = Intf_Get;
-    {$IFDEF D5}
-      function Intf_Get(Index: Integer): IPersistent;
-    {$ELSE}
-      function Intf_Get(Index: Integer): TPersistent;
-    {$ENDIF}
+    function Intf_Get(Index: Integer): TPersistent;
     function Get(Index: Integer): TPersistent;
     function GetCount: Integer;
-{$IFDEF D9} // Delphi 9.0
   {$IFNDEF __VSDESIGN__}
     function GetDesignObject( Index : Integer ) : IDesignObject;
   {$ENDIF}
-{$ENDIF}
     { IComponentList }
 //    function GetComponentList: TOWDesignerSelectionList;
   public
@@ -114,13 +56,11 @@ begin
   Result := FList[Index];
 end;
 
-{$IFDEF D9} // Delphi 9.0
-  {$IFNDEF __VSDESIGN__}
+{$IFNDEF __VSDESIGN__}
 function TOWDesignerSelectionList.GetDesignObject( Index : Integer ) : IDesignObject;
 begin
   Result := IDesignObject( FList[Index] );
 end;
-  {$ENDIF}
 {$ENDIF}
 
 function TOWDesignerSelectionList.GetCount: Integer;
@@ -138,17 +78,9 @@ begin
   Result := False;
 end;
 
-{$IFDEF D5}
-  function TOWDesignerSelectionList.Intf_Add(const Item: IPersistent): Integer;
-{$ELSE}
-  function TOWDesignerSelectionList.Intf_Add(const Item: TPersistent): Integer;
-{$ENDIF}
+function TOWDesignerSelectionList.Intf_Add(const Item: TPersistent): Integer;
 begin
-  {$IFDEF D5}
-    Result := Add( ExtractPersistent( Item ) );
-  {$ELSE}
-    Result := Add( Item );
-  {$ENDIF}
+  Result := Add( Item );
 end;
 
 function TOWDesignerSelectionList.Intf_Equals(const List: IDesignerSelections): Boolean;
@@ -156,17 +88,9 @@ begin
   Result := False;
 end;
 
-{$IFDEF D5}
-  function TOWDesignerSelectionList.Intf_Get(Index: Integer): IPersistent;
-{$ELSE}
-  function TOWDesignerSelectionList.Intf_Get(Index: Integer): TPersistent;
-{$ENDIF}
+function TOWDesignerSelectionList.Intf_Get(Index: Integer): TPersistent;
 begin
-  {$IFDEF D5}
-    Result := MakeIPersistent( TPersistent( FList[ Index ] ) );
-  {$ELSE}
-    Result := TPersistent( FList[ Index ] );
-  {$ENDIF}
+  Result := TPersistent( FList[ Index ] );
 end;
 
 {

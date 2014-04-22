@@ -1,4 +1,4 @@
-package OpenWirePkgD17;
+package OpenWirePkgD19;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -38,3 +38,4 @@ contains
   OWExtCollection in '..\OWExtCollection.pas';
 
 end.
+

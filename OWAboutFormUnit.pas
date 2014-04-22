@@ -1,51 +1,10 @@
 unit OWAboutFormUnit;
 
-{$IFDEF FPC}
-{$MODE DELPHI}{$H+}
-{$ENDIF}
-
-{$IFDEF VER140} // Delphi 6.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 15.0
-{$DEFINE D6}
-{$ENDIF}
-
 interface
 
 uses
-{$IFDEF FPC}
-  LCLIntf, LMessages, LResources,
-{$ELSE}
-  Windows, Messages,
-{$ENDIF}
-  SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls;
+  Windows, Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls;
 
 type
   TOWAboutForm = class(TForm)
@@ -107,15 +66,8 @@ end;
 
 procedure TOWAboutForm.FormCreate(Sender: TObject);
 begin
-{$IFDEF D6}
   OWLabel.OnMouseEnter := OWLabelMouseEnter;
   OWLabel.OnMouseLeave := OWLabelMouseLeave;
-{$ENDIF}
 end;
-
-{$IFDEF FPC}
-initialization
-  {$i OWAboutFormUnit.lrs}
-{$ENDIF}
 
 end.

@@ -4,67 +4,6 @@ unit OWDesignTypes;
   {$MODE DELPHI}{$H+}
 {$ENDIF}
 
-{$IFDEF VER140} // Delphi 6.0
-  {$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-  {$DEFINE D6}
-  {$DEFINE D7}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-  {$DEFINE D16Up}
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-  {$DEFINE D16Up}
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER250} // Delphi 18.0
-  {$DEFINE D16Up}
-  {$DEFINE D6}
-  {$DEFINE D9}
-{$ENDIF}
-
-{$IFNDEF D16Up}
-  {$DEFINE __DELPHI_DESIGN__}
-{$ENDIF}
-
 interface
 
 uses
@@ -79,37 +18,17 @@ uses
     {$IFNDEF __DELPHI_DESIGN__}
       Mitov.Design,
     {$ELSE}
-      {$IFDEF D6}
-        DesignEditors,
-        DesignIntf,
-        TypInfo,
-      {$ELSE}
-        dsgnintf,
-      {$ENDIF}
+      DesignEditors,
+      DesignIntf,
+      TypInfo,
     {$ENDIF}
   {$ENDIF}
 
 {$ENDIF}
     Vcl.Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes;
 
-{$IFDEF VER130}
-  type IProperty = TPropertyEditor;
-  type IOWDesigner = IFormDesigner;
-{$ELSE}
-  {$IFDEF FPC}
-    type IOWDesigner = TComponentEditorDesigner;
-  {$ELSE}
-    type IOWDesigner = IDesigner;
-  {$ENDIF}
-{$ENDIF}
-
-{$IFDEF FPC}
-  type TOWPropNameString = ShortString;
-  type TOWPropertyDesigner = TPropertyEditorHook;
-{$ELSE}
   type TOWPropNameString = String;
-  type TOWPropertyDesigner = IOWDesigner;
-{$ENDIF}
+  type TOWPropertyDesigner = IDesigner;
 
 type
   TOWEPinEntry = class
@@ -161,9 +80,6 @@ function  OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TC
 procedure Register;
 //---------------------------------------------------------------------------
 const
-{$IFDEF fpc}
-  WM_APP = $8000;
-{$ENDIF}
   OWM_UPDATE                      = WM_APP + 10;
   OWMSG_UPDATE_INSPECTOR          = WM_APP + 11;
   OWMSG_UPDATE_MODIFIED_INSPECTOR = WM_APP + 12;
@@ -172,30 +88,20 @@ var GOWInRefresh   : Boolean;
 var GOWRefreshForm : TForm;
 //---------------------------------------------------------------------------
 implementation
-{$IFDEF FPC}
-  uses SysUtils, Math;
-  type TADesignerSelectionList = TPersistentSelectionList;
 
-{$ELSE}
-  {$IFDEF D6}
-    uses
-    SysUtils,
-    {$IFNDEF __VSDESIGN__}
-      {$IFDEF __DELPHI_DESIGN__}
-        ToolsAPI, OWDesignSelectionsList,
-      {$ENDIF}
-    {$ENDIF}
-    Math;
-    {$IFNDEF __VSDESIGN__}
-      {$IFDEF __DELPHI_DESIGN__}
-        type TADesignerSelectionList = TOWDesignerSelectionList;
-      {$ENDIF}
-    {$ENDIF}
-  {$ELSE}
-    uses SysUtils, ToolsAPI, ToolIntf, ExptIntf, ActiveX, Math;
-    type TADesignerSelectionList = TDesignerSelectionList;
-  {$ENDIF}
-{$ENDIF}
+uses
+  SysUtils,
+  {$IFNDEF __VSDESIGN__}
+    {$IFDEF __DELPHI_DESIGN__}
+      ToolsAPI, OWDesignSelectionsList,
+    {$ENDIF} // __DELPHI_DESIGN__
+  {$ENDIF} // __VSDESIGN__
+  Math;
+  {$IFNDEF __VSDESIGN__}
+    {$IFDEF __DELPHI_DESIGN__}
+      type TADesignerSelectionList = TOWDesignerSelectionList;
+    {$ENDIF} // __DELPHI_DESIGN__
+  {$ENDIF} // __VSDESIGN__
 //---------------------------------------------------------------------------
 {$IFDEF BCB}
 const
@@ -237,7 +143,6 @@ var
   Component : TComponent;
 
 begin
-{$IFNDEF FPC}
   Component := Designer.GetComponent( RootName + SEPARATOR + RootName );
 
   Result := False;
@@ -250,23 +155,18 @@ begin
     end;
 
   Result := Designer.IsComponentLinkable( Component );
-{$ELSE}
-  Result := True;
-{$ENDIF}
 end;
 //---------------------------------------------------------------------------
 procedure OWLinkAwaitsLinkingAllForms();
 var
   I                     : Integer;
   ModuleIndex           : Integer;
-{$IFNDEF FPC}
   Module                : IOTAModule;
 
   ModuleServices        : IOTAModuleServices;
   FormEditor            : INTAFormEditor;
 
   Project               : IOTAProject;
-{$ENDIF}
   ModuleFileExt         : String;
 
 begin
@@ -279,7 +179,6 @@ begin
   InOppening := True;
   PinsNeedRefresh := False;
 
-{$IFNDEF FPC}
   BorlandIDEServices.QueryInterface( IOTAModuleServices, ModuleServices );
 
   if( Assigned( ModuleServices )) then
@@ -292,7 +191,7 @@ begin
         if( Project.GetModule( ModuleIndex ).GetFileName <> '' ) then
           begin
           try
-            ModuleFileExt := UpperCase( ExtractFileExt( Project.GetModule( ModuleIndex ).GetFileName )); 
+            ModuleFileExt := UpperCase( ExtractFileExt( Project.GetModule( ModuleIndex ).GetFileName ));
             if( ( ModuleFileExt <> '.CPP' ) and ( ModuleFileExt <> '.PAS' ) and ( ModuleFileExt <> '.DFM' )) then
                Continue;
 {
@@ -306,7 +205,7 @@ begin
             Project.GetModule( ModuleIndex ).OpenModule.QueryInterface( IOTAModule, Module );
             if( Project.GetModule( ModuleIndex ).FormName = '' ) then
                Continue;
-               
+
             for I := 0 to Module.GetModuleFileCount - 1 do
               begin
                 begin
@@ -323,7 +222,7 @@ begin
         end;
       end;
     end;
-{$ENDIF}
+
   InOppening := False;
 end;
 //---------------------------------------------------------------------------
@@ -383,7 +282,6 @@ var
   I         : Integer;
 
 begin
-{$IFNDEF FPC}
   FormNames := TOWModulesColection.Create;
 
   Designer.GetProjectModules( FormNames.GetModules );
@@ -391,13 +289,12 @@ begin
     OWCanAccessRootFromName( Designer, FormNames.Strings[ I ] );
 
   FormNames.Free;
-{$ENDIF}
+
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
 procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
 begin
-{$IFNDEF FPC}
   if( GOWInRefresh ) then
     Exit;
 
@@ -410,12 +307,10 @@ begin
 
     end;
 
-{$ENDIF}
 end;
 //---------------------------------------------------------------------------
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 begin
-{$IFNDEF FPC}
   if( GOWInRefresh ) then
     Exit;
 
@@ -428,7 +323,6 @@ begin
 
     end;
 
-{$ENDIF}
 end;
 {$ENDIF}
 {$ELSE}
@@ -493,10 +387,7 @@ var
 begin
   AExtention := ( OWGetStreamExtentionFromID( AStreamTypeID, IOWStreamInfoOWEditorExtention ) as IOWStreamInfoOWEditorExtention );
   if( AExtention = NIL ) then
-    begin
-    Result := False;
-    Exit;
-    end;
+    Exit( False );
 
   Color := AExtention.GetInstance().Color;
   Thickness  := AExtention.GetInstance().Thickness;
@@ -509,21 +400,20 @@ end;
 //---------------------------------------------------------------------------
 procedure Register;
 begin
-  OWRegisterStreamColorThickness( IOWIntegerStream,     clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWInt64Stream,       clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWFloatStream,       clRed, 1 );
-  OWRegisterStreamColorThickness( IOWRealStream,        clRed, 1 );
-  OWRegisterStreamColorThickness( IOWRealComplexStream, clAqua, 1 );
-  OWRegisterStreamColorThickness( IOWBoolStream,        clBlue, 1 );
-  OWRegisterStreamColorThickness( IOWCharStream,        clTeal, 1 );
-  OWRegisterStreamColorThickness( IOWStringStream,      clTeal, 1.5 );
-  OWRegisterStreamColorThickness( IOWIntRangedStream,   clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWInt64RangedStream, clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWRealRangedStream,  clRed, 1 );
-  OWRegisterStreamColorThickness( IOWDateTimeStream,    clFuchsia, 1 );
-{$IFDEF D16Up}
+  OWRegisterStreamColorThickness( IOWIntegerStream,       clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWInt64Stream,         clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWFloatStream,         clRed, 1 );
+  OWRegisterStreamColorThickness( IOWRealStream,          clRed, 1 );
+  OWRegisterStreamColorThickness( IOWRealComplexStream,   clAqua, 1 );
+  OWRegisterStreamColorThickness( IOWBoolStream,          clBlue, 1 );
+  OWRegisterStreamColorThickness( IOWCharStream,          clTeal, 1 );
+  OWRegisterStreamColorThickness( IOWStringStream,        clTeal, 1.5 );
+  OWRegisterStreamColorThickness( IOWStringListStream,    clTeal, 2 );
+  OWRegisterStreamColorThickness( IOWIntRangedStream,     clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWInt64RangedStream,   clFuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWRealRangedStream,    clRed, 1 );
+  OWRegisterStreamColorThickness( IOWDateTimeStream,      clFuchsia, 1 );
   OWRegisterStreamColorThickness( IOWStreamPersistStream, clLime, 2 );
-{$ENDIF}
 end;
 
 initialization
@@ -534,20 +424,4 @@ initialization
 {$ENDIF}
   GOWInRefresh := False;
 
-finalization
-  OWFreeStreamInfo( IOWIntegerStream );
-  OWFreeStreamInfo( IOWInt64Stream );
-  OWFreeStreamInfo( IOWFloatStream );
-  OWFreeStreamInfo( IOWRealStream );
-  OWFreeStreamInfo( IOWRealComplexStream );
-  OWFreeStreamInfo( IOWBoolStream );
-  OWFreeStreamInfo( IOWCharStream );
-  OWFreeStreamInfo( IOWStringStream );
-  OWFreeStreamInfo( IOWIntRangedStream );
-  OWFreeStreamInfo( IOWInt64RangedStream );
-  OWFreeStreamInfo( IOWRealRangedStream );
-  OWFreeStreamInfo( IOWDateTimeStream );
-{$IFDEF D16Up}
-  OWFreeStreamInfo( IOWStreamPersistStream );
-{$ENDIF}
 end.

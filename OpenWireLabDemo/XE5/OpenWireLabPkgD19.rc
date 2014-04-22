@@ -1,0 +1,24 @@
+MAINICON ICON "C:\\Program Files (x86)\\Embarcadero\\RAD Studio\\12.0\\bin\\delphi_PROJECTICON.ico"
+1 VERSIONINFO
+FILEVERSION 6,0,0,345
+PRODUCTVERSION 0,0,0,0
+FILEFLAGSMASK 0x3FL
+FILEFLAGS 0x00L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x00L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+         BLOCK "040904E4"
+         BEGIN
+              VALUE "FileVersion", "6.0.0.345\0"
+              VALUE "ProductVersion", "0.0.0.0\0"
+              VALUE "CompileDate", "Thursday, April 3, 2014 5:37 PM\0"
+         END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+         VALUE "Translation", 0x0409, 1252
+    END
+END

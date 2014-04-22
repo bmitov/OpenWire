@@ -1,79 +1,16 @@
 unit OWClassProperty;
 
-{$IFDEF FPC}
-{$MODE DELPHI}{$H+}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-{$DEFINE D7}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE D9}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE D9}
-{$ENDIF}
-
 interface
 uses
-{$IFDEF FPC}
-  ComponentEditors, PropEdits,
+{$IFDEF __VSDESIGN__}
+  VSDesign,
 {$ELSE}
-  {$IFDEF __VSDESIGN__}
-    VSDesign,
-  {$ELSE}
-    {$IFDEF VER130}
-    dsgnintf,
-    {$ELSE}
-    DesignEditors, DesignIntf,
-    {$ENDIF}
-  {$ENDIF}
+  DesignEditors, DesignIntf,
 {$ENDIF}
 
 Classes, TypInfo, Contnrs, OWDesignTypes;
 
-{$IFDEF FPC}
-  type IProperty = TPropertyEditor;
-{$ENDIF}
-
-{$IFNDEF FPC}
-{$IFNDEF VER130}
-  {$IFDEF D9}
-    type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IPropertyKind, IProperty70)
-  {$ELSE}
-    {$IFDEF D7}
-    type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IProperty70)
-
-    {$ELSE}
-    type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty)
-    {$ENDIF}
-  {$ENDIF}
+  type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IPropertyKind, IProperty70)
   protected
     function GetEditValue(out Value: String): Boolean; virtual;
     function HasInstance(Instance: TPersistent): Boolean; virtual;
@@ -131,8 +68,6 @@ Classes, TypInfo, Contnrs, OWDesignTypes;
     property Designer : IDesigner read FDesigner;
 
 end;
-{$ENDIF}
-{$ENDIF}
 
 type TOWComponentEditorEvent = procedure of object;
 type TOWComponentEditorEvabledEvent = function() : Boolean of object;
@@ -185,15 +120,7 @@ type
     FMenuItems      : TOWComponentEditorItems;
 
   protected
-{$IFDEF FPC}
-    procedure GetPropProc( Prop: TPropertyEditor );
-{$ELSE}
-  {$IFDEF VER130}
-    procedure GetPropProc( Prop: IProperty);
-  {$ELSE}
     procedure GetPropProc(const Prop: IProperty);
-  {$ENDIF}
-{$ENDIF}
     function  GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
     procedure EditProperty( PropertyName : String ); overload;
     procedure EditProperty( AFilter: TTypeKinds; PropertyName : String ); overload;
@@ -212,12 +139,8 @@ type
     procedure AfterConstruction(); override;
 
   public
-  {$IFDEF __VSDESIGN__}
     constructor Create(AComponent: TComponent; ADesigner: IDesigner); override;
-  {$ELSE}
-    constructor Create(AComponent: TComponent; ADesigner: IOWDesigner); override;
-  {$ENDIF}
-    destructor Destroy(); override;
+    destructor  Destroy(); override;
     
   end;
 
@@ -226,13 +149,6 @@ implementation
 {$IFNDEF FPC}
 uses OWDesignSelectionsList;
 
-{$IFDEF VER130}
-  type TADesignerSelectionList = TDesignerSelectionList;
-{$ELSE}
-  type TADesignerSelectionList = TOWDesignerSelectionList;
-{$ENDIF}
-
-{$IFNDEF VER130}
 constructor TOWClassPropertyEditor.CreateEx( const ADesigner: IDesigner );
 begin
   inherited Create( ADesigner, 1 );
@@ -351,61 +267,35 @@ begin
 
 end;
 {$ENDIF}
-{$ENDIF}
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 function TOWComponentEditor.GetIProperty( Comp : TComponent; AFilter: TTypeKinds; PropertyName : String ) : IProperty;
 var
-{$IFDEF FPC}
-  SelectionList : TPersistentSelectionList;
-  APropertyHook : TPropertyEditorHook;
-{$ELSE}
   SelectionListI : IDesignerSelections;
-  SelectionList : TADesignerSelectionList;
-{$ENDIF}
+  SelectionList : TOWDesignerSelectionList;
 
 begin
   LastIProp := NIL;
-  Result := NIL;
 
   if( Comp = NIL ) then
-    Exit;
+    Exit( NIL );
 
   if( PropertyName = '' ) then
-    Exit;
+    Exit( NIL );
 
-{$IFDEF FPC}
-  APropertyHook := TPropertyEditorHook.Create();
-  APropertyHook.LookupRoot := Comp;
-  SelectionList := TPersistentSelectionList.Create();
-{$ELSE}
-  SelectionList := TADesignerSelectionList.Create();
+  SelectionList := TOWDesignerSelectionList.Create();
   SelectionListI := SelectionList as IDesignerSelections;
-{$ENDIF}
   SelectionList.Add( Comp );
   FTargetProperty := PropertyName;
 
-{$IFDEF FPC}
-  GetPersistentProperties( SelectionList, AFilter, APropertyHook, GetPropProc, NIL );
-  SelectionList.Free();
-  APropertyHook.Free();
-{$ELSE}
-  {$IFDEF VER130}
-  GetComponentProperties( SelectionList, AFilter, Designer, GetPropProc );
-  {$ELSE}
   GetComponentProperties( SelectionListI, AFilter, Designer, GetPropProc );
-  {$ENDIF}
-{$ENDIF}
+
   Result := LastIProp;
 end;
 //---------------------------------------------------------------------------
-{$IFDEF __VSDESIGN__}
 constructor TOWComponentEditor.Create(AComponent: TComponent; ADesigner: IDesigner);
-{$ELSE}
-constructor TOWComponentEditor.Create(AComponent: TComponent; ADesigner: IOWDesigner);
-{$ENDIF}
 begin
   inherited;
   FMenuItems := TOWComponentEditorItems.Create();
@@ -443,15 +333,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-{$IFDEF FPC}
-procedure TOWComponentEditor.GetPropProc(Prop: TPropertyEditor);
-{$ELSE}
-  {$IFDEF VER130}
-procedure TOWComponentEditor.GetPropProc(Prop: IProperty);
-  {$ELSE}
 procedure TOWComponentEditor.GetPropProc(const Prop: IProperty);
-  {$ENDIF}
-{$ENDIF}
 begin
   if( Prop.GetName() = FTargetProperty ) then
     LastIProp := Prop;

@@ -39,8 +39,6 @@ implementation
 {$R *.DFM}
 {$ENDIF}
 
-//type TOWExposedSourcePin = class(TOWSourcePin);
-
 procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin );
 var
   I               : Integer;

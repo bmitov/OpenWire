@@ -1,78 +1,14 @@
 unit OWExtCollectionEditor;
 
 interface
-{$IFDEF VER140} // Delphi 6.0
-{$DEFINE D6}
-{$ENDIF}
 
-{$IFDEF VER150} // Delphi 7.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER230} // Delphi 16.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER240} // Delphi 17.0
-{$DEFINE D6}
-{$ENDIF}
-
-{$IFDEF VER250} // Delphi 18.0
-{$DEFINE D6}
-{$ENDIF}
-
-  uses
-    SysUtils, Classes,
-{$IFDEF D6}
-  DesignEditors,
-  DesignIntf,
-  TypInfo,
-  OWClassProperty,
-{$ELSE}
-  dsgnintf,
-{$ENDIF}
-   OWExtCollection; //, ColnEdit;
-
-{$IFDEF D6}
-type IADesigner = IDesigner;
-type TAGetPropProc = TGetPropProc;
-{$ELSE}
-type IADesigner = IFormDesigner;
-type TAGetPropProc = TGetPropEditProc;
-{$ENDIF}
+uses
+  SysUtils, Classes, DesignEditors, DesignIntf, TypInfo, OWClassProperty, OWExtCollection;
 
 type
   TOWExtCollectionProperty = class;
 //------------------------------------------------------------------------------
-{$IFDEF D6}
   TOWExtCollectionItemProperty = class( TOWClassPropertyEditor )
-{$ELSE}
-  TOWExtCollectionItemProperty = class( TPropertyEditor )
-{$ENDIF}
   protected
     FExtraInfo      : Boolean;
     FNameOverload   : String;
@@ -84,12 +20,12 @@ type
 
   public
     function  GetAttributes() : TPropertyAttributes; override;
-    procedure GetProperties(Proc: TAGetPropProc); override;
+    procedure GetProperties(Proc: TGetPropProc); override;
     function  GetValue() : String; override;
     function  GetName() : String; override;
 
   public
-    constructor CreateEx(const ADesigner: IADesigner; ACollectionItem : TOWExtCollectionItem; AName : String; OwnerEditor : TOWExtCollectionProperty );
+    constructor CreateEx(const ADesigner: IDesigner; ACollectionItem : TOWExtCollectionItem; AName : String; OwnerEditor : TOWExtCollectionProperty );
     destructor  Destroy(); override;
 
   end;
@@ -100,95 +36,58 @@ type
     function  GetValue: String; override;
     procedure Edit; override;
     procedure SetValue(const Value: String); override;
-    procedure GetProperties(Proc: TAGetPropProc); override;
+    procedure GetProperties(Proc: TGetPropProc); override;
 
   public
     procedure CheckRefresh();
     
   end;
 //------------------------------------------------------------------------------
-procedure Register;
-//------------------------------------------------------------------------------
 implementation
 
 uses
-  OWDesignSelectionsList, OWDesignTypes
-{$IFDEF VER230} // Delphi 16.0
-  , ColnEdit
-{$ENDIF}
-{$IFDEF VER240} // Delphi 17.0
-  , ColnEdit
-{$ENDIF}
-{$IFDEF VER250} // Delphi 18.0
-  , ColnEdit
-{$ENDIF}
-  ;
-
-{$IFDEF VER130} // Delphi 5.0
-  {$IFDEF OWCBUILDER}
-    procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: String); external 'bcbide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-  {$ELSE}
-    procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: String); external 'designide50.bpl' name  '@Colnedit@ShowCollectionEditor$qqr43System@%DelphiInterface$t15Forms@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-  {$ENDIF}
-
-{$ENDIF}
-
-{$IFDEF VER140} // Delphi 6.0
-  {$IFDEF OWCBUILDER}
-    procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: String); external 'bcbide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-  {$ELSE}
-    procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-      ACollection: TCollection; const PropertyName: String); external 'designide60.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-  {$ENDIF}
-{$ENDIF}
-
-{$IFDEF VER150} // Delphi 7.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide70.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-{$ENDIF}
-
-{$IFDEF VER170} // Delphi 9.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide90.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-{$ENDIF}
-
-{$IFDEF VER180} // Delphi 10.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide100.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-{$ENDIF}
-
-{$IFDEF VER190} // Delphi 11.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide110.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx17System@AnsiString'
-{$ENDIF}
-
-{$IFDEF VER200} // Delphi 12.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide120.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
-{$ENDIF}
-
-{$IFDEF VER210} // Delphi 14.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide140.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
-{$ENDIF}
-
-{$IFDEF VER220} // Delphi 15.0
-procedure ShowCollectionEditor(ADesigner: IDesigner; AComponent: TComponent;
-  ACollection: TCollection; const PropertyName: String); external 'designide150.bpl' name  '@Colnedit@ShowCollectionEditor$qqr48System@%DelphiInterface$t20Designintf@IDesigner%p18Classes@TComponentp19Classes@TCollectionx20System@UnicodeString'
-{$ENDIF}
-
+  OWDesignSelectionsList, OWDesignTypes, ColnEdit;
 
 //------------------------------------------------------------------------------
-type TOWExposedExtCollectionItem = class( TOWExtCollectionItem )
+type
+  TOWExtCollectionItemHelper = class helper for TOWExtCollectionItem
+  public
+    procedure SetCurrentEditorPtr( AValue : Pointer ); inline;
+
+  end;
+//------------------------------------------------------------------------------
+  TOWExtCollectionHelper = class helper for TOWExtCollection
+  private
+    function  GetLastIndicatedCount() : Integer; inline;
+    procedure SetLastIndicatedCount( AValue : Integer ); inline;
+
+  public
+    property LastIndicatedCount : Integer read GetLastIndicatedCount write SetLastIndicatedCount;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWExtCollectionItemHelper.SetCurrentEditorPtr( AValue : Pointer );
+begin
+  FCurrentEditorPtr := AValue;
 end;
 //------------------------------------------------------------------------------
-type TOWExposedExtCollection = class( TOWExtCollection )
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+function TOWExtCollectionHelper.GetLastIndicatedCount() : Integer;
+begin
+  Result := FLastIndicatedCount;
 end;
 //------------------------------------------------------------------------------
-constructor TOWExtCollectionItemProperty.CreateEx(const ADesigner: IADesigner; ACollectionItem : TOWExtCollectionItem; AName : String; OwnerEditor : TOWExtCollectionProperty );
+procedure TOWExtCollectionHelper.SetLastIndicatedCount( AValue : Integer );
+begin
+  FLastIndicatedCount := AValue;
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+constructor TOWExtCollectionItemProperty.CreateEx(const ADesigner: IDesigner; ACollectionItem : TOWExtCollectionItem; AName : String; OwnerEditor : TOWExtCollectionProperty );
 begin
   inherited Create( ADesigner, 1 );
   FExtraInfo := True;
@@ -196,13 +95,13 @@ begin
   FCollectionItem  := ACollectionItem;
   FNameOverload := AName;
   FOwnerEditor := OwnerEditor;
-  TOWExposedExtCollectionItem( FCollectionItem ).CurrentEditorPtr := @FCollectionItem;
+  FCollectionItem.SetCurrentEditorPtr( @FCollectionItem );
 end;
 //------------------------------------------------------------------------------
 destructor  TOWExtCollectionItemProperty.Destroy;
 begin
   if( FCollectionItem <> NIL )then
-    TOWExposedExtCollectionItem( FCollectionItem ).CurrentEditorPtr := NIL;
+    FCollectionItem.SetCurrentEditorPtr( NIL );
 
   inherited;
 end;
@@ -214,7 +113,7 @@ begin
 //  RequestRefresh();
 end;
 //------------------------------------------------------------------------------
-procedure TOWExtCollectionItemProperty.GetProperties(Proc: TAGetPropProc);
+procedure TOWExtCollectionItemProperty.GetProperties(Proc: TGetPropProc);
 var
   Components : TOWDesignerSelectionList;
   Types : TTypeKinds;
@@ -274,13 +173,14 @@ begin
 
   else
     Result := NIL;
+
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-procedure TOWExtCollectionProperty.GetProperties(Proc: TAGetPropProc);
+procedure TOWExtCollectionProperty.GetProperties(Proc: TGetPropProc);
 var
   Collection     : TOWExtCollection;
   I              : Integer;
@@ -290,14 +190,14 @@ begin
 //  inherited;
   Collection := TOWExtCollection( GetOrdValue() );
 
-  TOWExposedExtCollection( Collection ).LastIndicatedCount := Collection.Count;
+  Collection.LastIndicatedCount := Collection.Count;
   for I := 0 to Collection.Count - 1 do
     begin
     try
       CollectionItem := TOWExtCollectionItem( Collection.Items[ I ] );
       Proc( TOWExtCollectionItemProperty.CreateEx( Designer, CollectionItem, CollectionItem.DisplayName, Self ))
     finally
-    end;
+      end;
 
     end;
 
@@ -310,9 +210,9 @@ var
 
 begin
   Collection := TOWExtCollection( GetOrdValue() );
-  if( TOWExposedExtCollection( Collection ).LastIndicatedCount <> Collection.Count ) then
+  if( Collection.LastIndicatedCount <> Collection.Count ) then
     begin
-    TOWExposedExtCollection( Collection ).LastIndicatedCount := Collection.Count;
+    Collection.LastIndicatedCount := Collection.Count;
     OWResetObjectInspector( Designer );
     end;
 
@@ -351,7 +251,8 @@ begin
     OWResetObjectInspector( Designer );
 
   except;
-  end;
+    end;
+
 end;
 //------------------------------------------------------------------------------
 procedure TOWExtCollectionProperty.Edit(); 
@@ -368,36 +269,22 @@ begin
   OWRequestRefreshEx(Designer);
 
   Collection := TOWExtCollection( GetOrdValue() );
-  if( TOWExposedExtCollection( Collection ).LastIndicatedCount <> Collection.Count ) then
+  if( Collection.LastIndicatedCount <> Collection.Count ) then
     begin
-    TOWExposedExtCollection( Collection ).LastIndicatedCount := Collection.Count;
+    Collection.LastIndicatedCount := Collection.Count;
     OWResetObjectInspector( Designer );
     end;
 
   if( Collection.Count = 0 ) then
-    begin
-    Result := '(Empty)';
-    Exit;
-    end;
+    Exit( '(Empty)' );
 
   if( Collection.Count = 1 ) then
-    begin
-    Result := '1 Item';
-    Exit;
-    end;
+    Exit( '1 Item' );
 
   Result := IntToStr( Collection.Count ) + ' Items';
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-procedure Register;
-begin
-{$IFDEF VER170} // Delphi 9.0
-  ForceDemandLoadState(dlDisable);
-{$ENDIF}
-//  RegisterPropertyEditor( typeinfo(TOWExtCollection),  NIL, '', TOWExtCollectionProperty);
-end;
 //------------------------------------------------------------------------------
 end.
