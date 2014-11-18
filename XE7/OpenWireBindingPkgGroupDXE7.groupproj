@@ -1,0 +1,144 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{e0cf4031-bb65-448c-aa3b-f5eca1bcec49}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Mitov_Runtime_DXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Mitov_VCL_Runtime_DXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Mitov_Delphi_Design_DXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWirePkgDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireDsnDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireBindingPkgDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireBindingDatabasePkgDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireBindingVclPkgDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireBindingFmxPkgDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireBindingDsnDXE7.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Mitov_Runtime_DXE7">
+        <MSBuild Projects="Mitov_Runtime_DXE7.dproj"/>
+    </Target>
+    <Target Name="Mitov_Runtime_DXE7:Clean">
+        <MSBuild Projects="Mitov_Runtime_DXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Mitov_Runtime_DXE7:Make">
+        <MSBuild Projects="Mitov_Runtime_DXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Mitov_VCL_Runtime_DXE7">
+        <MSBuild Projects="Mitov_VCL_Runtime_DXE7.dproj"/>
+    </Target>
+    <Target Name="Mitov_VCL_Runtime_DXE7:Clean">
+        <MSBuild Projects="Mitov_VCL_Runtime_DXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Mitov_VCL_Runtime_DXE7:Make">
+        <MSBuild Projects="Mitov_VCL_Runtime_DXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Mitov_Delphi_Design_DXE7">
+        <MSBuild Projects="Mitov_Delphi_Design_DXE7.dproj"/>
+    </Target>
+    <Target Name="Mitov_Delphi_Design_DXE7:Clean">
+        <MSBuild Projects="Mitov_Delphi_Design_DXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Mitov_Delphi_Design_DXE7:Make">
+        <MSBuild Projects="Mitov_Delphi_Design_DXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWirePkgDXE7">
+        <MSBuild Projects="OpenWirePkgDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWirePkgDXE7:Clean">
+        <MSBuild Projects="OpenWirePkgDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWirePkgDXE7:Make">
+        <MSBuild Projects="OpenWirePkgDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE7">
+        <MSBuild Projects="OpenWireDsnDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE7:Clean">
+        <MSBuild Projects="OpenWireDsnDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE7:Make">
+        <MSBuild Projects="OpenWireDsnDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireBindingPkgDXE7">
+        <MSBuild Projects="OpenWireBindingPkgDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireBindingPkgDXE7:Clean">
+        <MSBuild Projects="OpenWireBindingPkgDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireBindingPkgDXE7:Make">
+        <MSBuild Projects="OpenWireBindingPkgDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireBindingDatabasePkgDXE7">
+        <MSBuild Projects="OpenWireBindingDatabasePkgDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireBindingDatabasePkgDXE7:Clean">
+        <MSBuild Projects="OpenWireBindingDatabasePkgDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireBindingDatabasePkgDXE7:Make">
+        <MSBuild Projects="OpenWireBindingDatabasePkgDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireBindingVclPkgDXE7">
+        <MSBuild Projects="OpenWireBindingVclPkgDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireBindingVclPkgDXE7:Clean">
+        <MSBuild Projects="OpenWireBindingVclPkgDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireBindingVclPkgDXE7:Make">
+        <MSBuild Projects="OpenWireBindingVclPkgDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireBindingFmxPkgDXE7">
+        <MSBuild Projects="OpenWireBindingFmxPkgDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireBindingFmxPkgDXE7:Clean">
+        <MSBuild Projects="OpenWireBindingFmxPkgDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireBindingFmxPkgDXE7:Make">
+        <MSBuild Projects="OpenWireBindingFmxPkgDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireBindingDsnDXE7">
+        <MSBuild Projects="OpenWireBindingDsnDXE7.dproj"/>
+    </Target>
+    <Target Name="OpenWireBindingDsnDXE7:Clean">
+        <MSBuild Projects="OpenWireBindingDsnDXE7.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireBindingDsnDXE7:Make">
+        <MSBuild Projects="OpenWireBindingDsnDXE7.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Mitov_Runtime_DXE7;Mitov_VCL_Runtime_DXE7;Mitov_Delphi_Design_DXE7;OpenWirePkgDXE7;OpenWireDsnDXE7;OpenWireBindingPkgDXE7;OpenWireBindingDatabasePkgDXE7;OpenWireBindingVclPkgDXE7;OpenWireBindingFmxPkgDXE7;OpenWireBindingDsnDXE7"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Mitov_Runtime_DXE7:Clean;Mitov_VCL_Runtime_DXE7:Clean;Mitov_Delphi_Design_DXE7:Clean;OpenWirePkgDXE7:Clean;OpenWireDsnDXE7:Clean;OpenWireBindingPkgDXE7:Clean;OpenWireBindingDatabasePkgDXE7:Clean;OpenWireBindingVclPkgDXE7:Clean;OpenWireBindingFmxPkgDXE7:Clean;OpenWireBindingDsnDXE7:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Mitov_Runtime_DXE7:Make;Mitov_VCL_Runtime_DXE7:Make;Mitov_Delphi_Design_DXE7:Make;OpenWirePkgDXE7:Make;OpenWireDsnDXE7:Make;OpenWireBindingPkgDXE7:Make;OpenWireBindingDatabasePkgDXE7:Make;OpenWireBindingVclPkgDXE7:Make;OpenWireBindingFmxPkgDXE7:Make;OpenWireBindingDsnDXE7:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

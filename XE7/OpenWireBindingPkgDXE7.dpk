@@ -1,40 +1,41 @@
-package OpenWirePkgD17;
+package OpenWireBindingPkgDXE7;
 
 {$R *.res}
+{$R '..\OWPinBindingManager.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$DEFINITIONINFO ON}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES OFF}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
-{$IMAGEBASE $00400000}
+{$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'OpenWire Project'}
+{$DESCRIPTION 'Mitov - OpenWire Live Bindings'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl;
+  rtl,
+  OpenWirePkgDXE7,
+  Mitov_Runtime_DXE7;
 
 contains
-  OWPins in '..\OWPins.pas',
-  OWStdTypes in '..\OWStdTypes.pas',
-  OWExtCollection in '..\OWExtCollection.pas';
+  OWPinBindingManager in '..\OWPinBindingManager.pas';
 
 end.

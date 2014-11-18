@@ -1,11 +1,11 @@
-package OpenWireDsnD17;
+package OpenWireDsnDXE7;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -15,14 +15,14 @@ package OpenWireDsnD17;
 {$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$DEFINITIONINFO ON}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
-{$IMAGEBASE $00400000}
+{$IMAGEBASE $400000}
 {$DEFINE __DELPHI_DESIGN__}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'OpenWire Project (Design Time)'}
@@ -33,18 +33,20 @@ requires
   rtl,
   vcl,
   vclx,
-  OpenWirePkgD17,
+  Mitov_Runtime_DXE7,
+  Mitov_VCL_Runtime_DXE7,
+  OpenWirePkgDXE7,
+  Mitov_Delphi_Design_DXE7,
   designide;
 
 contains
-  OWDesignSelectionsList in '..\OWDesignSelectionsList.pas',
   OpenWirePinEditors in '..\OpenWirePinEditors.pas' {OWPinEditorForm},
-  OWClassProperty in '..\OWClassProperty.pas',
   OWStateEditors in '..\OWStateEditors.pas' {OWStatePinForm},
   OWAboutFormUnit in '..\OWAboutFormUnit.pas' {OWAboutForm},
-  OWExtCollectionEditor in '..\OWExtCollectionEditor.pas',
   OWDesignTypes in '..\OWDesignTypes.pas',
-  OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm};
+  OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm},
+  OpenWire.Delphi.PropertyEditors in '..\OpenWire.Delphi.PropertyEditors.pas',
+  OpenWire.Design in '..\OpenWire.Design.pas';
 
 end.
 
