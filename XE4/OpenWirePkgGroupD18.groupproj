@@ -1,53 +1,60 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <ProjectGuid>{97aef5e4-8e8a-4194-8ca8-b56d945fc9c9}</ProjectGuid>
-  </PropertyGroup>
-  <ItemGroup>
-    <Projects Include="OpenWirePkgD18.dproj" />
-    <Projects Include="OpenWireDsnD18.dproj" />
-    <Projects Include="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" />
-  </ItemGroup>
-  <ProjectExtensions>
-    <Borland.ProjectType />
-    <BorlandProject>
-      <Default.Personality/>
-    </BorlandProject>
-  </ProjectExtensions>
-  <Target Name="OpenWirePkgD18">
-    <MSBuild Projects="OpenWirePkgD18.dproj" />
-  </Target>
-  <Target Name="OpenWirePkgD18:Clean">
-    <MSBuild Projects="OpenWirePkgD18.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="OpenWirePkgD18:Make">
-    <MSBuild Projects="OpenWirePkgD18.dproj" Targets="Make" />
-  </Target>
-  <Target Name="OpenWireDsnD18">
-    <MSBuild Projects="OpenWireDsnD18.dproj" />
-  </Target>
-  <Target Name="OpenWireDsnD18:Clean">
-    <MSBuild Projects="OpenWireDsnD18.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="OpenWireDsnD18:Make">
-    <MSBuild Projects="OpenWireDsnD18.dproj" Targets="Make" />
-  </Target>
-  <Target Name="OpenWireLabPkgD18">
-    <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" />
-  </Target>
-  <Target Name="OpenWireLabPkgD18:Clean">
-    <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="OpenWireLabPkgD18:Make">
-    <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" Targets="Make" />
-  </Target>
-  <Target Name="Build">
-    <CallTarget Targets="OpenWirePkgD18;OpenWireDsnD18;OpenWireLabPkgD18" />
-  </Target>
-  <Target Name="Clean">
-    <CallTarget Targets="OpenWirePkgD18:Clean;OpenWireDsnD18:Clean;OpenWireLabPkgD18:Clean" />
-  </Target>
-  <Target Name="Make">
-    <CallTarget Targets="OpenWirePkgD18:Make;OpenWireDsnD18:Make;OpenWireLabPkgD18:Make" />
-  </Target>
-  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{e0cf4031-bb65-448c-aa3b-f5eca1bcec49}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="OpenWirePkgD18.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireDsnD18.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="OpenWirePkgD18">
+        <MSBuild Projects="OpenWirePkgD18.dproj"/>
+    </Target>
+    <Target Name="OpenWirePkgD18:Clean">
+        <MSBuild Projects="OpenWirePkgD18.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWirePkgD18:Make">
+        <MSBuild Projects="OpenWirePkgD18.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireDsnD18">
+        <MSBuild Projects="OpenWireDsnD18.dproj"/>
+    </Target>
+    <Target Name="OpenWireDsnD18:Clean">
+        <MSBuild Projects="OpenWireDsnD18.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireDsnD18:Make">
+        <MSBuild Projects="OpenWireDsnD18.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireLabPkgD18">
+        <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj"/>
+    </Target>
+    <Target Name="OpenWireLabPkgD18:Clean">
+        <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireLabPkgD18:Make">
+        <MSBuild Projects="..\OpenWireLabDemo\XE4\OpenWireLabPkgD18.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="OpenWirePkgD18;OpenWireDsnD18;OpenWireLabPkgD18"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="OpenWirePkgD18:Clean;OpenWireDsnD18:Clean;OpenWireLabPkgD18:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="OpenWirePkgD18:Make;OpenWireDsnD18:Make;OpenWireLabPkgD18:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

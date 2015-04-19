@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{e0cf4031-bb65-448c-aa3b-f5eca1bcec49}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="OpenWirePkgDXE8.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireDsnDXE8.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="OpenWirePkgDXE8">
+        <MSBuild Projects="OpenWirePkgDXE8.dproj"/>
+    </Target>
+    <Target Name="OpenWirePkgDXE8:Clean">
+        <MSBuild Projects="OpenWirePkgDXE8.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWirePkgDXE8:Make">
+        <MSBuild Projects="OpenWirePkgDXE8.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE8">
+        <MSBuild Projects="OpenWireDsnDXE8.dproj"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE8:Clean">
+        <MSBuild Projects="OpenWireDsnDXE8.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireDsnDXE8:Make">
+        <MSBuild Projects="OpenWireDsnDXE8.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireLabPkgDXE8">
+        <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj"/>
+    </Target>
+    <Target Name="OpenWireLabPkgDXE8:Clean">
+        <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireLabPkgDXE8:Make">
+        <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="OpenWirePkgDXE8;OpenWireDsnDXE8;OpenWireLabPkgDXE8"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="OpenWirePkgDXE8:Clean;OpenWireDsnDXE8:Clean;OpenWireLabPkgDXE8:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="OpenWirePkgDXE8:Make;OpenWireDsnDXE8:Make;OpenWireLabPkgDXE8:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -15,14 +15,14 @@ package OpenWireDsnD18;
 {$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$DEFINITIONINFO ON}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
-{$IMAGEBASE $00400000}
+{$IMAGEBASE $400000}
 {$DEFINE __DELPHI_DESIGN__}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'OpenWire Project (Design Time)'}
@@ -33,18 +33,19 @@ requires
   rtl,
   vcl,
   vclx,
+  Mitov_Runtime_D18,
+  Mitov_Delphi_Design_D18,
   OpenWirePkgD18,
   designide;
 
 contains
-  OWDesignSelectionsList in '..\OWDesignSelectionsList.pas',
   OpenWirePinEditors in '..\OpenWirePinEditors.pas' {OWPinEditorForm},
-  OWClassProperty in '..\OWClassProperty.pas',
   OWStateEditors in '..\OWStateEditors.pas' {OWStatePinForm},
   OWAboutFormUnit in '..\OWAboutFormUnit.pas' {OWAboutForm},
-  OWExtCollectionEditor in '..\OWExtCollectionEditor.pas',
   OWDesignTypes in '..\OWDesignTypes.pas',
-  OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm};
+  OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm},
+  OpenWire.Delphi.PropertyEditors in '..\OpenWire.Delphi.PropertyEditors.pas',
+  OpenWire.Design in '..\OpenWire.Design.pas';
 
 end.
 

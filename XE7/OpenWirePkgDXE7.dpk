@@ -1,6 +1,7 @@
 package OpenWirePkgDXE7;
 
 {$R *.res}
+{$R 'OWStdTypes.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -35,7 +36,7 @@ requires
 
 contains
   OWPins in '..\OWPins.pas',
-  OWStdTypes in '..\OWStdTypes.pas';
+  OWStdTypes in '..\OWStdTypes.pas',
+  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas';
 
 end.
-

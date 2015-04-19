@@ -1,11 +1,12 @@
 package OpenWirePkgDXE6;
 
 {$R *.res}
+{$R 'OWStdTypes.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -30,12 +31,13 @@ package OpenWirePkgDXE6;
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl;
+  rtl,
+  Mitov_Runtime_DXE6;
 
 contains
   OWPins in '..\OWPins.pas',
   OWStdTypes in '..\OWStdTypes.pas',
-  OWExtCollection in '..\OWExtCollection.pas';
+  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas';
 
 end.
 

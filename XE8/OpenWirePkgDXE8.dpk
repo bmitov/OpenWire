@@ -1,6 +1,7 @@
-package OpenWireEditorHostedPkgDXE7;
+package OpenWirePkgDXE8;
 
 {$R *.res}
+{$R 'OWStdTypes.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -31,16 +32,11 @@ package OpenWireEditorHostedPkgDXE7;
 
 requires
   rtl,
-  vcl,
-  fmx,
-  Mitov_Runtime_DXE7,
-  Mitov_VCL_Runtime_DXE7,
-  OpenWirePkgDXE7,
-  OpenWireEditorBasicPkgDXE7;
+  Mitov_Runtime_DXE8;
 
 contains
-  GraphPersistance in '..\GraphPersistance.pas',
-  VCL.OWEditorGraph in '..\Editor\VCL.OWEditorGraph.pas';
+  OWPins in '..\OWPins.pas',
+  OWStdTypes in '..\OWStdTypes.pas',
+  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas';
 
 end.
-

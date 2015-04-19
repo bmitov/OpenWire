@@ -5,10 +5,10 @@ interface
 {$DEFINE BDS2005_OR_HIGHER}
 
 uses
-  Windows, DesignEditors, DesignIntf, TypInfo, OWClassProperty,
+  Windows, DesignEditors, DesignIntf, TypInfo,
   Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ImgList, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Buttons, Contnrs, OWPins, Vcl.ExtCtrls,
-  OWDesignTypes;
+  OWDesignTypes, Mitov.Delphi.PropertyEditors;
 
 type
 //---------------------------------------------------------------------------
@@ -41,7 +41,6 @@ type
       property ConnectedAfterPin  : TOWBasicPin read FConnectedAfterPin write SetConnectedAfterPin;
       
   end;
-
 
 type
   TOWPinEditorForm = class(TForm)
@@ -118,11 +117,6 @@ type
     PinsList      : TOWEPinsList;
     ListUpdating  : Boolean;
 
-  private
-    procedure OWMUpdate(var Message: TMessage); message OWM_UPDATE;
-    procedure OWMUpdateInspector(var Message: TMessage); message OWMSG_UPDATE_INSPECTOR;
-    procedure OWMUpdateModifiedInspector(var Message: TMessage); message OWMSG_UPDATE_MODIFIED_INSPECTOR;
-
   public
     function ExecuteForSource( ADesigner : IDesigner; ASourcePin : TOWSourcePin ): Integer;
     function ExecuteForSink( ADesigner : IDesigner; ASinkPin : TOWSinkPin ): Integer;
@@ -193,7 +187,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWBasicPinListPropertyEditor = class( TOWClassPropertyEditor )
+  TOWBasicPinListPropertyEditor = class( TDelphiClassPropertyEditor )
   protected
     function  GetEditValue(out Value: String): Boolean; override;
 
@@ -282,9 +276,9 @@ implementation
 {$R *.DFM}
 
 {$WARN UNIT_DEPRECATED OFF}
-    uses OWStateEditors, OWDesignSelectionsList, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
+    uses OWStateEditors, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
 {$WARN UNIT_DEPRECATED ON}
-    System.UITypes, OWAfterPinSelectFormUnit;
+    System.UITypes, OWAfterPinSelectFormUnit, Mitov.Types, Mitov.Threading;
 
 {$IFDEF BCB}
 const
@@ -376,7 +370,7 @@ end;
 function TOWSourcePinHelper.IsConnectedToPinName( OtherPinName : String ) : Boolean;
 var
   I         : Integer;
-  AReadLock : IOWLockSection;
+  AReadLock : ILockSection;
 
 begin
   AReadLock := ReadLock();
@@ -391,7 +385,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWSinkPinHelper.IsConnectedToPinName( OtherPinName : String ) : Boolean;
 var
-  AReadLock : IOWLockSection;
+  AReadLock : ILockSection;
 
 begin
   AReadLock := ReadLock();
@@ -407,7 +401,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWMultiSinkPinHelper.IsConnectedToPinName( OtherPinName : String ) : Boolean;
 var
-  AReadLock : IOWLockSection;
+  AReadLock : ILockSection;
   I         : Integer;
 
 begin
@@ -477,7 +471,7 @@ begin
     if( APin = NIL ) then
       begin
       Result := 'Refreshing ...';
-      OWResetObjectInspector( ADesigner );
+      LPResetObjectInspector( ADesigner );
       end
 
     else
@@ -1261,53 +1255,53 @@ end;
 
 procedure TOWPinEditorForm.FillFormsInfo();
 var
-  FormNames     : TOWModulesColection;
-  I             : Integer;
+  AFormNames  : TOWModulesColection;
+  I           : Integer;
 
-  CurProject    : IOTAProject;
-  ModuleInfo    : IOTAModuleInfo;
+  ACurProject : IOTAProject;
+  AModuleInfo : IOTAModuleInfo;
 
 begin
-  FormNames := TOWModulesColection.Create();
+  AFormNames := TOWModulesColection.Create();
 
 {$IFNDEF BDS2005_OR_HIGHER}
-  Designer.GetProjectModules( FormNames.GetModules );
+  Designer.GetProjectModules( AFormNames.GetModules );
 
 {$ELSE}
   // Workaround for BDS 2005 and 2006 bug.
-  CurProject := GetActiveProject();
+  ACurProject := GetActiveProject();
 
-  if( CurProject <> NIL ) then
-    for I := 0 to CurProject.GetModuleCount() - 1 do
+  if( ACurProject <> NIL ) then
+    for I := 0 to ACurProject.GetModuleCount() - 1 do
       begin
-      ModuleInfo := CurProject.GetModule( I );
+      AModuleInfo := ACurProject.GetModule( I );
 
-      FormNames.GetModules( ModuleInfo.FileName, ModuleInfo.Name, ModuleInfo.FormName, ModuleInfo.DesignClass, NIL );
+      AFormNames.GetModules( AModuleInfo.FileName, AModuleInfo.Name, AModuleInfo.FormName, AModuleInfo.DesignClass, NIL );
       end;
 
 {$ENDIF}
 
   FormsComboBox.Items.Clear();
-  if( FormNames.Count = 0 ) then
-    FormNames.Add( Root.Name );
+  if( AFormNames.Count = 0 ) then
+    AFormNames.Add( Root.Name );
 
-  for I := 0 to FormNames.Count - 1 do
+  for I := 0 to AFormNames.Count - 1 do
     begin
-    if( OWCanAccessRootFromName( Designer, FormNames.Strings[ I ] ) ) then
+    if( OWCanAccessRootFromName( Designer, AFormNames.Strings[ I ] ) ) then
       begin
-      if( FormNames.Strings[ I ] = Root.Name ) then
+      if( AFormNames.Strings[ I ] = Root.Name ) then
         begin
-        FormsComboBox.Items.Add( FormNames.Strings[ I ] + '  (Current)' );
+        FormsComboBox.Items.Add( AFormNames.Strings[ I ] + '  (Current)' );
         FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
         end
 
       else
-        FormsComboBox.Items.Add( FormNames.Strings[ I ] );
+        FormsComboBox.Items.Add( AFormNames.Strings[ I ] );
         
       end;
     end;
 
-  if( FormNames.Count > 1 ) then
+  if( AFormNames.Count > 1 ) then
     FormsComboBox.Items.Add( 'All forms' );
 
   PopulateAllEntries();
@@ -1316,7 +1310,7 @@ begin
 
   FormsComboBoxChange( Self );
 
-  FormNames.Free();
+  AFormNames.Free();
 end;
 
 procedure TOWPinEditorForm.PopulateAllEntries();
@@ -1862,38 +1856,6 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWPinEditorForm.OWMUpdateInspector(var Message: TMessage);
-var
-  List      : TOWDesignerSelectionList;
-  Designer  : IDesigner;
-
-begin
-  GOWInRefresh := False;
-
-  Designer := IDesigner( Message.WParam );
-  List := TOWDesignerSelectionList.Create();
-  Designer.GetSelections( List );
-  Designer.NoSelection();
-  Designer.SetSelections( List );
-  List.Free();
-end;
-//---------------------------------------------------------------------------
-procedure TOWPinEditorForm.OWMUpdateModifiedInspector(var Message: TMessage);
-var
-  Designer  : IDesigner;
-
-begin
-  OWMUpdateInspector( Message );
-
-  Designer := IDesigner( Message.WParam );
-  Designer.Modified();
-end;
-//---------------------------------------------------------------------------
-procedure TOWPinEditorForm.OWMUpdate(var Message: TMessage);
-begin
-  OWLinkAwaitsLinkingAllForms();
-end;
-//---------------------------------------------------------------------------
 function TOWPinEditorForm.ExecuteForSource( ADesigner : IDesigner; ASourcePin : TOWSourcePin ): Integer;
 begin
   Designer := ADesigner;
@@ -2120,7 +2082,7 @@ begin
   if( ACollection.LastIndicatedCount <> ACollection.Count ) then
     begin
     ACollection.LastIndicatedCount := ACollection.Count;
-    OWResetObjectInspector( GetIntDesigner() );
+    LPResetObjectInspector( GetIntDesigner() );
     end;
     
 end;
@@ -2136,7 +2098,7 @@ begin
   if( ACollection.LastIndicatedCount <> ACollection.Count ) then
     begin
     ACollection.LastIndicatedCount := ACollection.Count;
-    OWResetObjectInspector( GetIntDesigner() );
+    LPResetObjectInspector( GetIntDesigner() );
     end;
 
   if( ACollection.Count = 0 ) then
@@ -2212,7 +2174,7 @@ begin
     ACollection := TOWPinList( GetOrdValue() );
     ACollection.Count := StrToInt( Value );
     Modified();
-    OWResetObjectInspector( GetIntDesigner() );
+    LPResetObjectInspector( GetIntDesigner() );
       
   except;
     end;
@@ -2493,11 +2455,11 @@ begin
 
   ForceDemandLoadState(dlDisable);
 
-  RegisterPropertyInCategory( 'Input Pins',           TypeInfo(TOWSinkPin) );
-  RegisterPropertyInCategory( 'Input Pins',           TypeInfo(TOWMultiSinkPin) );
-  RegisterPropertyInCategory( 'Output Pins',          TypeInfo(TOWSourcePin) );
-  RegisterPropertyInCategory( 'State Pins',           TypeInfo(TOWStatePin) );
-  RegisterPropertyInCategory( 'Pin Lists',            TypeInfo(TOWPinList) );
+  RegisterPropertyInCategory( 'Input Pins',   TypeInfo(TOWSinkPin) );
+  RegisterPropertyInCategory( 'Input Pins',   TypeInfo(TOWMultiSinkPin) );
+  RegisterPropertyInCategory( 'Output Pins',  TypeInfo(TOWSourcePin) );
+  RegisterPropertyInCategory( 'State Pins',   TypeInfo(TOWStatePin) );
+  RegisterPropertyInCategory( 'Pin Lists',    TypeInfo(TOWPinList) );
 
   RegisterPropertyEditor( TypeInfo(TOWSourcePin),     NIL, '', TOWSourcePinPropertyEditor );
   RegisterPropertyEditor( TypeInfo(TOWMultiSinkPin),  NIL, '', TOWMultiSinkPinPropertyEditor );
@@ -2512,7 +2474,6 @@ end;
 //---------------------------------------------------------------------------
 initialization
   GOWPinEditorForm := TOWPinEditorForm.Create( Application );
-  GOWRefreshForm := GOWPinEditorForm;
 
   EditorNotifier := TIOWPinsEditorNotifier.Create();
   if( Assigned( ToolServices )) then

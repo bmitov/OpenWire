@@ -67,11 +67,7 @@ procedure OWRequestDesignerRefresh();
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
 function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
 procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
-procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
-procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 {$ENDIF}
-{$ELSE}
-procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
 {$ENDIF}
 //---------------------------------------------------------------------------
 procedure OWRegisterStreamColorThickness( AStreamTypeID : TGUID; AColor : TColor; AThickness : Single );
@@ -79,29 +75,16 @@ function  OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TC
 //---------------------------------------------------------------------------
 procedure Register;
 //---------------------------------------------------------------------------
-const
-  OWM_UPDATE                      = WM_APP + 10;
-  OWMSG_UPDATE_INSPECTOR          = WM_APP + 11;
-  OWMSG_UPDATE_MODIFIED_INSPECTOR = WM_APP + 12;
-//---------------------------------------------------------------------------
-var GOWInRefresh   : Boolean;
-var GOWRefreshForm : TForm;
-//---------------------------------------------------------------------------
 implementation
 
 uses
-  SysUtils,
+  System.SysUtils, Mitov.Threading,
   {$IFNDEF __VSDESIGN__}
     {$IFDEF __DELPHI_DESIGN__}
-      ToolsAPI, OWDesignSelectionsList,
+      ToolsAPI,
     {$ENDIF} // __DELPHI_DESIGN__
   {$ENDIF} // __VSDESIGN__
-  Math;
-  {$IFNDEF __VSDESIGN__}
-    {$IFDEF __DELPHI_DESIGN__}
-      type TADesignerSelectionList = TOWDesignerSelectionList;
-    {$ENDIF} // __DELPHI_DESIGN__
-  {$ENDIF} // __VSDESIGN__
+  System.Math, System.UITypes;
 //---------------------------------------------------------------------------
 {$IFDEF BCB}
 const
@@ -239,9 +222,7 @@ begin
 
   PinsNeedRefresh := True;
 
-  if( GOWRefreshForm <> NIL ) then
-    PostMessage( GOWRefreshForm.Handle, OWM_UPDATE, 0, 0 );
-
+  MainThreadExecute( True, OWLinkAwaitsLinkingAllForms );
 end;
 //---------------------------------------------------------------------------
 procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
@@ -252,10 +233,10 @@ begin
   if( Pin <> NIL ) then
     begin
     if( FilterPins ) then
-        Filters := []
+      Filters := []
 
     else
-        Filters := [ pvoFullList, pvoExcludeDirectDependency ];
+      Filters := [ pvoFullList, pvoExcludeDirectDependency ];
 
     if( OWGetMainOwnerComponent( Pin.Owner ) <> OwnerComponent ) then
       OWGetPinsValueListSingleRoot( List, OwnerComponent, Pin, '.', OwnerComponent.Name, Filters )
@@ -293,37 +274,6 @@ begin
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
-procedure OWResetObjectInspectorModified( Designer : TOWPropertyDesigner );
-begin
-  if( GOWInRefresh ) then
-    Exit;
-
-  if( Assigned( Designer)) then
-    begin
-    GOWInRefresh := True;
-    if( GOWRefreshForm <> NIL ) then
-      PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_MODIFIED_INSPECTOR,
-                Integer( Designer ), 0 );
-
-    end;
-
-end;
-//---------------------------------------------------------------------------
-procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
-begin
-  if( GOWInRefresh ) then
-    Exit;
-
-  if( Assigned( Designer)) then
-    begin
-    GOWInRefresh := True;
-    if( GOWRefreshForm <> NIL ) then
-      PostMessage( GOWRefreshForm.Handle, OWMSG_UPDATE_INSPECTOR,
-                Integer( Designer ), 0 );
-
-    end;
-
-end;
 {$ENDIF}
 {$ELSE}
 procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
@@ -382,13 +332,14 @@ end;
 //---------------------------------------------------------------------------
 function OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
 var
-  AExtention : IOWStreamInfoOWEditorExtention;
+  AExtentionIntf  : IOWStreamInfoExtention;
+  AExtention      : IOWStreamInfoOWEditorExtention;
 
 begin
-  AExtention := ( OWGetStreamExtentionFromID( AStreamTypeID, IOWStreamInfoOWEditorExtention ) as IOWStreamInfoOWEditorExtention );
-  if( AExtention = NIL ) then
+  if( not OWGetStreamExtentionFromID( AStreamTypeID, IOWStreamInfoOWEditorExtention, AExtentionIntf )) then
     Exit( False );
 
+  AExtention := ( AExtentionIntf as IOWStreamInfoOWEditorExtention );
   Color := AExtention.GetInstance().Color;
   Thickness  := AExtention.GetInstance().Thickness;
 
@@ -400,20 +351,31 @@ end;
 //---------------------------------------------------------------------------
 procedure Register;
 begin
-  OWRegisterStreamColorThickness( IOWIntegerStream,       clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWInt64Stream,         clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWFloatStream,         clRed, 1 );
-  OWRegisterStreamColorThickness( IOWRealStream,          clRed, 1 );
-  OWRegisterStreamColorThickness( IOWRealComplexStream,   clAqua, 1 );
-  OWRegisterStreamColorThickness( IOWBoolStream,          clBlue, 1 );
-  OWRegisterStreamColorThickness( IOWCharStream,          clTeal, 1 );
-  OWRegisterStreamColorThickness( IOWStringStream,        clTeal, 1.5 );
-  OWRegisterStreamColorThickness( IOWStringListStream,    clTeal, 2 );
-  OWRegisterStreamColorThickness( IOWIntRangedStream,     clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWInt64RangedStream,   clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWRealRangedStream,    clRed, 1 );
-  OWRegisterStreamColorThickness( IOWDateTimeStream,      clFuchsia, 1 );
-  OWRegisterStreamColorThickness( IOWStreamPersistStream, clLime, 2 );
+  OWRegisterStreamColorThickness( IOWIntegerStream,         TColors.Fuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWCardinalStream,        TColors.Purple,  1 );
+  OWRegisterStreamColorThickness( IOWInt64Stream,           TColors.Fuchsia, 1.2 );
+  OWRegisterStreamColorThickness( IOWUInt64Stream,          TColors.Purple,  1.2 );
+  OWRegisterStreamColorThickness( IOWFloatStream,           TColors.Red, 1 );
+  OWRegisterStreamColorThickness( IOWRealStream,            TColors.Red, 1 );
+  OWRegisterStreamColorThickness( IOWRealComplexStream,     TColors.Aqua, 1 );
+  OWRegisterStreamColorThickness( IOWBoolStream,            TColors.Blue, 1 );
+  OWRegisterStreamColorThickness( IOWByteStream,            TColors.Blue, 1.5 );
+  OWRegisterStreamColorThickness( IOWCharStream,            TColors.Teal, 1 );
+  OWRegisterStreamColorThickness( IOWStringStream,          TColors.Teal, 1.5 );
+  OWRegisterStreamColorThickness( IOWStringListStream,      TColors.Teal, 2 );
+  OWRegisterStreamColorThickness( IOWColorStream,           TColors.Navy, 1 );
+  OWRegisterStreamColorThickness( IOWAlphaColorStream,      TColors.Lightblue, 1 );
+  OWRegisterStreamColorThickness( IOWIntRangedStream,       TColors.Fuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWInt64RangedStream,     TColors.Fuchsia, 1 );
+  OWRegisterStreamColorThickness( IOWRealRangedStream,      TColors.Red, 1 );
+  OWRegisterStreamColorThickness( IOWDateTimeStream,        TColors.Yellow, 1 );
+  OWRegisterStreamColorThickness( IOWDateTimeRangedStream,  TColors.Yellow, 1 );
+  OWRegisterStreamColorThickness( IOWStreamPersistStream,   TColors.Lime, 2 );
+  OWRegisterStreamColorThickness( IOWIntegerListStream,     TColors.Fuchsia, 2.5 );
+  OWRegisterStreamColorThickness( IOWInt64ListStream,       TColors.Fuchsia, 2.5 );
+  OWRegisterStreamColorThickness( IOWFloatListStream,       TColors.Red, 2.5 );
+  OWRegisterStreamColorThickness( IOWRealListStream,        TColors.Red, 2.5 );
+  OWRegisterStreamColorThickness( IOWClockStream,           TColors.Orange, 1 );
 end;
 
 initialization
@@ -422,6 +384,5 @@ initialization
   InOppening := False;
 {$ENDIF}
 {$ENDIF}
-  GOWInRefresh := False;
 
 end.

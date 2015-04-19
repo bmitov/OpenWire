@@ -95,7 +95,7 @@
 		<DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
 		<Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\bds.exe</Debugger_HostApplication>
 		<VerInfo_MajorVer>7</VerInfo_MajorVer>
-		<VerInfo_MinorVer>0</VerInfo_MinorVer>
+		<VerInfo_MinorVer>6</VerInfo_MinorVer>
 		<VerInfo_Release>0</VerInfo_Release>
 		<VerInfo_Build>0</VerInfo_Build>
 	</PropertyGroup>
@@ -106,24 +106,25 @@
 		<DCCReference Include="rtl.dcp"/>
 		<DCCReference Include="vcl.dcp"/>
 		<DCCReference Include="vclx.dcp"/>
+		<DCCReference Include="Mitov_Runtime_D18.dcp"/>
+		<DCCReference Include="Mitov_Delphi_Design_D18.dcp"/>
 		<DCCReference Include="OpenWirePkgD18.dcp"/>
 		<DCCReference Include="designide.dcp"/>
-		<DCCReference Include="..\OWDesignSelectionsList.pas"/>
 		<DCCReference Include="..\OpenWirePinEditors.pas">
 			<Form>OWPinEditorForm</Form>
 		</DCCReference>
-		<DCCReference Include="..\OWClassProperty.pas"/>
 		<DCCReference Include="..\OWStateEditors.pas">
 			<Form>OWStatePinForm</Form>
 		</DCCReference>
 		<DCCReference Include="..\OWAboutFormUnit.pas">
 			<Form>OWAboutForm</Form>
 		</DCCReference>
-		<DCCReference Include="..\OWExtCollectionEditor.pas"/>
 		<DCCReference Include="..\OWDesignTypes.pas"/>
 		<DCCReference Include="..\OWAfterPinSelectFormUnit.pas">
 			<Form>OWAfterPinSelectForm</Form>
 		</DCCReference>
+		<DCCReference Include="..\OpenWire.Delphi.PropertyEditors.pas"/>
+		<DCCReference Include="..\OpenWire.Design.pas"/>
 		<BuildConfiguration Include="Release">
 			<Key>Cfg_Release</Key>
 			<CfgParent>Base</CfgParent>

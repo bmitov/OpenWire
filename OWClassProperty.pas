@@ -1,5 +1,7 @@
 unit OWClassProperty;
 
+REMOVED !
+
 interface
 uses
 {$IFDEF __VSDESIGN__}
@@ -8,7 +10,7 @@ uses
   DesignEditors, DesignIntf,
 {$ENDIF}
 
-Classes, TypInfo, Contnrs, OWDesignTypes;
+Classes, TypInfo, Contnrs;
 
   type TOWClassPropertyEditor = class(TBasePropertyEditor, IProperty, IPropertyKind, IProperty70)
   protected

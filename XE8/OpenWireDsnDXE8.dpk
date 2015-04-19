@@ -1,4 +1,4 @@
-package OpenWireDsnDXE6;
+package OpenWireDsnDXE8;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -33,9 +33,10 @@ requires
   rtl,
   vcl,
   vclx,
-  Mitov_Runtime_DXE6,
-  OpenWirePkgDXE6,
-  Mitov_Delphi_Design_DXE6,
+  Mitov_Runtime_DXE8,
+  Mitov_VCL_Runtime_DXE8,
+  OpenWirePkgDXE8,
+  Mitov_Delphi_Design_DXE8,
   designide;
 
 contains

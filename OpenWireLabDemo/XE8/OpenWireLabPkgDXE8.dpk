@@ -1,6 +1,7 @@
-package OpenWireEditorBasicPkgDXE7;
+package OpenWireLabPkgDXE8;
 
 {$R *.res}
+{$R '..\OWLComps.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -23,24 +24,19 @@ package OpenWireEditorBasicPkgDXE7;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'OpenWire Project'}
-{$RUNONLY}
+{$DESCRIPTION 'OpenWire DemoLab demonstration package'}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl,
-  Mitov_Runtime_DXE7,
-  Mitov_VCL_Runtime_DXE7,
-  OpenWirePkgDXE7;
+  vclx,
+  OpenWirePkgDXE8;
 
 contains
-  OWEditorResizeOverlayWindow in '..\Editor\OWEditorResizeOverlayWindow.pas',
-  OWEditorTypes in '..\Editor\OWEditorTypes.pas',
-  OWEPathFinder in '..\Editor\OWEPathFinder.pas',
-  OWERoundCornerPolyline in '..\Editor\OWERoundCornerPolyline.pas';
+  OWLStateComps in '..\OWLStateComps.pas',
+  OWLComps in '..\OWLComps.pas';
 
 end.
 
