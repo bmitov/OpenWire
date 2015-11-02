@@ -142,15 +142,15 @@ end;
 //---------------------------------------------------------------------------
 procedure OWLinkAwaitsLinkingAllForms();
 var
-  I                     : Integer;
-  ModuleIndex           : Integer;
-  Module                : IOTAModule;
+  I               : Integer;
+  ModuleIndex     : Integer;
+  Module          : IOTAModule;
 
-  ModuleServices        : IOTAModuleServices;
-  FormEditor            : INTAFormEditor;
+  ModuleServices  : IOTAModuleServices;
+  FormEditor      : INTAFormEditor;
 
-  Project               : IOTAProject;
-  ModuleFileExt         : String;
+  Project         : IOTAProject;
+  ModuleFileExt   : String;
 
 begin
   if( not PinsNeedRefresh ) then
@@ -191,14 +191,12 @@ begin
 
             for I := 0 to Module.GetModuleFileCount - 1 do
               begin
-                begin
-                Module.GetModuleFileEditor( I ).QueryInterface( INTAFormEditor, FormEditor );
-                if( Assigned( FormEditor )) then
-                  begin
-                  FormEditor := NIL;
-                  end;
-                end;
+              Module.GetModuleFileEditor( I ).QueryInterface( INTAFormEditor, FormEditor );
+              if( Assigned( FormEditor )) then
+                FormEditor := NIL;
+
               end;
+
           finally
           end
           end

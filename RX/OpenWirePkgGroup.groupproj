@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{e0cf4031-bb65-448c-aa3b-f5eca1bcec49}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="OpenWirePkg.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OpenWireDsn.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\OpenWireLabDemo\RX\OpenWireLabPkg.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="OpenWirePkg">
+        <MSBuild Projects="OpenWirePkg.dproj"/>
+    </Target>
+    <Target Name="OpenWirePkg:Clean">
+        <MSBuild Projects="OpenWirePkg.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWirePkg:Make">
+        <MSBuild Projects="OpenWirePkg.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireDsn">
+        <MSBuild Projects="OpenWireDsn.dproj"/>
+    </Target>
+    <Target Name="OpenWireDsn:Clean">
+        <MSBuild Projects="OpenWireDsn.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireDsn:Make">
+        <MSBuild Projects="OpenWireDsn.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OpenWireLabPkg">
+        <MSBuild Projects="..\OpenWireLabDemo\RX\OpenWireLabPkg.dproj"/>
+    </Target>
+    <Target Name="OpenWireLabPkg:Clean">
+        <MSBuild Projects="..\OpenWireLabDemo\RX\OpenWireLabPkg.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OpenWireLabPkg:Make">
+        <MSBuild Projects="..\OpenWireLabDemo\RX\OpenWireLabPkg.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="OpenWirePkg;OpenWireDsn;OpenWireLabPkg"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="OpenWirePkg:Clean;OpenWireDsn:Clean;OpenWireLabPkg:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="OpenWirePkg:Make;OpenWireDsn:Make;OpenWireLabPkg:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

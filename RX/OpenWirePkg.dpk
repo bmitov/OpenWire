@@ -1,12 +1,12 @@
-package OpenWirePkgD18;
+package OpenWirePkg;
 
 {$R *.res}
-{$R 'OWStdTypes.res'}
+{$R '..\OWStdTypes.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -27,12 +27,13 @@ package OpenWirePkgD18;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'OpenWire Project'}
+{$LIBSUFFIX '230'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  Mitov_Runtime_D18;
+  Mitov_Runtime;
 
 contains
   OWPins in '..\OWPins.pas',

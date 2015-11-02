@@ -65,6 +65,7 @@ end;
 procedure Register;
 begin
   RegisterPropertyEditor( TypeInfo(TOWPinListOwner),  NIL, '', TOWPinListOwnerPropertyEditor );
+  RegisterPropertyEditor( TypeInfo(TOWPin),  NIL, '', THiddenEditor );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------

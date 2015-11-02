@@ -269,16 +269,18 @@ function  OWSinkPinEdit( Designer : IDesigner; SinkPin : TOWSinkPin ) : Boolean;
 function  OWMultiSinkPinEdit( Designer : IDesigner; MultiSinkPin : TOWMultiSinkPin ) : Boolean;
 procedure OWGetSinkPinValues( SinkPin : TOWSinkPin; Proc: TGetStrProc );
 //---------------------------------------------------------------------------
-procedure Register;
+procedure Register();
 
 implementation
 
 {$R *.DFM}
 
+uses
 {$WARN UNIT_DEPRECATED OFF}
-    uses OWStateEditors, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
+  OWStateEditors, OWAboutFormUnit, Math, ToolsAPI, ToolIntf, ExptIntf,
 {$WARN UNIT_DEPRECATED ON}
-    System.UITypes, OWAfterPinSelectFormUnit, Mitov.Types, Mitov.Threading;
+  System.UITypes, OWAfterPinSelectFormUnit, Mitov.Types, Mitov.Threading,
+  Mitov.Delphi.Design;
 
 {$IFDEF BCB}
 const
@@ -288,7 +290,7 @@ const
   SEPARATOR = '.';
 {$ENDIF}
 
-{$R OpenWireResources2006.res}
+{$R OpenWireResources.res}
 
 var GOWPinEditorForm : TOWPinEditorForm;
 
@@ -1215,9 +1217,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-var
-  LogoBitmap : TBitmap = NIL;
-
 procedure TOWPinEditorForm.LinkAllButtonClick(Sender: TObject);
 var
   I : Integer;
@@ -2269,7 +2268,8 @@ procedure TIOWPinsEditorNotifier.EventNotification(NotifyCode: TEventNotificatio
 begin
 end;
 
-var EditorNotifier : TIOWPinsEditorNotifier;
+var
+  GEditorNotifier : TIOWPinsEditorNotifier;
 
 procedure TOWPinEditorForm.Image1Click(Sender: TObject);
 var
@@ -2446,14 +2446,14 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure Register;
+procedure Register();
 begin
-  LogoBitmap := TBitmap.Create();
-  LogoBitmap.LoadFromResourceName( HInstance, 'OPENWIRELOGO' );
-  if( SplashScreenServices <> nil ) then
-    SplashScreenServices.AddProductBitmap( 'OpenWire', LogoBitmap.Handle );
-
-  ForceDemandLoadState(dlDisable);
+  DelphiAddAboutInfo( HInstance,
+      'OPENWIRELOGO',
+      'OpenWire',
+      '',
+      False
+    );
 
   RegisterPropertyInCategory( 'Input Pins',   TypeInfo(TOWSinkPin) );
   RegisterPropertyInCategory( 'Input Pins',   TypeInfo(TOWMultiSinkPin) );
@@ -2475,18 +2475,15 @@ end;
 initialization
   GOWPinEditorForm := TOWPinEditorForm.Create( Application );
 
-  EditorNotifier := TIOWPinsEditorNotifier.Create();
+  GEditorNotifier := TIOWPinsEditorNotifier.Create();
   if( Assigned( ToolServices )) then
-    ToolServices.AddNotifier( EditorNotifier );
+    ToolServices.AddNotifier( GEditorNotifier );
 
 finalization
   if( Assigned( ToolServices )) then
-    ToolServices.RemoveNotifier( EditorNotifier );
+    ToolServices.RemoveNotifier( GEditorNotifier );
 
-  LogoBitmap.Free();
-  EditorNotifier.Free();
-  if( GOWPinEditorForm <> NIL ) then
-    GOWPinEditorForm.Free();
+  FreeAndNil( GEditorNotifier );
+  FreeAndNil( GOWPinEditorForm );
 
-  GOWPinEditorForm := NIL;
 end.

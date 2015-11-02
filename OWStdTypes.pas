@@ -183,7 +183,7 @@ type TOWTypedRangeChangeEvent<T_Data> = reference to procedure( Sender : TOWPin;
 type TOWInt64DateTimeValueRangeChangeEvent = reference to procedure( Sender : TOWPin; AValue, AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; ARangesFilled : Boolean; AOnConnect : Boolean );
 type TOWInt64DateTimeRangeChangeEvent = reference to procedure( Sender : TOWPin; AMin, AMax : Int64; AMinTime, AMaxTime : TDateTime; AOnConnect : Boolean );
 
-type TOWPinDispatchEvent = reference to function( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+type TOWPinDispatchEvent = reference to function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 
 type TOWBasicPinNotificationEvent = reference to function( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 
@@ -357,7 +357,7 @@ type
     FPinNotificationEvent : TOWBasicPinNotificationEvent;
 
   protected
-    FLPDataSection  : ICriticalSection;
+    FDataSection    : ICriticalSection;
     FStartOperation : IOWNotifyOperation;
 
   protected
@@ -1266,16 +1266,12 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWTypedListSinkPin<T> = class( TOWStdSinkPin )
+  TOWTypedListSinkPin<T> = class( TOWTypedSinkPin<IArrayList<T>> )
   protected
     FOnDataChange : TOWDataChangeEvent<IArrayList<T>>;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<IArrayList<T>>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<IArrayList<T>>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -1301,7 +1297,42 @@ type
 //---------------------------------------------------------------------------
   TOWBasicFormatConverter = class( TOWFormatConverter )
   protected
-    function  DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+    function  DoDispatch( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWBasicTypedFormatConverter<T_OutStream : IOWBasicStream; T_OutData; T_OutputPin : TOWTypedSourcePin<T_OutStream, T_OutData>> = class( TOWBasicFormatConverter )
+  protected
+    procedure Send( const AOutData : T_OutData ); inline;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWTypedFormatConverter<T_OutStream : IOWBasicStream; T_InData; T_OutData; T_InputPin : TOWTypedSinkPin<T_InData>, constructor; T_OutputPin : TOWTypedSourcePin<T_OutStream, T_OutData>, constructor> = class( TOWBasicTypedFormatConverter<T_OutStream, T_OutData, T_OutputPin> )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : T_InData; AOnConnect : Boolean ); virtual; abstract;
+
+  public
+    constructor Create(); override;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWTypedFromRangedFormatConverter<T_OutStream : IOWBasicStream; T_InData; T_OutData; T_InputPin : TOWTypedAndRangedSinkPin<T_InData>, constructor; T_OutputPin : TOWTypedSourcePin<T_OutStream, T_OutData>, constructor> = class( TOWBasicTypedFormatConverter<T_OutStream, T_OutData, T_OutputPin> )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : T_InData; ARangesFilled : Boolean; AOnConnect : Boolean ); virtual; abstract;
+
+  public
+    constructor Create(); override;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWTypedFromToRangedFormatConverter<T_OutStream : IOWBasicStream; T_OutRangedStream : IOWBasicStream; T_InData; T_OutData; T_InputPin : TOWTypedAndRangedSinkPin<T_InData>, constructor; T_OutputPin : TOWTypedRangedSourcePin<T_OutStream, T_OutRangedStream, T_OutData>, constructor> = class( TOWBasicFormatConverter )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : T_InData; ARangesFilled : Boolean; AOnConnect : Boolean ); virtual; abstract;
+    procedure Send( const AOutData : T_OutData ); inline;
+    procedure SendValueRange( const AValue, AMin, AMax : T_OutData ); inline;
+
+  public
+    constructor Create(); override;
 
   end;
 //---------------------------------------------------------------------------
@@ -1401,7 +1432,7 @@ begin
   if( Assigned( FOnPinDispatchEvent )) then
     begin
     Result := True;
-    AResult := FOnPinDispatchEvent( DataTypeID, Operation, State, Result );
+    AResult := FOnPinDispatchEvent( Self, DataTypeID, Operation, State, Result );
     if( Result ) then
       Exit;
 
@@ -1445,7 +1476,7 @@ begin
   if( Assigned( FOnPinDispatchEvent )) then
     begin
     Result := True;
-    AResult := FOnPinDispatchEvent( DataTypeID, Operation, State, Result );
+    AResult := FOnPinDispatchEvent( Self, DataTypeID, Operation, State, Result );
     if( Result ) then
       Exit;
 
@@ -1481,7 +1512,7 @@ begin
   if( Assigned( FOnPinDispatchEvent )) then
     begin
     Result := True;
-    AResult := FOnPinDispatchEvent( DataTypeID, Operation, State, Result );
+    AResult := FOnPinDispatchEvent( Self, DataTypeID, Operation, State, Result );
     if( Result ) then
       Exit;
 
@@ -1496,14 +1527,14 @@ end;
 constructor TOWBasicDispatchSourcePin.Create(AOwner: TComponent; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOwner );
-  FLPDataSection := TCriticalSection.Create();
+  FDataSection := TCriticalSection.Create();
   FPinNotificationEvent := APinNotificationEvent;
 end;
 //---------------------------------------------------------------------------
 constructor TOWBasicDispatchSourcePin.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AInputOwnerLock : IBasicLock; AMaxConnections : Integer = -1; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AInputOwnerLock );
-  FLPDataSection := TCriticalSection.Create();
+  FDataSection := TCriticalSection.Create();
   FPinNotificationEvent := APinNotificationEvent;
 end;
 //---------------------------------------------------------------------------
@@ -1512,15 +1543,10 @@ begin
   Result := inherited Notify( Operation );
 
   if( Operation.IsType( TOWStartOperation )) then
-    FLPDataSection.Access.Setter<IOWNotifyOperation>( FStartOperation, Operation )
+    FDataSection.Access.Setter<IOWNotifyOperation>( FStartOperation, Operation )
 
   else if( Operation.IsType( TOWStopOperation )) then
-    FLPDataSection.Access.Setter<IOWNotifyOperation>( FStartOperation, NIL );
-
-{
-        else if( Operation.IsType( TOWIgnoreStreamOperation )) then
-          FLPDataSection.Setter<IOWNotifyOperation>( FStartOperation, Operation );
-}
+    FDataSection.Access.Setter<IOWNotifyOperation>( FStartOperation, NIL );
 
 end;
 //---------------------------------------------------------------------------
@@ -1531,7 +1557,7 @@ var
 begin
   inherited;
 
-  FLPDataSection.Access.Execute(
+  FDataSection.Access.Execute(
       procedure()
       begin
         AStartOperation := FStartOperation;
@@ -1550,7 +1576,7 @@ var
 begin
   Result := inherited;
 
-  FLPDataSection.Access.Execute(
+  FDataSection.Access.Execute(
       procedure()
       begin
         AStartOperation := FStartOperation;
@@ -3491,7 +3517,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function TOWBasicFormatConverter.DoDispatch( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
+function TOWBasicFormatConverter.DoDispatch( Sender : TOWBasicPin; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState; var Handled : Boolean ) : TOWNotifyResult;
 begin
   if( not ( Operation.IsType( TOWSuppliedOperation ))) then
     FOutputPin.Notify( Operation )
@@ -3504,25 +3530,77 @@ end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+procedure TOWBasicTypedFormatConverter<T_OutStream, T_OutData, T_OutputPin>.Send( const AOutData : T_OutData );
+begin
+  T_OutputPin( FOutputPin ).Send( AOutData );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+constructor TOWTypedFormatConverter<T_OutStream, T_InData, T_OutData, T_InputPin, T_OutputPin>.Create();
+begin
+  inherited CreateEx( T_InputPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), T_OutputPin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+constructor TOWTypedFromRangedFormatConverter<T_OutStream, T_InData, T_OutData, T_InputPin, T_OutputPin>.Create();
+begin
+  inherited CreateEx( T_InputPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), T_OutputPin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+constructor TOWTypedFromToRangedFormatConverter<T_OutStream, T_OutRangedStream, T_InData, T_OutData, T_InputPin, T_OutputPin>.Create();
+begin
+  inherited CreateEx( T_InputPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), T_OutputPin.CreateLock( Self, FLock, NIL ) );
+end;
+//------------------------------------------------------------------------------
+procedure TOWTypedFromToRangedFormatConverter<T_OutStream, T_OutRangedStream, T_InData, T_OutData, T_InputPin, T_OutputPin>.Send( const AOutData : T_OutData );
+begin
+  T_OutputPin( FOutputPin ).SubmitValue( AOutData );
+end;
+//------------------------------------------------------------------------------
+procedure TOWTypedFromToRangedFormatConverter<T_OutStream, T_OutRangedStream, T_InData, T_OutData, T_InputPin, T_OutputPin>.SendValueRange( const AValue, AMin, AMax : T_OutData );
+begin
+  T_OutputPin( FOutputPin ).SubmitValueRange( AValue, AMin, AMax );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWBoolStream, IOWIntegerStream )]
+  TOWBoolToIntFormatConverter = class( TOWTypedFormatConverter<IOWIntegerStream, Boolean, Integer, TOWBoolSinkPin, TOWIntegerSourcePin> )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWBoolToIntFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean );
+begin
+  if( AValue ) then
+    Send( 1 )
+
+  else
+    Send( 0 );
+
+end;
+//------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWIntegerStream, IOWRealStream )]
-  TOWIntToRealFormatConverter = class( TOWBasicFormatConverter )
+  TOWIntToRealFormatConverter = class( TOWTypedFormatConverter<IOWRealStream, Integer, Real, TOWIntegerSinkPin, TOWRealSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWIntToRealFormatConverter.Create();
-begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWIntToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  TOWRealSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3530,23 +3608,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWIntegerStream, IOWFloatStream )]
-  TOWIntToFloatFormatConverter = class( TOWBasicFormatConverter )
+  TOWIntToFloatFormatConverter = class( TOWTypedFormatConverter<IOWFloatStream, Integer, Single, TOWIntegerSinkPin, TOWFloatSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWIntToFloatFormatConverter.Create();
-begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWIntToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  TOWFloatSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3554,23 +3624,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWIntegerStream, IOWStringStream )]
-  TOWIntToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWIntToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Integer, String, TOWIntegerSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWIntToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWIntegerSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWIntToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
+  Send( IntToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3578,23 +3640,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWCardinalStream, IOWRealStream )]
-  TOWCardinalToRealFormatConverter = class( TOWBasicFormatConverter )
+  TOWCardinalToRealFormatConverter = class( TOWTypedFormatConverter<IOWRealStream, Cardinal, Real, TOWCardinalSinkPin, TOWRealSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWCardinalToRealFormatConverter.Create();
-begin
-  inherited CreateEx( TOWCardinalSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWCardinalToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
 begin
-  TOWRealSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3602,23 +3656,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWCardinalStream, IOWFloatStream )]
-  TOWCardinalToFloatFormatConverter = class( TOWBasicFormatConverter )
+  TOWCardinalToFloatFormatConverter = class( TOWTypedFormatConverter<IOWFloatStream, Cardinal, Single, TOWCardinalSinkPin, TOWFloatSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWCardinalToFloatFormatConverter.Create();
-begin
-  inherited CreateEx( TOWCardinalSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWCardinalToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
 begin
-  TOWFloatSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3626,23 +3672,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWCardinalStream, IOWStringStream )]
-  TOWCardinalToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWCardinalToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Cardinal, String, TOWCardinalSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWCardinalToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWCardinalSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWCardinalToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Cardinal; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
+  Send( AValue.ToString());
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3650,23 +3688,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWFloatStream, IOWRealStream )]
-  TOWFloatToRealFormatConverter = class( TOWBasicFormatConverter )
+  TOWFloatToRealFormatConverter = class( TOWTypedFormatConverter<IOWRealStream, Single, Real, TOWFloatSinkPin, TOWRealSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWFloatToRealFormatConverter.Create();
-begin
-  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWFloatToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
 begin
-  TOWRealSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3674,23 +3704,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWByteStream, IOWIntegerStream )]
-  TOWByteToIntegerFormatConverter = class( TOWBasicFormatConverter )
+  TOWByteToIntegerFormatConverter = class( TOWTypedFormatConverter<IOWIntegerStream, Byte, Integer, TOWByteSinkPin, TOWIntegerSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Byte; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Byte; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWByteToIntegerFormatConverter.Create();
-begin
-  inherited CreateEx( TOWByteSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWIntegerSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWByteToIntegerFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Byte; AOnConnect : Boolean );
 begin
-  TOWIntegerSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3698,23 +3720,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWFloatStream, IOWStringStream )]
-  TOWFloatToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWFloatToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Single, String, TOWFloatSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWFloatToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWFloatSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWFloatToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ));
+  Send( FloatToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3722,23 +3736,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWRealStream, IOWStringStream )]
-  TOWRealToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWRealToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Real, String, TOWRealSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Real; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Real; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWRealToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWRealSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWRealToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Real; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ));
+  Send( FloatToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3746,23 +3752,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWInt64Stream, IOWRealStream )]
-  TOWInt64ToRealFormatConverter = class( TOWBasicFormatConverter )
+  TOWInt64ToRealFormatConverter = class( TOWTypedFormatConverter<IOWRealStream, Int64, Real, TOWInt64SinkPin, TOWRealSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWInt64ToRealFormatConverter.Create();
-begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWInt64ToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  TOWRealSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3770,23 +3768,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWInt64Stream, IOWFloatStream )]
-  TOWInt64ToFloatFormatConverter = class( TOWBasicFormatConverter )
+  TOWInt64ToFloatFormatConverter = class( TOWTypedFormatConverter<IOWFloatStream, Int64, Single, TOWInt64SinkPin, TOWFloatSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWInt64ToFloatFormatConverter.Create();
-begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWInt64ToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  TOWFloatSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3794,23 +3784,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWInt64Stream, IOWStringStream )]
-  TOWInt64ToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWInt64ToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Int64, String, TOWInt64SinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWInt64ToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWInt64ToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Int64; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
+  Send( IntToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3818,23 +3800,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWUInt64Stream, IOWRealStream )]
-  TOWUInt64ToRealFormatConverter = class( TOWBasicFormatConverter )
+  TOWUInt64ToRealFormatConverter = class( TOWTypedFormatConverter<IOWRealStream, UInt64, Real, TOWUInt64SinkPin, TOWRealSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWUInt64ToRealFormatConverter.Create();
-begin
-  inherited CreateEx( TOWUInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWRealSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWUInt64ToRealFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
 begin
-  TOWRealSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3842,23 +3816,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWUInt64Stream, IOWFloatStream )]
-  TOWUInt64ToFloatFormatConverter = class( TOWBasicFormatConverter )
+  TOWUInt64ToFloatFormatConverter = class( TOWTypedFormatConverter<IOWFloatStream, UInt64, Single, TOWUInt64SinkPin, TOWFloatSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWUInt64ToFloatFormatConverter.Create();
-begin
-  inherited CreateEx( TOWUInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWFloatSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWUInt64ToFloatFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
 begin
-  TOWFloatSourcePin( FOutputPin ).Send( AValue );
+  Send( AValue );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3866,23 +3832,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWUInt64Stream, IOWStringStream )]
-  TOWUInt64ToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWUInt64ToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, UInt64, String, TOWUInt64SinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWUInt64ToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWUInt64SinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWUInt64ToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : UInt64; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ));
+  Send( IntToStr( AValue ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3890,20 +3848,12 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWBoolStream, IOWStringStream )]
-  TOWBoolToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWBoolToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Boolean, String, TOWBoolSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWBoolToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWBoolSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWBoolToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : Boolean; AOnConnect : Boolean );
 const
   Values : array [Boolean] of String =
@@ -3913,7 +3863,7 @@ const
     );
 
 begin
-  TOWStringSourcePin( FOutputPin ).Send( Values[ AValue ]);
+  Send( Values[ AValue ]);
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3921,23 +3871,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWRealComplexStream, IOWStringStream )]
-  TOWRealComplexToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWRealComplexToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, TOWRealComplex, String, TOWComplexSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWRealComplexToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWComplexSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWRealComplexToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TOWRealComplex; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue.Real ) + ' I:' + FloatToStr( AValue.Imaginary ));
+  Send( FloatToStr( AValue.Real ) + ' I:' + FloatToStr( AValue.Imaginary ));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3945,23 +3887,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWDateTimeStream, IOWStringStream )]
-  TOWTimeToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWTimeToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, TDateTime, String, TOWDateTimeSinkPin, TOWStringSourcePin> )
   protected
-    procedure DoTimeChange( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWTimeToStringFormatConverter.Create();
+procedure TOWTimeToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean );
 begin
-  inherited CreateEx( TOWDateTimeSinkPin.CreateLock( Self, FLock, DoTimeChange, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//---------------------------------------------------------------------------
-procedure TOWTimeToStringFormatConverter.DoTimeChange( Sender : TOWPin; AValue : TDateTime; AOnConnect : Boolean );
-begin
-  TOWStringSourcePin( FOutputPin ).Send( DateTimeToStr( AValue ) );
+  Send( DateTimeToStr( AValue ) );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3969,23 +3903,15 @@ end;
 //---------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWIntRangedStream, IOWStringStream )]
-  TOWIntRangedToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWIntRangedToStringFormatConverter = class( TOWTypedFromRangedFormatConverter<IOWStringStream, Integer, String, TOWIntAndRangedSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWIntRangedToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWIntRangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
+  Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -3993,23 +3919,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWInt64RangedStream, IOWStringStream )]
-  TOWInt64RangedToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWInt64RangedToStringFormatConverter = class( TOWTypedFromRangedFormatConverter<IOWStringStream, Int64, String, TOWInt64AndRangedSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWInt64RangedToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWInt64RangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
+  Send( IntToStr( AValue ) + ' [' + IntToStr( AMin ) + ' - ' + IntToStr( AMax ) + ']' );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -4017,23 +3935,15 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWRealRangedStream,   IOWStringStream )]
-  TOWRealRangedToStringFormatConverter = class( TOWBasicFormatConverter )
+  TOWRealRangedToStringFormatConverter = class( TOWTypedFromRangedFormatConverter<IOWStringStream, Real, String, TOWRealAndRangedSinkPin, TOWStringSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWRealRangedToStringFormatConverter.Create();
-begin
-  inherited CreateEx( TOWRealAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWStringSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWRealRangedToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Real; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
-  TOWStringSourcePin( FOutputPin ).Send( FloatToStr( AValue ) + ' [' + FloatToStr( AMin ) + ' - ' + FloatToStr( AMax ) + ']' );
+  Send( FloatToStr( AValue ) + ' [' + FloatToStr( AMin ) + ' - ' + FloatToStr( AMax ) + ']' );
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -4041,27 +3951,19 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWIntRangedStream, IOWRealRangedStream )]
-  TOWIntToRealRangedFormatConverter = class( TOWBasicFormatConverter )
+  TOWIntToRealRangedFormatConverter = class( TOWTypedFromToRangedFormatConverter<IOWRealStream, IOWRealRangedStream, Integer, Real, TOWIntAndRangedSinkPin, TOWRealRangedSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWIntToRealRangedFormatConverter.Create();
-begin
-  inherited CreateEx( TOWIntAndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWRealRangedSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWIntToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Integer; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
   if( ARangesFilled ) then
-    TOWRealRangedSourcePin( FOutputPin ).SubmitValueRange( AValue, AMin, AMax )
+    SendValueRange( AValue, AMin, AMax )
     
   else
-     TOWRealRangedSourcePin( FOutputPin ).SubmitValue( AValue );
+    Send( AValue );
      
 end;
 //------------------------------------------------------------------------------
@@ -4070,20 +3972,12 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWInt64RangedStream, IOWRealRangedStream )]
-  TOWInt64ToRealRangedFormatConverter = class( TOWBasicFormatConverter )
+  TOWInt64ToRealRangedFormatConverter = class( TOWTypedFromToRangedFormatConverter<IOWRealStream, IOWRealRangedStream, Int64, Real, TOWInt64AndRangedSinkPin, TOWRealRangedSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean ); override;
 
   end;
 //---------------------------------------------------------------------------
-constructor TOWInt64ToRealRangedFormatConverter.Create();
-begin
-  inherited CreateEx( TOWInt64AndRangedSinkPin.CreateLock( Self, FLock, SinkOperationEvent, NIL, DoDispatch ), TOWRealRangedSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
-//------------------------------------------------------------------------------
 procedure TOWInt64ToRealRangedFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue, AMin, AMax : Int64; ARangesFilled : Boolean; AOnConnect : Boolean );
 begin
   if( ARangesFilled ) then
@@ -4308,19 +4202,11 @@ end;
 //------------------------------------------------------------------------------
 type
   [OWConvertDataType( IOWColorStream, IOWAlphaColorStream )]
-  TOWColorToAlphaColorFormatConverter = class( TOWBasicFormatConverter )
+  TOWColorToAlphaColorFormatConverter = class( TOWTypedFormatConverter<IOWAlphaColorStream, TColor, TAlphaColor, TOWColorSinkPin, TOWAlphaColorSourcePin> )
   protected
-    procedure SinkOperationEvent( Sender : TOWPin; AValue : TColor; AOnConnect : Boolean );
-
-  public
-    constructor Create(); override;
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : TColor; AOnConnect : Boolean ); override;
 
   end;
-//------------------------------------------------------------------------------
-constructor TOWColorToAlphaColorFormatConverter.Create();
-begin
-  inherited CreateEx( TOWColorSinkPin.CreateLock( Self, FLock, SinkOperationEvent, DoDispatch ), TOWAlphaColorSourcePin.CreateLock( Self, FLock, NIL ) );
-end;
 //------------------------------------------------------------------------------
 procedure TOWColorToAlphaColorFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TColor; AOnConnect : Boolean );
   function ColorToRGB(Color: TColor): Longint;
@@ -4336,7 +4222,7 @@ procedure TOWColorToAlphaColorFormatConverter.SinkOperationEvent( Sender : TOWPi
   end;
 
 begin
-  TOWRealSourcePin( FOutputPin ).Send( $FF000000 or TAlphaColor( ColorToRGB( AValue )));
+  Send( $FF000000 or TAlphaColor( ColorToRGB( AValue )));
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -5005,18 +4891,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedListSinkPin<T>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<IArrayList<T>>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWTypedListSinkPin<T>.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<IArrayList<T>>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
 function TOWTypedListSinkPin<T>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   Result := [];
@@ -5258,6 +5132,7 @@ begin
       TOWInt64RangedToStringFormatConverter,
       TOWRealRangedToStringFormatConverter,
       TOWBoolToStringFormatConverter,
+      TOWBoolToIntFormatConverter,
       TOWRealComplexToStringFormatConverter,
       TOWTimeToStringFormatConverter,
       TOWIntToStringListFormatConverter,
@@ -5314,6 +5189,29 @@ begin
       end
     );
 
+
+  TClassManagement.RegisterInitClassDefaults( TOWStdMultiSinkPin.TypeInfo(),
+      procedure( AOwner : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
+      type
+        TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
+
+      begin
+        if( AInstance is TComponent ) then
+          AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), ALockItem.GetLock(), NIL )
+
+        else if( AInstance is TPersistent ) then
+          begin
+          if( AOwner <> NIL ) then
+            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), ALockItem.GetLock(), NIL )
+
+          else
+            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), ALockItem.GetLock(), NIL );
+
+          end;
+
+      end
+    );
+
   TClassManagement.RegisterInitClassDefaults( TOWClockSinkPin.TypeInfo(),
       procedure( AOwner : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
       type
@@ -5336,6 +5234,161 @@ begin
       end
     );
 
+  TClassManagement.RegisterInitClassDefaults( TOWClockMultiSinkPin.TypeInfo(),
+      procedure( AOwner : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
+      type
+        TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
+
+      begin
+        if( AInstance is TComponent ) then
+          AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), ALockItem.GetLock(), NIL )
+
+        else if( AInstance is TPersistent ) then
+          begin
+          if( AOwner <> NIL ) then
+            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), ALockItem.GetLock(), NIL )
+
+          else
+            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), ALockItem.GetLock(), NIL );
+
+          end;
+
+      end
+    );
+
+  TClassManagement.RegisterInitClassDefaults(
+      TOWPinListOwner.TypeInfo
+    ,
+        procedure( AOwnerInstance : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
+        var
+          APinType : ITypeInfo;
+
+        begin
+          AMember.AccessAttributes.ForLast<OWAutoManagePinListOwnerAttribute>(
+              procedure( AAttribute : OWAutoManagePinListOwnerAttribute )
+              var
+                AComponent      : TComponent;
+                APinCategories  : TOWPinCategories;
+
+              begin
+                if( AInstance is TComponent ) then
+                  AComponent := TComponent( AInstance )
+
+                else if( AInstance is TPersistent ) then
+                  begin
+                  if( AOwnerInstance <> NIL ) then
+                    AComponent := TPersistent( AOwnerInstance ).GetOwnerComponent()
+
+                  else
+                    AComponent := TPersistent( AInstance ).GetOwnerComponent();
+
+                  end
+
+                else
+                  AComponent := NIL;
+
+                APinType := AAttribute.PinClass.TypeInfo();
+                if( APinType.InheritsFrom( TOWBasicSinkPin.TypeInfo() )) then
+                  APinCategories := [pcSink]
+
+                else if( APinType.InheritsFrom( TOWSourcePin.TypeInfo() )) then
+                  APinCategories := [pcSource]
+
+                else
+                  APinCategories := [pcState];
+
+
+                AMember.Value[ AInstance ] := TOWPinListOwner.CreateLockEx( AComponent, ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max,
+                  function( APinListOwner : TOWPinList ) : TOWPin
+                  type
+                    TOWClockSourcePinClass = class of TOWClockSourcePin;
+                    TOWStdSinkPinClass = class of TOWStdSinkPin;
+                    TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
+                    TOWClockSinkPinClass = class of TOWClockSinkPin;
+                    TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
+
+                  begin
+                    if( APinType.InheritsFrom( TOWClockSourcePin.TypeInfo() )) then
+                      Result := TOWClockSourcePinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+                    else if( APinType.InheritsFrom( TOWStdSinkPin.TypeInfo() )) then
+                      Result := TOWStdSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+                    else if( APinType.InheritsFrom( TOWStdMultiSinkPin.TypeInfo() )) then
+                      Result := TOWStdMultiSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+                    else if( APinType.InheritsFrom( TOWClockSinkPin.TypeInfo() )) then
+                      Result := TOWClockSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+                    else if( APinType.InheritsFrom( TOWClockMultiSinkPin.TypeInfo() )) then
+                      Result := TOWClockMultiSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+                    else
+                      Result := NIL;
+
+//                    Result := TOWArduinoColorSinkPin.CreateLock( Self, FLock, NIL );
+                  end
+                ,
+                  NIL
+                );
+
+              end
+            )
+
+//          OWAutoManagePinList( TOWArduinoColorSinkPin, 2, 2, 200 )
+        end
+      );
+
+  TClassManagement.RegisterInitClassDefaults(
+      TOWPinList.TypeInfo
+    ,
+        procedure( AOwnerInstance : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
+        var
+          APinType : ITypeInfo;
+
+        begin
+          AMember.AccessAttributes.ForLast<OWAutoManagePinListAttribute>(
+              procedure( AAttribute : OWAutoManagePinListAttribute )
+              var
+                AComponent      : TComponent;
+                APinCategories  : TOWPinCategories;
+
+              begin
+                if( AInstance is TComponent ) then
+                  AComponent := TComponent( AInstance )
+
+                else if( AInstance is TPersistent ) then
+                  begin
+                  if( AOwnerInstance <> NIL ) then
+                    AComponent := TPersistent( AOwnerInstance ).GetOwnerComponent()
+
+                  else
+                    AComponent := TPersistent( AInstance ).GetOwnerComponent();
+
+                  end
+
+                else
+                  AComponent := NIL;
+
+                APinType := AAttribute.PinClass.TypeInfo();
+                if( APinType.InheritsFrom( TOWBasicSinkPin.TypeInfo() )) then
+                  APinCategories := [pcSink]
+
+                else if( APinType.InheritsFrom( TOWSourcePin.TypeInfo() )) then
+                  APinCategories := [pcSource]
+
+                else
+                  APinCategories := [pcState];
+
+
+                AMember.Value[ AInstance ] := TOWPinList.CreateLock( AComponent, ALockItem.GetLock(), APinCategories, AAttribute.IsOwner );
+              end
+            )
+
+//          OWAutoManagePinList( TOWArduinoColorSinkPin, 2, 2, 200 )
+        end
+      );
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -5345,4 +5398,3 @@ initialization
   InitializationSection();
 
 end.
-

@@ -1,11 +1,11 @@
-package OpenWireDsnD19;
+package OpenWireDsn;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -26,6 +26,7 @@ package OpenWireDsnD19;
 {$DEFINE __DELPHI_DESIGN__}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'OpenWire Project (Design Time)'}
+{$LIBSUFFIX '230'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -33,9 +34,10 @@ requires
   rtl,
   vcl,
   vclx,
-  Mitov_Runtime_D19,
-  OpenWirePkgD19,
-  Mitov_Delphi_Design_D19,
+  Mitov_Runtime,
+  Mitov_VCL_Runtime,
+  OpenWirePkg,
+  Mitov_Delphi_Design,
   designide;
 
 contains
@@ -44,8 +46,8 @@ contains
   OWAboutFormUnit in '..\OWAboutFormUnit.pas' {OWAboutForm},
   OWDesignTypes in '..\OWDesignTypes.pas',
   OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm},
-  OpenWire.Design in '..\OpenWire.Design.pas',
-  OpenWire.Delphi.PropertyEditors in '..\OpenWire.Delphi.PropertyEditors.pas';
+  OpenWire.Delphi.PropertyEditors in '..\OpenWire.Delphi.PropertyEditors.pas',
+  OpenWire.Design in '..\OpenWire.Design.pas';
 
 end.
 

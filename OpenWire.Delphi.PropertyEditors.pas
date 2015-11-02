@@ -13,7 +13,7 @@ interface
 
 uses
   System.Classes, System.Types, Vcl.Graphics, DesignIntf, VCLEditors,
-  Mitov.Design, OpenWirePinEditors;
+  Mitov.Design, OpenWirePinEditors, Mitov.TypeInfo;
 
 type
   TOWPinListOwnerPropertyEditorProxy = class( OpenWirePinEditors.TOWPinListOwnerPropertyEditor, IInterface, IProperty, IPropertyKind, IProperty70, IInheritedPropertyEditor,
@@ -21,10 +21,11 @@ type
     )
 
   protected
-   FNestedEditor : IPropertyEditor;
-   FDesigner     : IDesigner;
-   FValueRect    : TRect;
-   HInGetValues  : Boolean;
+   FNestedEditor  : IPropertyEditor;
+   FDesigner      : IDesigner;
+   FValueRect     : TRect;
+   HInGetValues   : Boolean;
+   FOwnerTypeInfo : ITypeInfo; // For chache speedup!
 
   protected
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
@@ -71,7 +72,7 @@ uses
 procedure TOWPinListOwnerPropertyEditorProxy.Initialize();
 begin
   inherited;
-  InitializeEditor( Self, FNestedEditor );
+  InitializeEditor( FOwnerTypeInfo, Self, FNestedEditor );
 end;
 //---------------------------------------------------------------------------
 function TOWPinListOwnerPropertyEditorProxy.GetName(): String;
