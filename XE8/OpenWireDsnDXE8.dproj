@@ -83,7 +83,7 @@
         <DCC_DcpOutput>.\$(Platform)\$(Config)</DCC_DcpOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Build>15</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=7.7.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=7.7.0.0;Comments=;CompileDate=Thursday, October 07, 2010 7:57 PM</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=7.8.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=7.8.1.0;Comments=;CompileDate=Thursday, October 07, 2010 7:57 PM</VerInfo_Keys>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
         <VerInfo_MinorVer>5</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -208,8 +208,8 @@
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
                     <VersionInfo Name="AutoIncBuild">False</VersionInfo>
                     <VersionInfo Name="MajorVer">7</VersionInfo>
-                    <VersionInfo Name="MinorVer">7</VersionInfo>
-                    <VersionInfo Name="Release">0</VersionInfo>
+                    <VersionInfo Name="MinorVer">8</VersionInfo>
+                    <VersionInfo Name="Release">1</VersionInfo>
                     <VersionInfo Name="Build">0</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
                     <VersionInfo Name="PreRelease">False</VersionInfo>
@@ -222,13 +222,13 @@
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">7.7.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">7.8.1.0</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">7.7.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">7.8.1.0</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                     <VersionInfoKeys Name="CompileDate">Thursday, October 07, 2010 7:57 PM</VersionInfoKeys>
                 </VersionInfoKeys>

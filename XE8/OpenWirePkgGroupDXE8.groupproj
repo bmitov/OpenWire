@@ -5,7 +5,7 @@
   <ItemGroup>
     <Projects Include="OpenWirePkgDXE8.dproj" />
     <Projects Include="OpenWireDsnDXE8.dproj" />
-    <Projects Include="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" />
+    <Projects Include="..\OpenWireLabDemo\XE7\OpenWireLabPkgDXE8.dproj" />
   </ItemGroup>
   <ProjectExtensions>
     <Borland.ProjectType />
@@ -32,13 +32,13 @@
     <MSBuild Projects="OpenWireDsnDXE8.dproj" Targets="Make" />
   </Target>
   <Target Name="OpenWireLabPkgDXE8">
-    <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" />
+    <MSBuild Projects="..\OpenWireLabDemo\XE7\OpenWireLabPkgDXE8.dproj" />
   </Target>
   <Target Name="OpenWireLabPkgDXE8:Clean">
-    <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" Targets="Clean" />
+    <MSBuild Projects="..\OpenWireLabDemo\XE7\OpenWireLabPkgDXE8.dproj" Targets="Clean" />
   </Target>
   <Target Name="OpenWireLabPkgDXE8:Make">
-    <MSBuild Projects="..\OpenWireLabDemo\XE8\OpenWireLabPkgDXE8.dproj" Targets="Make" />
+    <MSBuild Projects="..\OpenWireLabDemo\XE7\OpenWireLabPkgDXE8.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
     <CallTarget Targets="OpenWirePkgDXE8;OpenWireDsnDXE8;OpenWireLabPkgDXE8" />

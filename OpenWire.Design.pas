@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2015 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2016 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,14 +20,14 @@ unit OpenWire.Design;
 interface
 
 uses
-  Mitov.Design;
+  Mitov.Design, Mitov.Containers.List;
 
 type
   TOWPinListOwnerPropertyEditor = class( TSinglePropertyEditor )
 {$IFNDEF VCL_EDITORS}
   public
     function  GetDisplayValue() : String; override;
-    function  GetStringValue() : String; override;
+    function  GetStringValue( AObjectsList : IArrayList<TObject> = NIL ) : String; override;
     procedure SetStringValue(const  AValue: String ); override;
 {$ENDIF}
   end;
@@ -47,7 +47,7 @@ begin
   Result := IntToStr( GetValue().AsType<TOWPinListOwner>.Count ) + ' Items';
 end;
 //---------------------------------------------------------------------------
-function TOWPinListOwnerPropertyEditor.GetStringValue() : String;
+function TOWPinListOwnerPropertyEditor.GetStringValue( AObjectsList : IArrayList<TObject> = NIL ) : String;
 begin
   Result := IntToStr( GetValue().AsType<TOWPinListOwner>.Count );
 end;
@@ -64,8 +64,9 @@ end;
 {$IFDEF FORM_EDITORS}
 procedure Register;
 begin
-  RegisterPropertyEditor( TypeInfo(TOWPinListOwner),  NIL, '', TOWPinListOwnerPropertyEditor );
   RegisterPropertyEditor( TypeInfo(TOWPin),  NIL, '', THiddenEditor );
+  RegisterPropertyEditor( TypeInfo(TOWPinList),  NIL, '', THiddenEditor );
+  RegisterPropertyEditor( TypeInfo(TOWPinListOwner),  NIL, '', TOWPinListOwnerPropertyEditor );
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------

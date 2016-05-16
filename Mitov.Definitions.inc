@@ -40,7 +40,17 @@
   {$DEFINE XE7Up}
   {$DEFINE XE5Up}
   {$DEFINE XE6Up}
+  {$DEFINE RXUp}
+{$ENDIF}
+
+{$IF CompilerVersion = 30} // Delphi RX 10.1 Seattle
   {$DEFINE RX}
+{$ENDIF}
+
+{$IF CompilerVersion > 30} // Delphi RX 10.1 Seattle
+  {$DEFINE RX10_1}
+  {$DEFINE RX10_1Up}
+  {$DEFINE RX1Up}
 {$ENDIF}
 
 {$DEFINE D13}
@@ -53,10 +63,21 @@
 {$DEFINE STANDATD_BUFFER_ALLOCATION}
 
 {$IFDEF MSWINDOWS}
+  {$IF ( not defined(FMX)) OR ( not defined(RXUp))}
+    {$DEFINE FMX_VCL}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF MSWINDOWS}
   {$DEFINE USEMEDIATIMERS}
 {$ELSE}
   {$DEFINE USE_NATIVE_IMPLEMENTATION}
 {$ENDIF}
+
+{$IF defined(ANDROID) or defined(IOS)}
+  {$DEFINE NOMODAL}
+{$ENDIF}
+
 
 {$ZEROBASEDSTRINGS OFF}
 

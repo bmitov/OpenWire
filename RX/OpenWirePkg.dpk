@@ -2,6 +2,7 @@ package OpenWirePkg;
 
 {$R *.res}
 {$R '..\OWStdTypes.res'}
+{$R '..\Mitov.Categories.OpenWire.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -38,6 +39,8 @@ requires
 contains
   OWPins in '..\OWPins.pas',
   OWStdTypes in '..\OWStdTypes.pas',
-  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas';
+  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas',
+  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas',
+  OWUtils in '..\OWUtils.pas';
 
 end.

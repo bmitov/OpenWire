@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, System.SysUtils, System.UITypes, OWPins, System.Generics.Defaults,
-  System.TypInfo, Mitov.Types, Mitov.Containers.List, Mitov.Threading;
+  System.TypInfo, Mitov.Types, Mitov.Containers.List, Mitov.Threading, Mitov.Attributes;
 
 type
   IOWBasicStream = interface(IOWStream)
@@ -16,144 +16,144 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  [OWName('Clock')]
+  [Name('Clock')]
   [OWCoreInterface]
   IOWClockStream = interface(IOWBasicStream)
     ['{48CDAF9F-00C7-4B45-999D-4EE25353A952}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('General Data Stream')]
+  [Name('General Data Stream')]
   [OWCoreInterface]
   IOWDataStream = interface(IOWBasicStream)
     ['{CFDF94D7-5134-49D9-AC65-902BBC1CD140}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('32 bit Integer')]
+  [Name('32 bit Integer')]
   IOWIntegerStream = interface(IOWDataStream)
     ['{92F6B47E-B46E-49BB-9A8E-676D3C2F2E66}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('32 bit Unsigned Integer')]
+  [Name('32 bit Unsigned Integer')]
   IOWCardinalStream = interface(IOWDataStream)
     ['{B9867263-626B-47A4-AC8D-F3B6C68392B9}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Float')]
+  [Name('Float')]
   IOWFloatStream = interface(IOWDataStream)
     ['{67F6997B-7EB4-4E2F-8320-4A512B5F2BC7}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Real')]
+  [Name('Real')]
   IOWRealStream = interface(IOWDataStream)
     ['{208F9564-3C20-4C97-BB77-2FC5AE6E4194}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Real Complex')]
+  [Name('Real Complex')]
   IOWRealComplexStream = interface(IOWDataStream)
     ['{4CC4ADE6-E5AE-4E27-A9E7-42C14E062F41}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Boolean')]
+  [Name('Boolean')]
   IOWBoolStream = interface(IOWDataStream)
     ['{7AA677AE-F983-4714-8E64-EC6F3D17695B}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Byte')]
+  [Name('Byte')]
   IOWByteStream = interface(IOWDataStream)
     ['{6869A0AD-852B-454F-B664-F54040F7019D}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Character')]
+  [Name('Character')]
   IOWCharStream = interface(IOWDataStream)
     ['{3241B885-95E1-495F-ACEC-4A1C98872B63}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Color')]
+  [Name('Color')]
   IOWColorStream = interface(IOWDataStream)
     ['{44421113-BE8B-4C12-86C3-5721B6EFD882}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Alpha Color')]
+  [Name('Alpha Color')]
   IOWAlphaColorStream = interface(IOWDataStream)
     ['{C9C4E86B-29A1-41B3-B749-0D69035B140E}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Sting')]
+  [Name('Sting')]
   IOWStringStream = interface(IOWDataStream)
     ['{25C048B4-89D4-4277-AA98-A835EB29F5C1}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('TStings')]
+  [Name('TStings')]
   IOWStringListStream = interface(IOWDataStream)
     ['{6A8D79B4-6799-4FB7-A0AB-43C327B7382A}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Ranged 32 bit Integer')]
+  [Name('Ranged 32 bit Integer')]
   IOWIntRangedStream = interface(IOWDataStream)
     ['{836EE1EA-B8BD-4E04-8225-6AB547D1A3C4}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('64 bit Integer')]
+  [Name('64 bit Integer')]
   IOWInt64Stream = interface(IOWDataStream)
     ['{6D054E38-F733-4212-8D5A-0E866802F866}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('64 bit Unsigned Integer')]
+  [Name('64 bit Unsigned Integer')]
   IOWUInt64Stream = interface(IOWDataStream)
     ['{EE313232-48B9-40E6-A7CE-3682B3ADE39B}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Ranged 64 bit Integer')]
+  [Name('Ranged 64 bit Integer')]
   IOWInt64RangedStream = interface(IOWDataStream)
     ['{B201C2F8-CA4D-4CF3-8E6D-E620D2B9D7EF}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Ranged Real')]
+  [Name('Ranged Real')]
   IOWRealRangedStream = interface(IOWDataStream)
     ['{648AC95D-2772-427C-AD9D-2B7F1EDDE1A7}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Date/Time')]
+  [Name('Date/Time')]
   IOWDateTimeStream = interface(IOWDataStream)
     ['{475D7D8B-4796-42A5-8F8E-B512B8FD2704}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Date')]
+  [Name('Date')]
   IOWDateStream = interface(IOWDataStream)
     ['{FE356F3A-7552-4CA2-B542-A39061A61617}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Time')]
+  [Name('Time')]
   IOWTimeStream = interface(IOWDataStream)
     ['{B8EA13BE-233C-4309-AF37-6441A57973BC}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Ranged DateTime')]
+  [Name('Ranged DateTime')]
   IOWDateTimeRangedStream = interface(IOWDataStream)
     ['{92419B6E-F281-455A-852F-8253D761E30B}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Stream Persist')]
+  [Name('Stream Persist')]
   IOWStreamPersistStream = interface(IOWDataStream)
     ['{846DC44A-1EB7-4BDD-BB93-04E9BC5E4BBD}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Integer List')]
+  [Name('Integer List')]
   IOWIntegerListStream = interface(IOWDataStream)
     ['{FB1752DB-AA81-4237-8FC1-26721AE56974}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Int64 List')]
+  [Name('Int64 List')]
   IOWInt64ListStream = interface(IOWDataStream)
     ['{FB0AD5A2-9033-48B3-87F5-E8FCF69EF47B}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Real List')]
+  [Name('Real List')]
   IOWRealListStream = interface(IOWDataStream)
     ['{727FDD83-ADDB-4755-9A6D-1C4CFC72604C}']
   end;
 //---------------------------------------------------------------------------
-  [OWName('Float List')]
+  [Name('Float List')]
   IOWFloatListStream = interface(IOWDataStream)
     ['{0B59821C-2927-41DD-BC4B-1AB541FF9B28}']
   end;
@@ -545,7 +545,7 @@ type
     procedure SetValue( AValue : T_Data );
 
   public
-    procedure Send( AValue : T_Data );
+    procedure Send( AValue : T_Data ); virtual;
 
   public
     constructor CreateEx( AOwner: TComponent; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
@@ -570,7 +570,8 @@ type
     FValue        : T_Data;
 
   protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
+    function IsSupportedDataType( AOperation : IOWNotifyOperation ) : Boolean; virtual; stdcall;
+    function DispatchData( DataTypeID : PDataTypeID; AOperation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
     constructor Create( AOwner : TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
@@ -598,18 +599,14 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWTypedStatePin<T_Interface : IInterface; T_Data> = class( TOWStdStatePin )
+  TOWBasicTypedStatePin<T_Data> = class( TOWStdStatePin )
   protected
-    FPinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>;
-    FOnDataChange         : TOWDataChangeEvent<T_Data>;
-    FValue                : T_Data;
-    FComparer             : IComparer<T_Data>;
+    FOnDataChange : TOWDataChangeEvent<T_Data>;
+    FValue        : T_Data;
+    FComparer     : IComparer<T_Data>;
 
   protected
     procedure SetValue( AValue : T_Data );
-
-  protected
-    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
@@ -623,6 +620,15 @@ type
 
   public
     property Value : T_Data read FValue write SetValue;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWTypedStatePin<T_Interface : IInterface; T_Data> = class( TOWBasicTypedStatePin<T_Data> )
+  protected
+    FPinNotificationEvent : TOWTypedPinNotificationEvent<T_Interface, T_Data>;
+
+  protected
+    function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   end;
 //---------------------------------------------------------------------------
@@ -753,8 +759,10 @@ type
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+  TOWBasicByteSourcePin = class( TOWTypedSourcePin<IOWByteStream, Byte> );
+//---------------------------------------------------------------------------
   [OWDataType( IOWByteStream )]
-  TOWByteSourcePin = class( TOWTypedSourcePin<IOWByteStream, Byte> );
+  TOWByteSourcePin = class( TOWBasicByteSourcePin );
 //---------------------------------------------------------------------------
   TOWByteSinkPin = class( TOWTypedSinkPin<Byte>, IOWByteStream );
 //---------------------------------------------------------------------------
@@ -850,29 +858,15 @@ type
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringListSinkPin = class( TOWStdSinkPin, IOWStringListStream )
-  protected
-    FOnDataChange : TOWDataChangeEvent<TStrings>;
-
+  TOWStringListSinkPin = class( TOWTypedSinkPin<TStrings>, IOWStringListStream )
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
-  TOWStringListMultiSinkPin = class( TOWStdMultiSinkPin, IOWStringListStream )
-  protected
-    FOnDataChange : TOWDataChangeEvent<TStrings>;
-
+  TOWStringListMultiSinkPin = class( TOWTypedMultiSinkPin<TStrings>, IOWStringListStream )
   protected
     function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -909,7 +903,11 @@ type
   TOWIntegerStatePin = class( TOWTypedStatePin<IOWIntegerStream, Integer>, IOWIntegerStream );
 //---------------------------------------------------------------------------
   [OWDataType( IOWCardinalStream )]
-  TOWCardinalSourcePin = class( TOWTypedSourcePin<IOWCardinalStream, Cardinal> );
+  TOWCardinalSourcePin = class( TOWTypedSourcePin<IOWCardinalStream, Cardinal> )
+  public
+    procedure Send( AValue : Cardinal ); override; // Workaround for Delphi compiler bug
+
+  end;
 //---------------------------------------------------------------------------
   TOWCardinalSinkPin = class( TOWTypedSinkPin<Cardinal>, IOWCardinalStream );
 //---------------------------------------------------------------------------
@@ -972,30 +970,15 @@ type
 //---------------------------------------------------------------------------
   [OWDataType( IOWFloatStream )]
   [OWDataType( IOWRealStream )]
-  TOWRealStatePin = class( TOWStdStatePin, IOWFloatStream, IOWRealStream )
+  TOWRealStatePin = class( TOWBasicTypedStatePin<Real>, IOWFloatStream, IOWRealStream )
   protected
     FPinNotificationEvent : TOWPinNotificationEvent;
-    FOnDataChange         : TOWDataChangeEvent<Real>;
-    FValue                : Real;
-
-  protected
-    procedure SetValue( AValue : Real );
 
   protected
     function Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override;
 
   protected
-    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
-
-  public
-    procedure Send( AValue : Real );
-
-  public
-    constructor Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<Real>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-    constructor CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<Real>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-
-  public
-    property Value : Real read FValue write SetValue;
+    function DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   end;
 //---------------------------------------------------------------------------
@@ -1078,7 +1061,11 @@ type
   [OWDataType( IOWDateTimeStream )]
   TOWDateTimeSourcePin = class( TOWTypedSourcePin<IOWDateTimeStream, TDateTime> );
 //---------------------------------------------------------------------------
-  TOWDateTimeSinkPin = class( TOWTypedSinkPin<TDateTime>, IOWDateTimeStream );
+  TOWDateTimeSinkPin = class( TOWTypedSinkPin<TDateTime>, IOWDateTimeStream )
+  protected
+    function IsSupportedDataType( AOperation : IOWNotifyOperation ) : Boolean; override; stdcall;
+
+  end;
 //---------------------------------------------------------------------------
   TOWDateTimeMultiSinkPin = class( TOWTypedMultiSinkPin<TDateTime>, IOWDateTimeStream );
 //---------------------------------------------------------------------------
@@ -1342,7 +1329,7 @@ uses
 {$IFDEF MSWINDOWS}
   Windows,
 {$ENDIF}
-  Mitov.Utils, Mitov.Elements, OpenWire.TypeConverters, Mitov.ClassManagement, Mitov.TypeInfo;
+  System.UIConsts, Mitov.Utils, Mitov.Elements, OpenWire.TypeConverters, Mitov.ClassManagement, Mitov.TypeInfo;
 
 //---------------------------------------------------------------------------
 function IncMilliSecond(const AValue: TDateTime;
@@ -1790,24 +1777,29 @@ begin
   FOnDataChange := AOnDataChange;
 end;
 //---------------------------------------------------------------------------
-function TOWTypedSinkPin<T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
+function TOWTypedSinkPin<T_Data>.IsSupportedDataType( AOperation : IOWNotifyOperation ) : Boolean; stdcall;
+begin
+  Result := AOperation.IsType( TOWTypedSuppliedOperation<T_Data> );
+end;
+//---------------------------------------------------------------------------
+function TOWTypedSinkPin<T_Data>.DispatchData( DataTypeID : PDataTypeID; AOperation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;  stdcall;
 begin
   Result := [];
 
-  if( Operation.IsType( TOWTypedSuppliedOperation<T_Data> )) then
+  if( IsSupportedDataType( AOperation )) then
     begin
 //    if( FValue <> TOWSuppliedSingleOperation( Operation.GetInstance() ).Value ) then
       begin
-      FValue := TOWTypedSuppliedOperation<T_Data>( Operation.GetInstance() ).Value;
+      FValue := TOWTypedSuppliedOperation<T_Data>( AOperation.GetInstance() ).Value;
       if( Assigned( FOnDataChange )) then
         FOnDataChange( Self, FValue, nsNewLink in State );
 
       end;
     end
 
-  else if( not TryCustomDispatch( DataTypeID, Operation, State, Result )) then
+  else if( not TryCustomDispatch( DataTypeID, AOperation, State, Result )) then
     begin
-    if( Operation.IsType( TOWClearContentOperation )) then
+    if( AOperation.IsType( TOWClearContentOperation )) then
       begin
       FValue := Default( T_Data );
       if( Assigned( FOnDataChange )) then
@@ -1864,21 +1856,21 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedStatePin<T_Interface, T_Data>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWBasicTypedStatePin<T_Data>.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
   FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-constructor TOWTypedStatePin<T_Interface, T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWBasicTypedStatePin<T_Data>.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
   FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-function TOWTypedStatePin<T_Interface, T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
+function TOWBasicTypedStatePin<T_Data>.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   Result := [];
 
@@ -1905,6 +1897,30 @@ begin
     end;
 
 end;
+//---------------------------------------------------------------------------
+procedure TOWBasicTypedStatePin<T_Data>.SetValue( AValue : T_Data );
+var
+  AWriteLock  : ILockSection;
+
+begin
+  AWriteLock := WriteLock();
+  if( FComparer.Compare( FValue, AValue ) <> 0 ) then
+    Send( AValue );
+
+end;
+//---------------------------------------------------------------------------
+procedure TOWBasicTypedStatePin<T_Data>.Send( AValue : T_Data );
+var
+  AWriteLock  : ILockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FValue := AValue;
+  Notify( TOWTypedSuppliedOperation<T_Data>.Create( FValue ));
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 function TOWTypedStatePin<T_Interface, T_Data>.Notification( Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
@@ -1941,27 +1957,6 @@ begin
     end;
 
   Result := [];
-end;
-//---------------------------------------------------------------------------
-procedure TOWTypedStatePin<T_Interface, T_Data>.SetValue( AValue : T_Data );
-var
-  AWriteLock  : ILockSection;
-
-begin
-  AWriteLock := WriteLock();
-  if( FComparer.Compare( FValue, AValue ) <> 0 ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWTypedStatePin<T_Interface, T_Data>.Send( AValue : T_Data );
-var
-  AWriteLock  : ILockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<T_Data>.Create( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2204,18 +2199,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWRealStatePin.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<Real>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited Create( AOwner, AOnDisconnect, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWRealStatePin.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<Real>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
 function TOWRealStatePin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
   Result := [];
@@ -2317,27 +2300,6 @@ begin
     InterfFloat.DispatchData( DataTypeID, Operation, State );
     end;
 
-end;
-//---------------------------------------------------------------------------
-procedure TOWRealStatePin.SetValue( AValue : Real );
-var
-  AWriteLock  : ILockSection;
-
-begin
-  AWriteLock := WriteLock();
-  if( FValue <> AValue ) then
-    Send( AValue );
-
-end;
-//---------------------------------------------------------------------------
-procedure TOWRealStatePin.Send( AValue : Real );
-var
-  AWriteLock  : ILockSection;
-
-begin
-  AWriteLock := WriteLock();
-  FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Real>.Create( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2957,18 +2919,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStringListSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringListSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
 function TOWStringListSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 var
   AStrings : TStrings;
@@ -3008,18 +2958,6 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor TOWStringListMultiSinkPin.Create( AOwner: TComponent; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited Create( AOwner, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
-//---------------------------------------------------------------------------
-constructor TOWStringListMultiSinkPin.CreateLock( AOwner: TComponent; AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<TStrings>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
-begin
-  inherited CreateLock( AOwner, AOwnerLock, AOnPinDispatchEvent );
-  FOnDataChange := AOnDataChange;
-end;
 //---------------------------------------------------------------------------
 function TOWStringListMultiSinkPin.DispatchData( DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult; stdcall;
 begin
@@ -3151,6 +3089,19 @@ end;
 procedure TOWStringListStatePin.Send( AValue : TStrings );
 begin
   Notify( TOWSuppliedStringListOperation.Create( AValue ));
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+procedure TOWCardinalSourcePin.Send( AValue : Cardinal );
+var
+  AWriteLock  : ILockSection;
+
+begin
+  AWriteLock := WriteLock();
+  FValue := AValue;
+  Notify( TOWTypedSuppliedOperation<Cardinal>.Create( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3512,6 +3463,14 @@ begin
 
     end;
 
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+function TOWDateTimeSinkPin.IsSupportedDataType( AOperation : IOWNotifyOperation ) : Boolean; stdcall;
+begin
+  Result := AOperation.IsType( TOWTypedSuppliedOperation<TDateTime> ) or AOperation.IsType( TOWTypedSuppliedOperation<TDate> ) or AOperation.IsType( TOWTypedSuppliedOperation<TTime> );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -4228,6 +4187,38 @@ end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWColorStream, IOWStringStream )]
+  TOWColorToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, TColor, String, TOWColorSinkPin, TOWStringSourcePin> )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : TColor; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWColorToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TColor; AOnConnect : Boolean );
+begin
+  Send( ColorToString( AValue ) );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWAlphaColorStream, IOWStringStream )]
+  TOWAlphaColorToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, TAlphaColor, String, TOWAlphaColorSinkPin, TOWStringSourcePin> )
+  protected
+    procedure SinkOperationEvent( Sender : TOWPin; AValue : TAlphaColor; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWAlphaColorToStringFormatConverter.SinkOperationEvent( Sender : TOWPin; AValue : TAlphaColor; AOnConnect : Boolean );
+begin
+  Send( AlphaColorToString( AValue ) );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 function OWDefaultDataNotificationHandler( Sender : TOWPin; Handler : IOWStream; DataTypeID : PDataTypeID; Operation : IOWNotifyOperation; State : TOWNotifyState ) : TOWNotifyResult;
 var
   Interf : IOWDataStream;
@@ -5071,8 +5062,47 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure InitializationSection();
+function CreatePinListItem( AComponent : TComponent; APinClass : TClass; APinType : ITypeInfo; ALockItem : ILockItem ) : TOWPin;
+type
+  TOWClockSourcePinClass = class of TOWClockSourcePin;
+  TOWStdSinkPinClass = class of TOWStdSinkPin;
+  TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
+  TOWClockSinkPinClass = class of TOWClockSinkPin;
+  TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
+
 begin
+  if( APinType.InheritsFrom( TOWClockSourcePin.TypeInfo() )) then
+    Result := TOWClockSourcePinClass( APinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+  else if( APinType.InheritsFrom( TOWStdSinkPin.TypeInfo() )) then
+    Result := TOWStdSinkPinClass( APinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+  else if( APinType.InheritsFrom( TOWStdMultiSinkPin.TypeInfo() )) then
+    Result := TOWStdMultiSinkPinClass( APinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+  else if( APinType.InheritsFrom( TOWClockSinkPin.TypeInfo() )) then
+    Result := TOWClockSinkPinClass( APinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+  else if( APinType.InheritsFrom( TOWClockMultiSinkPin.TypeInfo() )) then
+    Result := TOWClockMultiSinkPinClass( APinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
+
+  else
+    Result := NIL;
+
+//                    Result := TOWArduinoColorSinkPin.CreateLock( Self, FLock, NIL );
+end;
+//---------------------------------------------------------------------------
+procedure InitializationSection();
+var
+  ASinkPinTypeInfo : ITypeInfo;
+  ASourcePinTypeInfo : ITypeInfo;
+//  AStatePinTypeInfo : ITypeInfo;
+
+begin
+  ASinkPinTypeInfo := TOWBasicSinkPin.TypeInfo();
+  ASourcePinTypeInfo := TOWSourcePin.TypeInfo();
+//  AStatePinTypeInfo := TOWStatePin.TypeInfo();
+
   OWRegisterStreams(
       [
       TypeInfo( IOWDataStream ),
@@ -5141,7 +5171,9 @@ begin
       TOWFloatToStringListFormatConverter,
       TOWIntToRealListFormatConverter,
       TOWFloatToRealListFormatConverter,
-      TOWColorToAlphaColorFormatConverter
+      TOWColorToAlphaColorFormatConverter,
+      TOWColorToStringFormatConverter,
+      TOWAlphaColorToStringFormatConverter
       ]
    );
 
@@ -5266,6 +5298,9 @@ begin
         begin
           AMember.AccessAttributes.ForLast<OWAutoManagePinListOwnerAttribute>(
               procedure( AAttribute : OWAutoManagePinListOwnerAttribute )
+              type
+                TOWPinListOwnerClass = class of TOWPinListOwner;
+
               var
                 AComponent      : TComponent;
                 APinCategories  : TOWPinCategories;
@@ -5288,45 +5323,19 @@ begin
                   AComponent := NIL;
 
                 APinType := AAttribute.PinClass.TypeInfo();
-                if( APinType.InheritsFrom( TOWBasicSinkPin.TypeInfo() )) then
+                if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
                   APinCategories := [pcSink]
 
-                else if( APinType.InheritsFrom( TOWSourcePin.TypeInfo() )) then
+                else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
                   APinCategories := [pcSource]
 
                 else
                   APinCategories := [pcState];
 
-
-                AMember.Value[ AInstance ] := TOWPinListOwner.CreateLockEx( AComponent, ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max,
+                AMember.Value[ AInstance ] := TOWPinListOwnerClass( AClass ).CreateLockEx( AComponent, ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max,
                   function( APinListOwner : TOWPinList ) : TOWPin
-                  type
-                    TOWClockSourcePinClass = class of TOWClockSourcePin;
-                    TOWStdSinkPinClass = class of TOWStdSinkPin;
-                    TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
-                    TOWClockSinkPinClass = class of TOWClockSinkPin;
-                    TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
-
                   begin
-                    if( APinType.InheritsFrom( TOWClockSourcePin.TypeInfo() )) then
-                      Result := TOWClockSourcePinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
-
-                    else if( APinType.InheritsFrom( TOWStdSinkPin.TypeInfo() )) then
-                      Result := TOWStdSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
-
-                    else if( APinType.InheritsFrom( TOWStdMultiSinkPin.TypeInfo() )) then
-                      Result := TOWStdMultiSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
-
-                    else if( APinType.InheritsFrom( TOWClockSinkPin.TypeInfo() )) then
-                      Result := TOWClockSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
-
-                    else if( APinType.InheritsFrom( TOWClockMultiSinkPin.TypeInfo() )) then
-                      Result := TOWClockMultiSinkPinClass( AAttribute.PinClass ).CreateLock( AComponent, ALockItem.GetLock(), NIL )
-
-                    else
-                      Result := NIL;
-
-//                    Result := TOWArduinoColorSinkPin.CreateLock( Self, FLock, NIL );
+                    Result := CreatePinListItem( AComponent, AAttribute.PinClass, APinType, ALockItem );
                   end
                 ,
                   NIL
@@ -5335,7 +5344,6 @@ begin
               end
             )
 
-//          OWAutoManagePinList( TOWArduinoColorSinkPin, 2, 2, 200 )
         end
       );
 
@@ -5343,11 +5351,14 @@ begin
       TOWPinList.TypeInfo
     ,
         procedure( AOwnerInstance : TObject; AInstance : TObject; AClass : TClass; AMember : IValueMemberInfo; ALockItem : ILockItem )
+        type
+          TOWPinListClass = class of TOWPinList;
+
         var
           APinType : ITypeInfo;
 
         begin
-          AMember.AccessAttributes.ForLast<OWAutoManagePinListAttribute>(
+          if( not AMember.AccessAttributes.ForLast<OWAutoManagePinListAttribute>(  True,
               procedure( AAttribute : OWAutoManagePinListAttribute )
               var
                 AComponent      : TComponent;
@@ -5371,19 +5382,84 @@ begin
                   AComponent := NIL;
 
                 APinType := AAttribute.PinClass.TypeInfo();
-                if( APinType.InheritsFrom( TOWBasicSinkPin.TypeInfo() )) then
+                if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
                   APinCategories := [pcSink]
 
-                else if( APinType.InheritsFrom( TOWSourcePin.TypeInfo() )) then
+                else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
                   APinCategories := [pcSource]
 
                 else
                   APinCategories := [pcState];
 
-
-                AMember.Value[ AInstance ] := TOWPinList.CreateLock( AComponent, ALockItem.GetLock(), APinCategories, AAttribute.IsOwner );
+                AMember.Value[ AInstance ] := TOWPinListClass( AClass ).CreateLock( AComponent, ALockItem.GetLock(), APinCategories, AAttribute.IsOwner );
               end
-            )
+            )) then
+              AMember.AccessAttributes.ForLast<AutoManageAttribute>( True,
+                  procedure( AAttribute : AutoManageAttribute )
+                  var
+                    AComponent      : TComponent;
+                    APinCategories  : TOWPinCategories;
+                    APinList        : TOWPinList;
+
+                  begin
+                    if( AInstance is TComponent ) then
+                      AComponent := TComponent( AInstance )
+
+                    else if( AInstance is TPersistent ) then
+                      begin
+                      if( AOwnerInstance <> NIL ) then
+                        AComponent := TPersistent( AOwnerInstance ).GetOwnerComponent()
+
+                      else
+                        AComponent := TPersistent( AInstance ).GetOwnerComponent();
+
+                      end
+
+                    else
+                      AComponent := NIL;
+
+                    APinCategories := [];
+
+                    AMember.AccessAttributes.ForEach<OWAddPinAttribute>( True,
+                        procedure( AAttribute : OWAddPinAttribute )
+                        begin
+                          if( AAttribute.Value.TypeInfo().InheritsFrom( ASinkPinTypeInfo )) then
+                            APinCategories := APinCategories + [ pcSink ]
+
+                          else if( AAttribute.Value.TypeInfo().InheritsFrom( ASourcePinTypeInfo )) then
+                            APinCategories := APinCategories + [ pcSource ]
+
+                          else
+                            APinCategories := APinCategories + [ pcState ];
+
+                        end
+                      );
+
+                    if( APinCategories = [] ) then
+                      APinCategories := [pcState];
+
+                    APinList := TOWPinListClass( AClass ).CreateLock( AComponent, ALockItem.GetLock(), APinCategories, True );
+
+                    AMember.Value[ AInstance ] := APinList;
+
+                    AMember.AccessAttributes.ForEach<OWAddPinAttribute>( True,
+                        procedure( AAttribute : OWAddPinAttribute )
+                        var
+                          AItem : TOWBasicPin;
+
+                        begin
+                          AItem := CreatePinListItem( AComponent, AAttribute.Value, AAttribute.Value.TypeInfo(), ALockItem );
+                          if( AAttribute.Name <> '' ) then
+                            APinList.AddNamed( AItem, AAttribute.Name )
+
+                          else
+                            APinList.Add( AItem );
+
+                        end
+                      );
+
+                  end
+                );
 
 //          OWAutoManagePinList( TOWArduinoColorSinkPin, 2, 2, 200 )
         end

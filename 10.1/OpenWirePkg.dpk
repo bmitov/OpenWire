@@ -1,12 +1,13 @@
-package OpenWireLabPkgDXE6;
+package OpenWirePkg;
 
 {$R *.res}
-{$R '..\OWLComps.dcr'}
+{$R '..\OWStdTypes.res'}
+{$R '..\Mitov.Categories.OpenWire.res'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -24,19 +25,22 @@ package OpenWireLabPkgDXE6;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'OpenWire DemoLab demonstration package'}
+{$DESCRIPTION 'OpenWire Project'}
+{$LIBSUFFIX '240'}
+{$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  vcl,
-  vclx,
-  OpenWirePkgDXE6;
+  Mitov_Runtime;
 
 contains
-  OWLStateComps in '..\OWLStateComps.pas',
-  OWLComps in '..\OWLComps.pas';
+  OWPins in '..\OWPins.pas',
+  OWStdTypes in '..\OWStdTypes.pas',
+  OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas',
+  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas',
+  OWUtils in '..\OWUtils.pas';
 
 end.
-
