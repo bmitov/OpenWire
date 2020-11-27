@@ -11,6 +11,7 @@ type
   IOWTypeConverterEntry = interface
     ['{C8A8135F-6D0F-45CE-AFB5-12A414F3DFA2}']
 
+    [Result : weak]
     function GetInstance() : TOWTypeConverterEntry;
 
   end;
@@ -25,6 +26,7 @@ type
     function GetConverterClass() : TOWFormatConverterClass;
 
   protected
+    [Result : weak]
     function GetInstance() : TOWTypeConverterEntry;
 
   public
@@ -37,15 +39,15 @@ type
     procedure ReplaceConverterClass( AConverterClass : TOWFormatConverterClass );
 
   public
-    constructor Create( AInputID : TGUID; AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
+    constructor Create( const AInputID : TGUID; const AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
 
   end;
 //---------------------------------------------------------------------------
-procedure OWRegisterTypeConverter( AInputID : TGUID; AOutputID : TGUID; AConverterClass : TOWFormatConverterClass ); overload;
+procedure OWRegisterTypeConverter( const AInputID : TGUID; const AOutputID : TGUID; AConverterClass : TOWFormatConverterClass ); overload;
 procedure OWRegisterTypeConverter( AConverterClass : TOWFormatConverterClass ); overload;
 procedure OWRegisterTypeConverters( AConverterClasses : array of TOWFormatConverterClass );
-function  OWGetConverter( AInputID : TGUID; AOutputID : TGUID; out AConverterClass : TOWFormatConverterClass ) : Boolean;
-function  OWCanConvert( AInputID : TGUID; AOutputID : TGUID ) : Boolean;
+function  OWGetConverter( const AInputID : TGUID; const AOutputID : TGUID; out AConverterClass : TOWFormatConverterClass ) : Boolean;
+function  OWCanConvert( const AInputID : TGUID; const AOutputID : TGUID ) : Boolean;
 function  OWSetTypeConvertrsEnabled( AValue : Boolean ) : Boolean;
 //---------------------------------------------------------------------------
 procedure TypeConvertersInitGlobals();
@@ -69,7 +71,7 @@ var
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypeConverterEntry.Create( AInputID : TGUID; AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
+constructor TOWTypeConverterEntry.Create( const AInputID : TGUID; const AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
 begin
   inherited Create();
   FInputID := AInputID;
@@ -121,7 +123,7 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterTypeConverter( AInputID : TGUID; AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
+procedure OWRegisterTypeConverter( const AInputID : TGUID; const AOutputID : TGUID; AConverterClass : TOWFormatConverterClass );
 var
   AEntry  : TOWTypeConverterEntry;
 
@@ -136,8 +138,8 @@ end;
 //---------------------------------------------------------------------------
 procedure OWRegisterTypeConverter( AConverterClass : TOWFormatConverterClass );
 begin
-  TRttiInfo.GetType( AConverterClass ).AccessAttributes.GetAll<OWConvertDataTypeAttribute>.Query().ForEach(
-      procedure( AAttribute : OWConvertDataTypeAttribute )
+  AConverterClass.ClassTypeInfo().AccessAttributes.GetAll<OWConvertDataTypeAttribute>.Query().ForEach(
+      procedure( const AAttribute : OWConvertDataTypeAttribute )
       begin
         OWRegisterTypeConverter( AAttribute.FromDataType, AAttribute.ToDataType, AConverterClass );
       end
@@ -146,16 +148,13 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure OWRegisterTypeConverters( AConverterClasses : array of TOWFormatConverterClass );
-var
-  AConverterClass : TOWFormatConverterClass;
-
 begin
-  for AConverterClass in AConverterClasses do
+  for var AConverterClass in AConverterClasses do
     OWRegisterTypeConverter( AConverterClass );
 
 end;
 //---------------------------------------------------------------------------
-function OWGetConverter( AInputID : TGUID; AOutputID : TGUID; out AConverterClass : TOWFormatConverterClass ) : Boolean;
+function OWGetConverter( const AInputID : TGUID; const AOutputID : TGUID; out AConverterClass : TOWFormatConverterClass ) : Boolean;
 var
   AEntry  : TOWTypeConverterEntry;
 
@@ -173,7 +172,7 @@ begin
   Exit( False );
 end;
 //---------------------------------------------------------------------------
-function OWCanConvert( AInputID : TGUID; AOutputID : TGUID ) : Boolean;
+function OWCanConvert( const AInputID : TGUID; const AOutputID : TGUID ) : Boolean;
 begin
   if( GConvertersDisabled ) then
     Exit( False );
@@ -190,19 +189,19 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure GModuleUnloadProc( HInstance: NativeInt );
+procedure GModuleUnloadProc( AHInstance : NativeInt );
 begin
   GOWConverterTypes.RemoveAll(
-      function( AKey : TRecTuple<TGUID,TGUID>; AValue : IOWTypeConverterEntry ) : Boolean
+      function( const AKey : TRecTuple<TGUID,TGUID>; const AValue : IOWTypeConverterEntry ) : Boolean
       var
         ATypeConverterEntryList : IArrayList<TOWFormatConverterClass>;
 
       begin
         ATypeConverterEntryList := AValue.GetInstance().ConverterClasses;
         ATypeConverterEntryList.RemoveAll(
-            function( AClass : TOWFormatConverterClass ) : Boolean
+            function( const AClass : TOWFormatConverterClass ) : Boolean
             begin
-              Result := ( NativeInt( FindClassHInstance( AClass )) = HInstance );
+              Result := ( NativeInt( FindClassHInstance( AClass )) = AHInstance );
             end
           );
 
