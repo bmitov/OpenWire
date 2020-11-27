@@ -19,7 +19,7 @@ type
     FPositionPin : TOWIntegerStatePin;
 
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner : TComponent); override;
     destructor  Destroy; override;
 
   protected
@@ -30,7 +30,7 @@ type
 {$ENDIF}
 
   protected
-    procedure OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
+    procedure OnIntegerChangeEvent( Sender : TOWPin; const AValue : Integer; AOnConnect : Boolean );
 
   published // OpenWire support
     property PositionPin : TOWIntegerStatePin read FPositionPin write FPositionPin;
@@ -43,11 +43,11 @@ type
     FPositionPin : TOWFloatIntStatePin;
 
   public
-    constructor Create(AOwner: TComponent); override;
+    constructor Create( AOwner : TComponent); override;
     destructor  Destroy; override;
 
   protected
-    procedure FloatChangeEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
+    procedure FloatChangeEvent( Sender : TOWPin; const AValue : Single; AOnConnect : Boolean );
     
   published // OpenWire support
     property PositionPin : TOWFloatIntStatePin read FPositionPin write FPositionPin;
@@ -58,20 +58,19 @@ procedure Register;
 
 implementation
 
-constructor TOWLTrackBar.Create(AOwner: TComponent);
+constructor TOWLTrackBar.Create( AOwner : TComponent);
 begin
   inherited;
-  FPositionPin := TOWIntegerStatePin.Create( Self, OnIntegerChangeEvent );
-  
+  TOWIntegerStatePin.Create( TOWPin.PinOwnerSetter<TOWIntegerStatePin>( FPositionPin, Self, Self ), NIL, OnIntegerChangeEvent );
 end;
 
 destructor  TOWLTrackBar.Destroy;
 begin
-  FPositionPin.Free();
+  FPositionPin.DisposeOf();
   inherited;
 end;
 
-procedure TOWLTrackBar.OnIntegerChangeEvent( Sender : TOWPin; AValue : Integer; AOnConnect : Boolean );
+procedure TOWLTrackBar.OnIntegerChangeEvent( Sender : TOWPin; const AValue : Integer; AOnConnect : Boolean );
 begin
   Position := AValue;
 end;
@@ -86,20 +85,19 @@ begin
   FPositionPin.Value := Position;
 end;
 
-constructor TOWLProgressBar.Create(AOwner: TComponent);
+constructor TOWLProgressBar.Create(AOwner : TComponent);
 begin
   inherited;
-  FPositionPin := TOWFloatIntStatePin.Create( Self, FloatChangeEvent );
-
+  TOWFloatIntStatePin.Create( TOWPin.PinOwnerSetter<TOWFloatIntStatePin>( FPositionPin, Self, Self ), NIL, FloatChangeEvent );
 end;
 
 destructor  TOWLProgressBar.Destroy;
 begin
-  FPositionPin.Free();
+  FPositionPin.DisposeOf();
   inherited;
 end;
 
-procedure TOWLProgressBar.FloatChangeEvent( Sender : TOWPin; AValue : Single; AOnConnect : Boolean );
+procedure TOWLProgressBar.FloatChangeEvent( Sender : TOWPin; const AValue : Single; AOnConnect : Boolean );
 begin
   Position := Round( AValue );
 end;
