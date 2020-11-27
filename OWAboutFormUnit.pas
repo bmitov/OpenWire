@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//     This software is supplied under the terms of a license agreement or    //
+//     nondisclosure agreement with Mitov Software and may not be copied      //
+//     or disclosed except in accordance with the terms of that agreement.    //
+//         Copyright(c) 2002-2020 Mitov Software. All Rights Reserved.        //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit OWAboutFormUnit;
 
 interface
@@ -35,6 +44,7 @@ uses ShellAPI;
 {$R *.DFM}
 {$ENDIF}
 
+//---------------------------------------------------------------------------
 procedure TOWAboutForm.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if( Key = #27 ) then
@@ -44,7 +54,7 @@ begin
     end;
 
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWAboutForm.OWLabelClick(Sender: TObject);
 begin
 {$IFDEF FPC}
@@ -53,21 +63,24 @@ begin
   ShellExecute( 0, 'open', 'http://www.openwire.org', '', '', SW_SHOWNORMAL );
 {$ENDIF}
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWAboutForm.OWLabelMouseEnter(Sender: TObject);
 begin
   OWLabel.Font.Color := clRed;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWAboutForm.OWLabelMouseLeave(Sender: TObject);
 begin
   OWLabel.Font.Color := clBlue;
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWAboutForm.FormCreate(Sender: TObject);
 begin
   OWLabel.OnMouseEnter := OWLabelMouseEnter;
   OWLabel.OnMouseLeave := OWLabelMouseLeave;
 end;
-
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 end.
