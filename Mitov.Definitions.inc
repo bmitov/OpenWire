@@ -1,57 +1,48 @@
-{$WARN UNSAFE_TYPE OFF}
+﻿{$WARN UNSAFE_TYPE OFF}
 {$WARN UNSAFE_CODE OFF}
 {$WARN UNSAFE_CAST OFF}
 
-{$IFDEF VER270} // Delphi XE6
-  {$DEFINE D19}
-  {$DEFINE XE6}
-  {$DEFINE XE5Up}
-  {$DEFINE XE6Up}
-  {$DEFINE XE7Down}
-  {$IFDEF NEXTGEN}
-    {$DEFINE OLD_NEXTGEN}
-  {$ENDIF}
-{$ENDIF}
+{$DEFINE D19}
+{$DEFINE XE8Up}
+{$DEFINE XE7Up}
+{$DEFINE XE5Up}
+{$DEFINE XE6Up}
+{$DEFINE RXUp}
 
-{$IFDEF VER280} // Delphi XE7
-  {$DEFINE D19}
-  {$DEFINE XE7}
-  {$DEFINE XE7Up}
-  {$DEFINE XE5Up}
-  {$DEFINE XE6Up}
-  {$DEFINE XE7Down}
-  {$IFDEF NEXTGEN}
-    {$DEFINE OLD_NEXTGEN}
-  {$ENDIF}
-{$ENDIF}
-
-{$IFDEF VER290} // Delphi XE8
-  {$DEFINE D19}
-  {$DEFINE XE8}
-  {$DEFINE XE8Up}
-  {$DEFINE XE7Up}
-  {$DEFINE XE5Up}
-  {$DEFINE XE6Up}
-{$ENDIF}
-
-{$IF CompilerVersion > 29} // Delphi RX 10 Seattle
-  {$DEFINE D19}
-  {$DEFINE XE8Up}
-  {$DEFINE XE7Up}
-  {$DEFINE XE5Up}
-  {$DEFINE XE6Up}
-  {$DEFINE RXUp}
-{$ENDIF}
-
-{$IF CompilerVersion = 30} // Delphi RX 10.1 Seattle
+{$IF CompilerVersion = 30} // Delphi RX 10 Seattle
   {$DEFINE RX}
 {$ENDIF}
 
-{$IF CompilerVersion > 30} // Delphi RX 10.1 Seattle
+{$IF CompilerVersion = 31} // Delphi RX 10.1 Berlin
   {$DEFINE RX10_1}
+{$ENDIF}
+
+{$IF CompilerVersion = 32} // Delphi RX 10.2 Tokyo
+  {$DEFINE RX10_2}
+{$ENDIF}
+
+{$DEFINE RX10_3_Up}
+
+{$IF CompilerVersion = 33} // Delphi RX 10.3 Rio
+  {$DEFINE RX10_3}
+  {$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+{$ENDIF}
+
+{$IF CompilerVersion = 34} // Delphi RX 10.4 Sidney
+  {$DEFINE RX10_4}
+  {$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+{$ENDIF}
+
+{$IF CompilerVersion > 33} // Delphi RX 10.3 Rio
+  {$DEFINE RX10_4_Up}
+{$ENDIF}
+
+{$IF CompilerVersion > 30} // Delphi RX 10.1 Berlin
   {$DEFINE RX10_1Up}
   {$DEFINE RX1Up}
 {$ENDIF}
+
+{$DEFINE FIXED_COMPILERS}
 
 {$DEFINE D13}
 {$DEFINE D16Up}
@@ -80,6 +71,7 @@
 
 
 {$ZEROBASEDSTRINGS OFF}
+{$WARN UNSUPPORTED_CONSTRUCT ERROR}
 
 {$POINTERMATH ON}
 
