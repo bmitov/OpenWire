@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//     This software is supplied under the terms of a license agreement or    //
+//     nondisclosure agreement with Mitov Software and may not be copied      //
+//     or disclosed except in accordance with the terms of that agreement.    //
+//         Copyright(c) 2002-2020 Mitov Software. All Rights Reserved.        //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit OWAfterPinSelectFormUnit;
 
 {$IFDEF FPC}
@@ -22,7 +31,7 @@ type
     Panel2: TPanel;
     CancelButton: TBitBtn;
     OkButton: TBitBtn;
-    procedure ListBoxDblClick(Sender: TObject);
+    procedure ListBoxDblClick( Sender : TObject );
   private
     { Private declarations }
   public
@@ -39,20 +48,25 @@ implementation
 {$R *.DFM}
 {$ENDIF}
 
+//---------------------------------------------------------------------------
 procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin );
 var
-  I               : Integer;
   NotifyAfterName : String;
 
 begin
   ListBox.Items.Add( '(none)' );
-  for I := 0 to ADispatcher.PinCount - 1 do
-//    if( AExcludePin <> ADispatcher.Pins[ I ] ) then
-    if( ADispatcher.CanConnectAfter( AExcludePin, ADispatcher.Pins[ I ] )) then
-      ListBox.Items.AddObject( ADispatcher.Pins[ I ].GetFullName( AExcludePin.GetRootName() <> ADispatcher.Pins[ I ].GetRootName() ), ADispatcher.Pins[ I ] );
+  var AExecutePinRootName := AExcludePin.GetRootName();
+  for var I : Integer := 0 to ADispatcher.PinCount - 1 do
+    begin
+    var APin := ADispatcher.Pins[ I ];
+//    if( AExcludePin <> APin ) then
+    if( ADispatcher.CanConnectAfter( AExcludePin, APin )) then
+      ListBox.Items.AddObject( APin.GetFullName( AExecutePinRootName <> APin.GetRootName() ), APin );
+
+    end;
 
   if( ANotifyAfterPin <> NIL ) then
-      NotifyAfterName := ANotifyAfterPin.GetFullName( AExcludePin.GetRoot() <> ANotifyAfterPin.GetRoot() );
+    NotifyAfterName := ANotifyAfterPin.GetFullName( AExcludePin.GetRoot() <> ANotifyAfterPin.GetRoot() );
 
   if( NotifyAfterName <> '' ) then
     ListBox.ItemIndex := ListBox.Items.IndexOf( NotifyAfterName );
@@ -61,21 +75,25 @@ begin
     ListBox.ItemIndex := 0;
 
 end;
-
+//---------------------------------------------------------------------------
 procedure TOWAfterPinSelectForm.FillFromSourcePin( AExcludePin : TOWBasicPin; ASourcePin : TOWSourcePin; ANotifyAfterPin : TOWBasicPin );
 var
-  I               : Integer;
   NotifyAfterName : String;
 
 begin
   ListBox.Items.Add( '(none)' );
-  for I := 0 to ASourcePin.SinkCount - 1 do
-//    if( AExcludePin <> ASourcePin.Sinks[ I ] ) then
-    if( ASourcePin.CanConnectAfter( AExcludePin, ASourcePin.Sinks[ I ] )) then
-      ListBox.Items.AddObject( ASourcePin.Sinks[ I ].GetFullName( AExcludePin.GetRoot() <> ASourcePin.Sinks[ I ].GetRoot() ), ASourcePin.Sinks[ I ] );
+  var APinRoot := AExcludePin.GetRoot();
+  for var I : Integer := 0 to ASourcePin.SinkCount - 1 do
+    begin
+    var APin := ASourcePin.Sinks[ I ];
+//    if( AExcludePin <> APin ) then
+    if( ASourcePin.CanConnectAfter( AExcludePin, APin )) then
+      ListBox.Items.AddObject( APin.GetFullName( APinRoot <> APin.GetRoot() ), APin );
+
+    end;
 
   if( ANotifyAfterPin <> NIL ) then
-      NotifyAfterName := ANotifyAfterPin.GetFullName( AExcludePin.GetRoot() <> ANotifyAfterPin.GetRoot() );
+    NotifyAfterName := ANotifyAfterPin.GetFullName( APinRoot <> ANotifyAfterPin.GetRoot() );
 
   if( NotifyAfterName <> '' ) then
     ListBox.ItemIndex := ListBox.Items.IndexOf( NotifyAfterName );
@@ -84,34 +102,33 @@ begin
     ListBox.ItemIndex := 0;
     
 end;
-
+//---------------------------------------------------------------------------
 function TOWAfterPinSelectForm.GetSelectedName() : String;
 begin
   if( ListBox.ItemIndex > 0 ) then
-    Result := ListBox.Items[ ListBox.ItemIndex ]
+    Exit( ListBox.Items[ ListBox.ItemIndex ] );
 
-  else
-    Result := '';
-
+  Result := '';
 end;
-
+//---------------------------------------------------------------------------
 function  TOWAfterPinSelectForm.GetSelectedPin() : TOWPin;
 begin
   if( ListBox.ItemIndex > 0 ) then
-    Result := TOWPin( ListBox.Items.Objects[ ListBox.ItemIndex ] )
+    Exit( TOWPin( ListBox.Items.Objects[ ListBox.ItemIndex ] ));
 
-  else
-    Result := NIL;
-
+  Result := NIL;
 end;
-
-procedure TOWAfterPinSelectForm.ListBoxDblClick(Sender: TObject);
+//---------------------------------------------------------------------------
+procedure TOWAfterPinSelectForm.ListBoxDblClick( Sender : TObject );
 begin
   if( ListBox.ItemIndex > 0 ) then
     ModalResult := mrOk;
-    
-end;
 
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 {$IFDEF FPC}
 initialization
   {$i OWAfterPinSelectFormUnit.lrs}
