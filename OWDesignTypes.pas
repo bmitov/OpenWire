@@ -1,3 +1,12 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//     This software is supplied under the terms of a license agreement or    //
+//     nondisclosure agreement with Mitov Software and may not be copied      //
+//     or disclosed except in accordance with the terms of that agreement.    //
+//         Copyright(c) 2002-2020 Mitov Software. All Rights Reserved.        //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 unit OWDesignTypes;
 
 {$IFDEF FPC}
@@ -25,7 +34,7 @@ uses
   {$ENDIF}
 
 {$ENDIF}
-    Vcl.Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes;
+    Vcl.Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes, Mitov.Containers.Dictionary, Mitov.Utils;
 
   type TOWPropNameString = String;
   type TOWPropertyDesigner = IDesigner;
@@ -55,18 +64,18 @@ type
 //---------------------------------------------------------------------------
   TOWModulesColection = class(TStringList)
   public
-    procedure GetModules( const FileName, UnitName, FormName, DesignClass: String; CoClasses: TStrings );
+    procedure GetModules( const AFileName, AUnitName, AFormName, ADesignClass : String; ACoClasses : TStrings );
 
   end;
 //---------------------------------------------------------------------------
 {$IFNDEF __VSDESIGN__}
 {$IFDEF __DELPHI_DESIGN__}
-function  OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
+function  OWCanAccessRootFromName( ADesigner : TOWPropertyDesigner; const ARootName : String ) : Boolean;
 procedure OWLinkAwaitsLinkingAllForms();
 procedure OWRequestDesignerRefresh();
-procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
-function  OWGetMainDesignOwner( Component : TComponent ) : TComponent;
-procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
+procedure OWGetPinValueList( ACollection : IPairCollection<String, TOWBasicPin>; AOwnerComponent : TComponent; APin : TOWPin; AFilterPins : Boolean );
+function  OWGetMainDesignOwner( AComponent : TComponent ) : TComponent;
+procedure OWRequestRefreshEx( ADesigner : TOWPropertyDesigner );
 {$ENDIF}
 {$ENDIF}
 //---------------------------------------------------------------------------
@@ -109,10 +118,10 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-procedure TOWModulesColection.GetModules( const FileName, UnitName, FormName, DesignClass: String; CoClasses: TStrings );
+procedure TOWModulesColection.GetModules( const AFileName, AUnitName, AFormName, ADesignClass : String; ACoClasses : TStrings );
 begin
-  if( FormName <> '' ) then
-    Add( FormName );
+  if( AFormName <> '' ) then
+    Add( AFormName );
 
 end;
 //---------------------------------------------------------------------------
@@ -121,85 +130,77 @@ end;
 //---------------------------------------------------------------------------
 {$IFNDEF __VSDESIGN__}
 {$IFDEF __DELPHI_DESIGN__}
-function OWCanAccessRootFromName( Designer : TOWPropertyDesigner; RootName : String ) : Boolean;
-var
-  Component : TComponent;
-
+function OWCanAccessRootFromName( ADesigner : TOWPropertyDesigner; const ARootName : String ) : Boolean;
 begin
-  Component := Designer.GetComponent( RootName + SEPARATOR + RootName );
+  var AComponent := ADesigner.GetComponent( ARootName + SEPARATOR + ARootName );
 
   Result := False;
-  if( Component = NIL ) then
+  if( AComponent = NIL ) then
     begin
-    Component := Designer.GetComponent( RootName );
-    if( Component = NIL ) then
+    AComponent := ADesigner.GetComponent( ARootName );
+    if( AComponent = NIL ) then
       Exit;
 
     end;
 
-  Result := Designer.IsComponentLinkable( Component );
+  Result := ADesigner.IsComponentLinkable( AComponent );
 end;
 //---------------------------------------------------------------------------
 procedure OWLinkAwaitsLinkingAllForms();
 var
-  I               : Integer;
-  ModuleIndex     : Integer;
-  Module          : IOTAModule;
+  AModule         : IOTAModule;
 
-  ModuleServices  : IOTAModuleServices;
-  FormEditor      : INTAFormEditor;
-
-  Project         : IOTAProject;
-  ModuleFileExt   : String;
+  AModuleServices : IOTAModuleServices;
+  AFormEditor     : INTAFormEditor;
 
 begin
-  if( not PinsNeedRefresh ) then
+  if( not GPinsNeedRefresh ) then
     Exit;
 
   if( OWGetAllLinked() ) then
     Exit;
 
   InOppening := True;
-  PinsNeedRefresh := False;
+  GPinsNeedRefresh := False;
 
-  BorlandIDEServices.QueryInterface( IOTAModuleServices, ModuleServices );
+  BorlandIDEServices.QueryInterface( IOTAModuleServices, AModuleServices );
 
-  if( Assigned( ModuleServices )) then
+  if( Assigned( AModuleServices )) then
     begin
-    if( ModuleServices.CurrentModule.OwnerCount > 0 ) then
+    if( AModuleServices.CurrentModule.OwnerCount > 0 ) then
       begin
-      Project := ModuleServices.CurrentModule.Owners[ 0 ];
-      for ModuleIndex := 0 to Project.GetModuleCount - 1 do
+      var AProject : IOTAProject := AModuleServices.CurrentModule.Owners[ 0 ];
+      for var ModuleIndex : Integer := 0 to AProject.GetModuleCount - 1 do
         begin
-        if( Project.GetModule( ModuleIndex ).GetFileName <> '' ) then
+        if( AProject.GetModule( ModuleIndex ).GetFileName <> '' ) then
           begin
           try
-            ModuleFileExt := UpperCase( ExtractFileExt( Project.GetModule( ModuleIndex ).GetFileName ));
-            if( ( ModuleFileExt <> '.CPP' ) and ( ModuleFileExt <> '.PAS' ) and ( ModuleFileExt <> '.DFM' )) then
+            var AModuleFileExt := UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName ));
+            if( ( AModuleFileExt <> '.CPP' ) and ( AModuleFileExt <> '.PAS' ) and ( AModuleFileExt <> '.DFM' )) then
                Continue;
 {
-            if( UpperCase( ExtractFileExt( Project.GetModule( ModuleIndex ).GetFileName )) = '.RES' ) then
+            if( UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName )) = '.RES' ) then
                Continue;
 
-            if( UpperCase( ExtractFileExt( Project.GetModule( ModuleIndex ).GetFileName )) = '.DCP' ) then
+            if( UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName )) = '.DCP' ) then
                Continue;
 }
 
-            Project.GetModule( ModuleIndex ).OpenModule.QueryInterface( IOTAModule, Module );
-            if( Project.GetModule( ModuleIndex ).FormName = '' ) then
+            AProject.GetModule( ModuleIndex ).OpenModule.QueryInterface( IOTAModule, AModule );
+            if( AProject.GetModule( ModuleIndex ).FormName = '' ) then
                Continue;
 
-            for I := 0 to Module.GetModuleFileCount - 1 do
+            for var I : Integer := 0 to AModule.GetModuleFileCount - 1 do
               begin
-              Module.GetModuleFileEditor( I ).QueryInterface( INTAFormEditor, FormEditor );
-              if( Assigned( FormEditor )) then
-                FormEditor := NIL;
+              AModule.GetModuleFileEditor( I ).QueryInterface( INTAFormEditor, AFormEditor );
+              if( Assigned( AFormEditor )) then
+                AFormEditor := NIL;
 
               end;
 
           finally
-          end
-          end
+            end;
+          end;
         end;
       end;
     end;
@@ -215,66 +216,64 @@ begin
   if( OWGetAllLinked() ) then
     Exit;
 
-  if( PinsNeedRefresh ) then
+  if( GPinsNeedRefresh ) then
     Exit;
 
-  PinsNeedRefresh := True;
+  GPinsNeedRefresh := True;
 
-  MainThreadExecute( True, OWLinkAwaitsLinkingAllForms );
+  MainThreadExecute( NIL, True, OWLinkAwaitsLinkingAllForms );
 end;
 //---------------------------------------------------------------------------
-procedure OWGetPinValueList( OwnerComponent : TComponent; Pin : TOWPin; List : TStrings; FilterPins : Boolean );
+procedure OWGetPinValueList( ACollection : IPairCollection<String, TOWBasicPin>; AOwnerComponent : TComponent; APin : TOWPin; AFilterPins : Boolean );
 var
-  Filters : TOWPinValueFilters;
+  AFilters : TOWPinValueFilters;
 
 begin
-  if( Pin <> NIL ) then
+  if( APin <> NIL ) then
     begin
-    if( FilterPins ) then
-      Filters := []
+    if( AFilterPins ) then
+      AFilters := []
 
     else
-      Filters := [ pvoFullList, pvoExcludeDirectDependency ];
+      AFilters := [ pvoFullList, pvoExcludeDirectDependency ];
 
-    if( OWGetMainOwnerComponent( Pin.Owner ) <> OwnerComponent ) then
-      OWGetPinsValueListSingleRoot( List, OwnerComponent, Pin, '.', OwnerComponent.Name, Filters )
+    if( GetMainOwnerComponent( APin.Owner ) <> AOwnerComponent ) then
+      begin
+      OWGetPinsValueListSingleRoot( ACollection, AOwnerComponent, APin, '.', AOwnerComponent.Name, AFilters );
+      Exit;
+      end;
 
-    else
-      OWGetPinsValueListSingleRoot( List, OwnerComponent, Pin, '.', '', Filters );
-
+    OWGetPinsValueListSingleRoot( ACollection, AOwnerComponent, APin, '.', '', AFilters );
     end;
-end;
-//---------------------------------------------------------------------------
-function OWGetMainDesignOwner( Component : TComponent ) : TComponent;
-begin
-  if( Component.Owner = NIL ) then
-    Result := Component
-
-  else
-    Result := OWGetMainOwnerComponent( Component.Owner );
 
 end;
 //---------------------------------------------------------------------------
-procedure OWRequestRefreshEx( Designer : TOWPropertyDesigner );
-var
-  FormNames : TOWModulesColection;
-  I         : Integer;
-
+function OWGetMainDesignOwner( AComponent : TComponent ) : TComponent;
 begin
-  FormNames := TOWModulesColection.Create;
+  if( AComponent.Owner = NIL ) then
+    Exit( AComponent );
 
-  Designer.GetProjectModules( FormNames.GetModules );
-  for I := 0 to FormNames.Count - 1 do
-    OWCanAccessRootFromName( Designer, FormNames.Strings[ I ] );
+  Result := GetMainOwnerComponent( AComponent.Owner );
+end;
+//---------------------------------------------------------------------------
+procedure OWRequestRefreshEx( ADesigner : TOWPropertyDesigner );
+begin
+  var AFormNames := TOWModulesColection.Create();
+  try
+    ADesigner.GetProjectModules( AFormNames.GetModules );
+    for var I : Integer := 0 to AFormNames.Count - 1 do
+      OWCanAccessRootFromName( ADesigner, AFormNames.Strings[ I ] );
 
-  FormNames.Free;
+  finally
+    AFormNames.DisposeOf();
+    end;
 
   OWRequestDesignerRefresh();
 end;
 //---------------------------------------------------------------------------
 {$ENDIF}
 {$ELSE}
-procedure OWResetObjectInspector( Designer : TOWPropertyDesigner );
+procedure OWResetObjectInspector( ADesigner : TOWPropertyDesigner );
 begin
 end;
 {$ENDIF}
@@ -282,8 +281,10 @@ end;
 type
   TOWStreamInfoOWEditorExtention = class;
 //---------------------------------------------------------------------------
-  IOWStreamInfoOWEditorExtention = interface
+  IOWStreamInfoOWEditorExtention = interface( IOWStreamInfoExtention )
     ['{21C15026-CF32-4579-AE17-4EA6A065A7C5}']
+
+    [Result : weak]
     function GetInstance() : TOWStreamInfoOWEditorExtention;
 
   end;
@@ -294,10 +295,14 @@ type
     FThickness  : Single;
 
   protected
+    [Result : weak]
     function GetInstance() : TOWStreamInfoOWEditorExtention;
 
   public
-    constructor Create( AExtentionId : TGUID; AColor : TColor; AThickness : Single );
+    class function Create( const AExtentionId : TGUID; AColor : TColor; AThickness : Single ) : IOWStreamInfoOWEditorExtention;
+
+  public
+    constructor CreateObject( const AExtentionId : TGUID; AColor : TColor; AThickness : Single );
 
   public
     property Color      : TColor  read FColor;
@@ -308,11 +313,16 @@ type
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStreamInfoOWEditorExtention.Create( AExtentionId : TGUID; AColor : TColor; AThickness : Single );
+constructor TOWStreamInfoOWEditorExtention.CreateObject( const AExtentionId : TGUID; AColor : TColor; AThickness : Single );
 begin
-  inherited Create( AExtentionId );
+  inherited CreateObject( AExtentionId );
   FColor := AColor;
   FThickness := AThickness;
+end;
+//---------------------------------------------------------------------------
+class function TOWStreamInfoOWEditorExtention.Create( const AExtentionId : TGUID; AColor : TColor; AThickness : Single ) : IOWStreamInfoOWEditorExtention;
+begin
+  Result := CreateObject( AExtentionId, AColor, AThickness );
 end;
 //---------------------------------------------------------------------------
 function TOWStreamInfoOWEditorExtention.GetInstance() : TOWStreamInfoOWEditorExtention;
@@ -331,13 +341,12 @@ end;
 function OWGetStreamThicknessColorFromID( AStreamTypeID : TGUID; var Color : TColor; var Thickness : Single ) : Boolean;
 var
   AExtentionIntf  : IOWStreamInfoExtention;
-  AExtention      : IOWStreamInfoOWEditorExtention;
 
 begin
   if( not OWGetStreamExtentionFromID( AStreamTypeID, IOWStreamInfoOWEditorExtention, AExtentionIntf )) then
     Exit( False );
 
-  AExtention := ( AExtentionIntf as IOWStreamInfoOWEditorExtention );
+  var AExtention : IOWStreamInfoOWEditorExtention := ( AExtentionIntf as IOWStreamInfoOWEditorExtention );
   Color := AExtention.GetInstance().Color;
   Thickness  := AExtention.GetInstance().Thickness;
 
@@ -356,6 +365,8 @@ begin
   OWRegisterStreamColorThickness( IOWFloatStream,           TColors.Red, 1 );
   OWRegisterStreamColorThickness( IOWRealStream,            TColors.Red, 1 );
   OWRegisterStreamColorThickness( IOWRealComplexStream,     TColors.Aqua, 1 );
+  OWRegisterStreamColorThickness( IOWFloatQuaternionStream, TColors.Fuchsia, 1.5 );
+  OWRegisterStreamColorThickness( IOWFloatPoint3DStream,    TColors.Azure, 1.5 );
   OWRegisterStreamColorThickness( IOWBoolStream,            TColors.Blue, 1 );
   OWRegisterStreamColorThickness( IOWByteStream,            TColors.Blue, 1.5 );
   OWRegisterStreamColorThickness( IOWCharStream,            TColors.Teal, 1 );
