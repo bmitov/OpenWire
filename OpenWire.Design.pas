@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2016 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2020 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,9 +26,9 @@ type
   TOWPinListOwnerPropertyEditor = class( TSinglePropertyEditor )
 {$IFNDEF VCL_EDITORS}
   public
-    function  GetDisplayValue() : String; override;
-    function  GetStringValue( AObjectsList : IArrayList<TObject> = NIL ) : String; override;
-    procedure SetStringValue(const  AValue: String ); override;
+    function  GetDisplayValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList; override;
+    function  GetStringValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList; override;
+    procedure SetStringValue( const AValue : String ); override;
 {$ENDIF}
   end;
 //---------------------------------------------------------------------------
@@ -42,19 +42,40 @@ uses
   System.SysUtils, System.Rtti, OWPins;
 
 {$IFNDEF VCL_EDITORS}
-function TOWPinListOwnerPropertyEditor.GetDisplayValue() : String;
+function TOWPinListOwnerPropertyEditor.GetDisplayValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
 begin
-  Result := IntToStr( GetValue().AsType<TOWPinListOwner>.Count ) + ' Items';
+  Result := GetStringValues( AObjectsList );
+  for var AValue in GetInstanceValues( AObjectsList ) do
+    begin
+    var ACount := AValue.AsType<TOWPinListOwner>.Count;
+    if( ACount = 1 ) then
+      Result.Add( '1 Item' )
+
+    else
+      Result.Add( ACount.ToString() + ' Items' );
+
+    end;
+
 end;
 //---------------------------------------------------------------------------
-function TOWPinListOwnerPropertyEditor.GetStringValue( AObjectsList : IArrayList<TObject> = NIL ) : String;
+function TOWPinListOwnerPropertyEditor.GetStringValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
 begin
-  Result := IntToStr( GetValue().AsType<TOWPinListOwner>.Count );
+  Result := TStringArrayList.Create();
+  for var AValue in GetInstanceValues( AObjectsList ) do
+    Result.Add( AValue.AsType<TOWPinListOwner>.Count.ToString());
+
 end;
 //---------------------------------------------------------------------------
-procedure TOWPinListOwnerPropertyEditor.SetStringValue(const  AValue: String );
+procedure TOWPinListOwnerPropertyEditor.SetStringValue( const AValue : String );
 begin
-  GetValue().AsType<TOWPinListOwner>.Count := StrToIntDef( AValue, GetValue().AsType<TOWPinListOwner>.Count );
+  var APinList := GetInstanceValues()[ 0 ].AsType<TOWPinListOwner>;
+  var ANewValue := StrToIntDef( AValue, APinList.Count );
+  if( ANewValue <> APinList.Count ) then
+    begin
+    APinList.Count := ANewValue;
+    Modified();
+    end;
+
 end;
 {$ENDIF}
 //---------------------------------------------------------------------------
