@@ -153,19 +153,19 @@ V7.8.2       12/21/2018 Added Delphi and C++ Builder 10.2 support
                         Added Float 3D Point and Float Quaternion support
                         Added more format converters
 
-V8.0.0       11/23/2020 Added Delphi and C++ Builder 10.3 support
+V8.0.0       04/28/2021 Added Delphi and C++ Builder 10.3 and 10.4 support
                         Added OWMaxConnections Attribute
                         Added OWDebugPins Attribute
                         Added support for Dynamic Type Info
                         Added option for overriding pin images
                         Added GetFullIdents returing list of pin owner information
                         Redesigned pin path collection to significantly improve the speed
-                        Redesigned to set owner fiends on creation
+                        Redesigned to set owner fields on creation
                         Imporved pin information caching
                         CreateLock replaced by Create with Lock parameter
                         Improved FMX Design Time support
 
-Legal issues: Copyright (C) 2001-2020 by Mitov Software
+Legal issues: Copyright (C) 2001-2021 by Mitov Software
               mitov@mitov.com
               www.mitov.com
               www.openwire.org
@@ -278,7 +278,8 @@ type
     property IsOwner  : Boolean read FIsOwner;
 
   public
-    constructor Create( APinClass : TClass; AIsOwner : Boolean );
+    constructor Create( APinClass : TClass; AIsOwner : Boolean ); reintroduce; overload;
+    constructor Create( const APinClass : IAtttributeParameterInfo; AIsOwner : Boolean ); reintroduce; overload;
 
   end;
 //---------------------------------------------------------------------------
@@ -294,7 +295,8 @@ type
     property Max    : Integer read FMax;
 
   public
-    constructor Create( APinClass : TClass; ACount : Integer; AMin : Integer; AMax : Integer );
+    constructor Create( APinClass : TClass; ACount : Integer; AMin : Integer; AMax : Integer ); reintroduce; overload;
+    constructor Create( const APinClass : IAtttributeParameterInfo; ACount : Integer; AMin : Integer; AMax : Integer ); reintroduce; overload;
 
   end;
 //---------------------------------------------------------------------------
@@ -307,16 +309,17 @@ type
   OWPinGroupAttribute = class( TBasicClassAttribute );
   OWAddPinAttribute = class( TBasicClassAttribute )
   protected
-    FName : String;
+    FName   : String;
 
   public
     property Name : String read FName;
 
   public
-    function CreatePin( AOnCreated : TProc<TOWPin>; const ALockItem : ILockItem; out AResult : TOWBasicPin ) : Boolean; virtual;
+    function CreatePin( const AOnCreated : TProc<TOWPin>; const ALockItem : ILockItem; out AResult : TOWBasicPin ) : Boolean; virtual;
 
   public
-    constructor Create( AName : String; AValue : TClass );
+    constructor Create( const AName : String; AValue : TClass ); overload;
+    constructor Create( const AName : String; const APinClass : IAtttributeParameterInfo ); overload;
 
   end;
 //---------------------------------------------------------------------------
@@ -359,7 +362,7 @@ type
     function GetInstance() : TOWNotifyOperation; stdcall;
 
     function IsType( AClass : TOWNotifyOperationClass ) : Boolean; overload; stdcall;
-    function IsType( AClasses : array of TOWNotifyOperationClass ) : Boolean; overload; stdcall;
+    function IsType( const AClasses : array of TOWNotifyOperationClass ) : Boolean; overload; stdcall;
 
   end;
 //---------------------------------------------------------------------------
@@ -381,7 +384,7 @@ type
     function GetInstance() : TOWNotifyOperation; stdcall;
 
     function IsType( AClass : TOWNotifyOperationClass ) : Boolean; overload; virtual; stdcall;
-    function IsType( AClasses : array of TOWNotifyOperationClass ) : Boolean; overload; stdcall;
+    function IsType( const AClasses : array of TOWNotifyOperationClass ) : Boolean; overload; stdcall;
 
   end;
 //---------------------------------------------------------------------------
@@ -729,6 +732,7 @@ type
     class function IntGetPNGResImageByNameClass( HInstance : NativeInt; const AName : String; out ABitmap : IGPBitmap ) : Boolean; virtual;
 
   public
+    function  GetEmbeddedOwner() : TComponent; virtual;
     function  GetImage( out AImage : IGPBitmap ) : Boolean; virtual;
     function  IsPreviewPin() : Boolean; virtual;
     function  IsDebugPin() : Boolean; virtual;
@@ -809,7 +813,7 @@ type
     function  CanConnectToStateInt( const ADispatcher : TOWBasicStateDispatcher; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : Boolean; virtual;
     procedure IntStateDisconnect(); virtual;
     function  GetEditorString() : String; virtual;
-    function  SetEditorString( ARoot : TComponent; const AValue: String ) : Boolean; virtual;
+    function  SetEditorString( ARoot : TComponent; const AValue : String ) : Boolean; virtual;
 
   public
     function  IsLinkedTo( const APinName : String ) : Boolean; virtual;
@@ -873,21 +877,21 @@ type
     FLoadName     : String;
 
   public
-    class function PinNullSetter<T : TOWPin>( var APin : T ) : TProc<TOWPin>; overload;
-    class function PinOwnerSetter<T : TOWPin>( var APin : T; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>; overload;
-    class function PinOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>; overload;
-    class function PinPathSetter<T : TOWPin>( var APin : T; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinPathSetter( const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinListAddSetter( APinList : TOWPinList ) : TProc<TOWPin>; overload;
-    class function PinListAddSetter<T : TOWPin>( var APin : T; APinList : TOWPinList ) : TProc<TOWPin>; overload;
-    class function PinListInsertSetter( APinList : TOWPinList; AIndex : Integer ) : TProc<TOWPin>; overload;
-    class function PinListInsertSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; AIndex : Integer ) : TProc<TOWPin>; overload;
-    class function PinListAddNamedSetter( APinList : TOWPinList; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinListAddNamedSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinListInsertNamedSetter( APinList : TOWPinList; AIndex : Integer; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinListInsertNamedSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; AIndex : Integer; const APinName : String ) : TProc<TOWPin>; overload;
-    class function PinCustomOwnerSetter( const AProc : TProc<TOWPin>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>;
-    class function PinCustomPathSetter( const AProc : TProc<TOWPin>; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>;
+    class function PinNullSetter<T : TOWPin>( var APin : T ) : TProc<TOWPin>; overload; static;
+    class function PinOwnerSetter<T : TOWPin>( var APin : T; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>; overload; static;
+    class function PinOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>; overload; static;
+    class function PinPathSetter<T : TOWPin>( var APin : T; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinPathSetter( const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinListAddSetter( APinList : TOWPinList ) : TProc<TOWPin>; overload; static;
+    class function PinListAddSetter<T : TOWPin>( var APin : T; APinList : TOWPinList ) : TProc<TOWPin>; overload; static;
+    class function PinListInsertSetter( APinList : TOWPinList; AIndex : Integer ) : TProc<TOWPin>; overload; static;
+    class function PinListInsertSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; AIndex : Integer ) : TProc<TOWPin>; overload; static;
+    class function PinListAddNamedSetter( APinList : TOWPinList; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinListAddNamedSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinListInsertNamedSetter( APinList : TOWPinList; AIndex : Integer; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinListInsertNamedSetter<T : TOWPin>( var APin : T; APinList : TOWPinList; AIndex : Integer; const APinName : String ) : TProc<TOWPin>; overload; static;
+    class function PinCustomOwnerSetter( const AProc : TProc<TOWPin>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>; static;
+    class function PinCustomPathSetter( const AProc : TProc<TOWPin>; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPin>; static;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock );
@@ -959,6 +963,7 @@ type
     function  WriteLock() : ILockSection; override;
 
   public
+    function  GetEmbeddedOwner() : TComponent; override;
     function  GetRoot() : TComponent; override;
     function  GetRootName() : String; override;
     function  GetSaveName() : String; override;
@@ -1477,7 +1482,7 @@ type
     function  IsConnectedByConverterTo( const AOtherPin : TOWBasicPin ) : Boolean; override; //const;
     function  GetConnectionConverter( const AOtherPin : TOWBasicPin; out AConverter : IOWFormatConverter ) : Boolean; override;
 
-    procedure Assign(Source: TPersistent); override;
+    procedure Assign( ASource : TPersistent ); override;
 
   public // ISerializable
     procedure SerializationRead( const AReader : IReader ); override;
@@ -1625,7 +1630,7 @@ type
     function  GetConnectionConverter( const AOtherPin : TOWBasicPin; out AConverter : IOWFormatConverter ) : Boolean; override;
     function  ConnectToStateAfter( ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin ) : Boolean; override;
 
-    procedure Assign(Source: TPersistent); override;
+    procedure Assign( ASource : TPersistent ); override;
 
   public
     destructor  Destroy(); override;
@@ -1795,10 +1800,10 @@ type
     function  IsFormSaved( AOwnerComponent : TComponent ) : Boolean;
 
   public
-    class function GetByName( const AName : String; ADesignTime : Boolean ) : TOWStateDispatcher;
-    class function GetByNameCreate( APin : TOWBasicPin; const AName : String; ADesignTime : Boolean ) : TOWStateDispatcher;
-    class function GetUniqueName( AOwnerForm : TComponent; const APrefix : String ) : String;
-    class function IsUniqueName( const AName : String; ADesignTime : Boolean ) : Boolean;
+    class function GetByName( const AName : String; ADesignTime : Boolean ) : TOWStateDispatcher; static;
+    class function GetByNameCreate( APin : TOWBasicPin; const AName : String; ADesignTime : Boolean ) : TOWStateDispatcher; static;
+    class function GetUniqueName( AOwnerForm : TComponent; const APrefix : String ) : String; static;
+    class function IsUniqueName( const AName : String; ADesignTime : Boolean ) : Boolean; static;
 
   public
     function GetAfterPinDisplayName( APin : TOWPin ) : String; override;
@@ -1824,7 +1829,7 @@ type
     procedure SetPin( AItem : Integer; APin : TOWBasicPin ); virtual; abstract;
     function  GetName( AItem : Integer ) : String; virtual; abstract;
     procedure SetName( AItem : Integer; const AName : String ); virtual; abstract;
-    function  GetPinListOwner() : TComponent; virtual; abstract;
+    function  GetOwnerComponent() : TComponent; virtual; abstract;
     function  GetListName() : String; // virtual; abstract;
     function  GetListSaveName() : String; // virtual; abstract;
     function  GetShortName() : String; // virtual; abstract;
@@ -1852,11 +1857,12 @@ type
     procedure InvalidateCaches( AObject : TObject ); override;
 
   public
+    function  GetEmbeddedOwner() : TComponent; virtual; abstract;
     function  GetEnumerator() : IEnumerator<TOWBasicPin>;
     function  GetReverseEnumerator() : IEnumerator<TOWBasicPin>;
     function  GetReverse() : IReverseEnumeratorHost<TOWBasicPin>;
-    function  Find( ACompareFunc : TFunc<TOWBasicPin, Boolean> ) : TOWBasicPin; overload;
-    function  Find( ACompareFunc : TFunc<TOWBasicPin, Boolean>; out ARes : TOWBasicPin ) : Boolean; overload;
+    function  Find( const ACompareFunc : TFunc<TOWBasicPin, Boolean> ) : TOWBasicPin; overload;
+    function  Find( const ACompareFunc : TFunc<TOWBasicPin, Boolean>; out ARes : TOWBasicPin ) : Boolean; overload;
     function  Query( AReverse : Boolean = False ) : IContainerQuery<TOWBasicPinList, IArrayList<TOWBasicPin>, TOWBasicPin>;
     function  GetOwner() : TPersistent; override;
     function  GetOwnerName( AIncludeRootForm : Boolean ) : String; virtual;
@@ -1876,7 +1882,7 @@ type
     property ShortName      : String            read GetShortName;
     property Name           : String            read GetListName;
     property SaveName       : String            read GetListSaveName;
-    property Owner          : TComponent        read GetPinListOwner;
+    property Owner          : TComponent        read GetOwnerComponent;
     property PinCategories  : TOWPinCategories  read GetPinCategories;
 
   published
@@ -1908,18 +1914,18 @@ type
 //    class function SetPinList( var APin : TOWPinList ) : TProc<TOWBasicPinList>; overload;
 //    class function SetPinList( var APin : TOWPinListOwner ) : TProc<TOWBasicPinList>; overload;
 
-    class function PinListOwnerSetter<T : TOWBasicPinList>( var APin : T; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload;
-    class function PinListOwnerSetter( var APin : TOWBasicPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload;
-    class function PinListOwnerSetter( var APin : TOWPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload;
-    class function PinListOwnerSetter( var APin : TOWPinListOwner; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload;
-    class function PinListOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload;
-    class function PinListPathSetter<T : TOWBasicPinList>( var APin : T; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload;
-    class function PinListPathSetter( var APin : TOWBasicPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload;
-    class function PinListPathSetter( var APin : TOWPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload;
-    class function PinListPathSetter( var APin : TOWPinListOwner; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload;
-    class function PinListPathSetter( const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload;
-    class function PinListCustomOwnerSetter( const AProc : TProc<TOWPinList>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
-    class function PinListCustomPathSetter( const AProc : TProc<TOWPinList>; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>;
+    class function PinListOwnerSetter<T : TOWBasicPinList>( var APin : T; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload; static;
+    class function PinListOwnerSetter( var APin : TOWBasicPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload; static;
+    class function PinListOwnerSetter( var APin : TOWPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload; static;
+    class function PinListOwnerSetter( var APin : TOWPinListOwner; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload; static;
+    class function PinListOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; overload; static;
+    class function PinListPathSetter<T : TOWBasicPinList>( var APin : T; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload; static;
+    class function PinListPathSetter( var APin : TOWBasicPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload; static;
+    class function PinListPathSetter( var APin : TOWPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload; static;
+    class function PinListPathSetter( var APin : TOWPinListOwner; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload; static;
+    class function PinListPathSetter( const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; overload; static;
+    class function PinListCustomOwnerSetter( const AProc : TProc<TOWPinList>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>; static;
+    class function PinListCustomPathSetter( const AProc : TProc<TOWPinList>; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>; static;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; APinCategories : TOWPinCategories; AIsPinsOwner : Boolean );
@@ -1952,7 +1958,7 @@ type
     procedure CleanUnloaded();
     procedure ApplyFormName( var AIdent : String );
 
-    function  GetPinListOwner() : TComponent; override;
+    function  GetOwnerComponent() : TComponent; override;
 //    function  GetRootName() : String; override;
 
   protected // ISerializable
@@ -1976,6 +1982,9 @@ type
     procedure DefineProperties( AFiler : TFiler ); override;
 
     procedure ConnectPin( ACurrentPinIndex : Integer; AType : TOWPinType; AToType : TOWPinType; const AIdent : String; const AIdentName : String );
+
+  public
+    function  GetEmbeddedOwner() : TComponent; override;
 
   public
     procedure Add( AItem : TOWBasicPin );
@@ -2025,7 +2034,7 @@ type
   //  function  DoWrite() : Boolean; override;
 
   public
-    class function DelegatePinDestroy( const ALamda : TProc ) : TOWPinDestroyFunction;
+    class function DelegatePinDestroy( const ALamda : TProc ) : TOWPinDestroyFunction; static;
 
   public
     procedure AddNamed( AItem : TOWBasicPin; const AName : String ); override;
@@ -2034,8 +2043,8 @@ type
     procedure BeforeDestruction(); override;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL; APinAddedFunction : TOWPinEvent = NIL );
-    constructor CreateEx( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; AMinPins : Integer; AMaxPins : Integer; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL; APinAddedFunction : TOWPinEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; const APinCreateFunction : TOWPinCreateFunction; const APinDestroyFunction : TOWPinDestroyFunction = NIL; const APinAddedFunction : TOWPinEvent = NIL );
+    constructor CreateEx( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; AMinPins : Integer; AMaxPins : Integer; const APinCreateFunction : TOWPinCreateFunction; const APinDestroyFunction : TOWPinDestroyFunction = NIL; const APinAddedFunction : TOWPinEvent = NIL );
 
   published
     property Count  stored GetCountStored;
@@ -2123,7 +2132,7 @@ type
     ['{A4E3AC9E-29CE-4F0D-B270-05A356339310}']
 
     function GetExtentionId() : TGUID;
-    function IsInModule( HInstance : NativeInt ) : Boolean;
+    function IsInModule( AHInstance : NativeInt ) : Boolean;
 
   end;
 //---------------------------------------------------------------------------
@@ -2133,7 +2142,7 @@ type
 
   public
     function GetExtentionId() : TGUID;
-    function IsInModule( HInstance : NativeInt ) : Boolean; virtual;
+    function IsInModule( AHInstance : NativeInt ) : Boolean; virtual;
 
   public
     class function Create( const AExtentionId : TGUID ) : IOWStreamInfoExtention;
@@ -2147,6 +2156,15 @@ type
     ['{666DB7D4-725A-4573-946B-5BBBF5EC6568}']
 
     procedure EnumeratePins( const ACollection : IPairCollection<String, TObject>; AType : TClass; ASaveValue : Boolean );
+
+  end;
+//---------------------------------------------------------------------------
+  //##NOEXPORT##
+  IOpenWriteEditorCache = interface
+    ['{F5FC1C06-7D8F-44A4-981F-C244B5B8DD07}']
+
+    function  AddInvalidateCache( const AProc : TProc ) : TProc;
+    procedure RemoveInvalidateCache( const AProc : TProc );
 
   end;
 //---------------------------------------------------------------------------
@@ -2177,7 +2195,8 @@ function  OWGetDispatcher( AIndex : Integer ) : TOWBasicStateDispatcher;
 
 procedure OWInitGlobals();
 function  OWGetSubObject( AObject : TObject; const AObjectName : String ) : TObject;
-function  OWGetPropValue( AInstance : TObject; const APropName : String; APreferStrings : Boolean ): TValue;
+function  OWGetPropValue( AInstance : TObject; const APropName : String; APreferStrings : Boolean; out AResult : TValue ) : Boolean;
+function  OWGetPropValueAndRealName( AInstance : TObject; const APropName : String; APreferStrings : Boolean; out AName : String; out AResult : TValue ) : Boolean;
 
 procedure OWNotifyDynamicPinsSwapped( APin1 : TOWBasicPin; APin2 : TOWBasicPin );
 
@@ -2335,7 +2354,7 @@ type
     procedure PopulatePinAndDestroy( APin : TOWBasicPin );
 
   public
-    constructor Create( ARoot : TComponent; AType : TOWPinType; APinIdentName : String; APinDisplayName : String; ACreatedFrom : String );
+    constructor Create( ARoot : TComponent; AType : TOWPinType; const APinIdentName : String; const APinDisplayName : String; const ACreatedFrom : String );
     destructor  Destroy(); override;
 
   end;
@@ -2502,8 +2521,9 @@ var // State pins support
 //---------------------------------------------------------------------------
 function ReplaceComponentOwnerName( const AName : String; const ARenameMap : IDictionary<String, String> ) : String;
 begin
-  var AList : IStringArrayList := TStringArrayList.CreateFromDelimiterText( AName, '.' );
-  if( AList.Count > 2 ) then
+  var AList := AName.Split( [ '.' ] );
+
+  if( Length( AList ) > 2 ) then
     ARenameMap.ForItem( AList[ 1 ],
         procedure( const AValue : String )
         begin
@@ -2511,7 +2531,7 @@ begin
         end
       );
 
-  Result := AList.AsDelimiterText( '.' );
+  Result := String.Join( '.', AList );
 end;
 //---------------------------------------------------------------------------
 function OWMakeShortName( const AName : String ) : String;
@@ -3018,48 +3038,6 @@ begin
   Result := GUIDToString( AStreamTypeID );
 end;
 //---------------------------------------------------------------------------
-{
-function OWInheritsFromClassName( AClass : TClass; AName : String ) : Boolean;
-begin
-  if( AClass.ClassNameIs( AName )) then
-    Exit( True );
-
-  AClass := AClass.ClassParent();
-
-  if( AClass = NIL ) then
-    Result := False
-
-  else
-    Result := OWInheritsFromClassName( AClass, AName );
-
-end;
-//---------------------------------------------------------------------------
-function OWGetMainOwnerComponent( AComponent : TComponent ) : TComponent;
-begin
-  if( AComponent = NIL ) then
-    Exit( NIL );
-
-  Result := AComponent;
-  while( Result.Owner <> NIL ) do
-    begin
-    if( OWInheritsFromClassName( Result.Owner.ClassType(), 'TApplication' )) then
-      Exit;
-
-    if( Result is TDataModule ) then
-      Exit;
-
-    if( OWInheritsFromClassName( Result.ClassType(), 'TCustomForm' )) then
-      Exit;
-
-    if( OWInheritsFromClassName( Result.ClassType(), 'TFrame' )) then
-      Exit;
-
-    Result := Result.Owner;
-    end;
-
-end;
-}
-//---------------------------------------------------------------------------
 function OWGetAllLinked() : Boolean;
 begin
   GlobalStorageSection.Enter();
@@ -3496,7 +3474,11 @@ begin
   if( AOwnerName = '' ) then
     Exit( GetOwnerComponent() );
 
-  Result := OWGetPropValue( GetOwnerComponent(), AOwnerName, False ).AsType<TPersistent>();
+  var AValue : TValue;
+  if( OWGetPropValue( GetOwnerComponent(), AOwnerName, False, AValue )) then
+    Exit( AValue.AsType<TPersistent>());
+
+  Result := NIL;
 end;
 //---------------------------------------------------------------------------
 function TOWBasicPin.GetOwnerName( AIncludeRootForm : Boolean ) : String;
@@ -3715,7 +3697,14 @@ begin
     begin
     var AOwner := Owner;
     if( AOwner <> NIL ) then
-      Result := AOwner.Name + '.' + Result;
+      begin
+      var AOwnerName := AOwner.Name;
+      if( not GOWNeedsOwnerName ) then
+        if( AOwnerName = '' ) then
+          Exit;
+
+      Result := AOwnerName + '.' + Result;
+      end;
 
     if( Result.StartsWith( '.' )) then
       Result := '__Unknown__' + Result;
@@ -3763,6 +3752,9 @@ begin
 //  Exit;
 
   PopulateNameCache();
+
+  if( FPropertyElements = NIL ) then
+    Exit( TPropertyElements.Create());
 
   Result := TPropertyElements.CreateCopy( FPropertyElements );
 
@@ -3972,7 +3964,7 @@ begin
   if( ARoot = NIL ) then
     Exit( False );
 
-  if( InheritsFromClassName( ARoot.ClassType(), 'TPreviewForm' )) then
+  if( InheritsFromClassName( ARoot.TypeInfo(), 'TPreviewForm' )) then
     Exit( True );
 
   if( ARoot.Name = 'Root' ) then
@@ -3998,6 +3990,11 @@ end;
 function TOWBasicPin.GetOwnerPinList() : TOWPinList;
 begin
   Result := FOwnerPinList;
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.GetEmbeddedOwner() : TComponent;
+begin
+  Result := NIL;
 end;
 //---------------------------------------------------------------------------
 function TOWBasicPin.GetOwnerComponent() : TComponent;
@@ -4938,6 +4935,8 @@ var
   APtr : ^T;
 
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -4951,6 +4950,8 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPin.PinOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>;
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   Result :=
     procedure( AInstance : TOWPin )
     begin
@@ -5181,6 +5182,8 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPin.PinCustomOwnerSetter( const AProc : TProc<TOWPin>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPin>;
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   Result :=
     procedure( AInstance : TOWPin )
     begin
@@ -5536,6 +5539,11 @@ begin
 end;
 //---------------------------------------------------------------------------
 function TOWPin.GetOwnerComponent() : TComponent;
+begin
+  Result := TClassManagement.GetRealComponent( FOwner );
+end;
+//---------------------------------------------------------------------------
+function TOWPin.GetEmbeddedOwner() : TComponent;
 begin
   Result := FOwner;
 end;
@@ -6491,7 +6499,7 @@ begin
     AWriter.WriteIdent( 'Sinks' );
     WriteConnectionsData( AWriter );
     end;
-    
+
 end;
 //---------------------------------------------------------------------------
 procedure TOWSourcePin.ReadNoStateListEntry( AReader : TReader; const AIdent : String; ASkipConnections : Boolean );
@@ -6561,12 +6569,12 @@ begin
                         begin
                           var ALocalID := AID;
                           ApplyFormName( ALocalID );
-                          ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
+                          ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
                           ABasePinAfter := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, ALocalID, GetFullName( True ) );
                         end
                       );
 
-                    var ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSink, AID, AName, GetFullName( True ) );
+                    var ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, AName, GetFullName( True ) );
                     IntConnectAfter( ABasePin, ABasePinAfter, OWNULLID );
                   end
                 );
@@ -9137,14 +9145,14 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWMultiSinkPin.Assign(Source: TPersistent);
+procedure TOWMultiSinkPin.Assign( ASource : TPersistent );
 begin
-  if( Source = NIL ) then
+  if( ASource = NIL ) then
     Connect( NIL )
 
   else
     begin
-    var AOtherPin := Source as TOWMultiSinkPin;
+    var AOtherPin := ASource as TOWMultiSinkPin;
     if( AOtherPin <> NIL ) then
       begin
       for var I := 0 to AOtherPin.SourceCount - 1 do
@@ -9539,6 +9547,8 @@ begin
               ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
               AName := ReplaceComponentOwnerName( AName, AReader.Access.GetRenameMap() );
 
+              var AFullName := GetFullName( True );
+
               ABaseAfterPin := NIL;
               AReader.ReadString( 'SaveAfter',
                   procedure( const AID : String )
@@ -9546,7 +9556,7 @@ begin
                     var ALocalID := AID;
                     ApplyFormName( ALocalID );
                     ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
-                    ABaseAfterPin := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, ALocalID, GetFullName( True ) );
+                    ABaseAfterPin := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, ALocalID, AFullName );
                   end
                 );
 
@@ -9557,11 +9567,10 @@ begin
                   begin
                   ALocalID := ARootName + SubstringFrom( ALocalID, '.' );
                   AName := ARootName + SubstringFrom( AName, '.' );
-//                        Exit;
                   end;
                 end;
 
-              var ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSource, ALocalID, AName, GetFullName( True ) );
+              var ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSource, ALocalID, AName, AFullName );
               ConnectAfter( ABasePin, ABaseAfterPin );
             end
           );
@@ -9589,6 +9598,9 @@ begin
                     else
                       AName := ALocalID;
 
+                    ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
+                    AName := ReplaceComponentOwnerName( AName, AReader.Access.GetRenameMap() );
+
                     if( TDeserializeOption.FromPaste in AOptions ) then
                       begin
                       var ARootName := GetRootName();
@@ -9606,6 +9618,7 @@ begin
                         begin
                           var ALocalID := AID;
                           ApplyFormName( ALocalID );
+                          ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
                           ABasePinAfter := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, ALocalID, GetFullName( True ) );
                         end
                       );
@@ -10548,14 +10561,14 @@ begin
   Result := FIntRealSourcePin.DependsOn( AOtherPin );
 end;
 //---------------------------------------------------------------------------
-procedure TOWSinkPin.Assign(Source: TPersistent);
+procedure TOWSinkPin.Assign( ASource : TPersistent );
 begin
-  if( Source = NIL ) then
+  if( ASource = NIL ) then
     Connect( NIL )
 
   else
     begin
-    var AOtherPin := Source as TOWSinkPin;
+    var AOtherPin := ASource as TOWSinkPin;
     if( AOtherPin <> NIL ) then
       Connect( AOtherPin.SourcePin )
 
@@ -11325,6 +11338,7 @@ begin
   AReader.ReadNested( 'SourcePin',
       procedure( const AReader : IReader )
       begin
+        var AReaderAccess := AReader.Access;
         AReader.ReadString( 'ID',
             procedure( const AID : String )
             var
@@ -11339,8 +11353,8 @@ begin
               else
                 AName := ALocalID;
 
-              ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
-              AName := ReplaceComponentOwnerName( AName, AReader.Access.GetRenameMap() );
+              ALocalID := ReplaceComponentOwnerName( ALocalID, AReaderAccess.GetRenameMap() );
+              AName := ReplaceComponentOwnerName( AName, AReaderAccess.GetRenameMap() );
 
               if( TDeserializeOption.FromPaste in AOptions ) then
                 begin
@@ -11349,22 +11363,23 @@ begin
                   begin
                   ALocalID := ARootName + SubstringFrom( ALocalID, '.' );
                   AName := ARootName + SubstringFrom( AName, '.' );
-//                        Exit;
                   end;
                 end;
 
               var ABaseAfterPin : TOWBasicPin := NIL;
+              var AFullName := GetFullName( True );
+              var ARoot := GetRoot();
               AReader.ReadString( 'SaveAfter',
                   procedure( const AID : String )
                   begin
                     var ALocalID := AID;
                     ApplyFormName( ALocalID );
-                    ALocalID := ReplaceComponentOwnerName( ALocalID, AReader.Access.GetRenameMap() );
-                    ABaseAfterPin := GOWPins.GetByNameCreate( GetRoot(), ptSink, ALocalID, ALocalID, GetFullName( True ) );
+                    ALocalID := ReplaceComponentOwnerName( ALocalID, AReaderAccess.GetRenameMap() );
+                    ABaseAfterPin := GOWPins.GetByNameCreate( ARoot, ptSink, ALocalID, ALocalID, AFullName );
                   end
                 );
 
-              var ABasePin := GOWPins.GetByNameCreate( GetRoot(), ptSource, ALocalID, AName, GetFullName( True ) );
+              var ABasePin := GOWPins.GetByNameCreate( ARoot, ptSource, ALocalID, AName, AFullName );
               ConnectAfter( ABasePin, ABaseAfterPin );
             end
           );
@@ -11863,10 +11878,10 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-{$IFDEF USE_NEW_RTTI}
+//{$IFDEF USE_NEW_RTTI}
 function OWGetClassPropertiesOfTypePrefix( APrefix : String; AObject : TObject; AType : TClass; ACollection : IPairCollection<String, TObject>; SaveValue : Boolean; ALevel : Integer; APropertyStack : ILinkedList<TObject> ) : Boolean;
 var
-  AContext      : TRttiContext;
+//  AContext      : TRttiContext;
   AEnumChildren : IEnumerateChildren;
 
 begin
@@ -11880,78 +11895,76 @@ begin
       Exit;
 
   try
-    var ARTType := AContext.GetType( AObject.ClassType() );
-    for var AProperty in ARTType.GetProperties() do
+    AObject := GetRealTypeInstance( AObject );
+    var ARTType := AObject.TypeInfo();
+    for var AProperty in ARTType.GetSingleProperties( [ mvPublished ], [ tkClass ] ) do
       begin
-      if( ( AProperty.Visibility = mvPublished ) and ( AProperty.PropertyType.TypeKind = tkClass )) then
+      var APropertyObject := AProperty.Value[ AObject ].AsObject();
+      if( APropertyObject <> NIL ) then
         begin
-        var APropertyObject := AProperty.GetValue( AObject ).AsObject();
-        if( APropertyObject <> NIL ) then
+        if( TClassManagement.IsDescendantOf( APropertyObject, AType )) then
+          ACollection.AddPair( APrefix + AProperty.Name, APropertyObject );
+
+        if( APropertyObject is TOWPinList )then
           begin
-          if( TClassManagement.IsDescendantOf( APropertyObject, AType )) then
-            ACollection.AddPair( APrefix + AProperty.Name, APropertyObject );
-
-          if( APropertyObject is TOWPinList )then
+          for var APinIndex := 0 to TOWPinList( APropertyObject ).Count - 1 do
             begin
-            for var APinIndex := 0 to TOWPinList( APropertyObject ).Count - 1 do
+            if( TClassManagement.IsDescendantOf( TOWPinList( APropertyObject ).Pins[ APinIndex ], AType )) then
               begin
-              if( TClassManagement.IsDescendantOf( TOWPinList( APropertyObject ).Pins[ APinIndex ], AType )) then
-                begin
-                if( SaveValue ) then
-                  ACollection.AddPair( APrefix + AProperty.Name + '._Pin' + APinIndex.ToString(), TOWPinList( APropertyObject ).Pins[ APinIndex ] )
+              if( SaveValue ) then
+                ACollection.AddPair( APrefix + AProperty.Name + '._Pin' + APinIndex.ToString(), TOWPinList( APropertyObject ).Pins[ APinIndex ] )
 
-                else
-                  ACollection.AddPair( APrefix + AProperty.Name + '.' + TOWPinList( APropertyObject ).Names[ APinIndex ], TOWPinList( APropertyObject ).Pins[ APinIndex ] );
+              else
+                ACollection.AddPair( APrefix + AProperty.Name + '.' + TOWPinList( APropertyObject ).Names[ APinIndex ], TOWPinList( APropertyObject ).Pins[ APinIndex ] );
 
-                end;
               end;
-            end
+            end;
+          end
 
-          else if( APropertyObject is TPersistent )then
-            begin
-            if( not ( APropertyObject is TComponent )) then
-              if( not APropertyStack.Query().Contains( APropertyObject )) then
+        else if( APropertyObject is TPersistent )then
+          begin
+          if( not ( APropertyObject is TComponent )) then
+            if( not APropertyStack.Query().Contains( APropertyObject )) then
+              begin
+              APropertyStack.Add( APropertyObject );
+              if( APropertyObject is TCollection )then
                 begin
-                APropertyStack.Add( APropertyObject );
-                if( APropertyObject is TCollection )then
+                for var J := 0 to TCollection( APropertyObject ).Count - 1 do
                   begin
-                  for var J := 0 to TCollection( APropertyObject ).Count - 1 do
-                    begin
-                    var ASubObject := TCollection( APropertyObject ).Items[ J ];
-                    var AName := APrefix + AProperty.Name + '[' + J.ToString() + ']';
-                    APropertyStack.Add( ASubObject );
-                    if( TClassManagement.IsDescendantOf( ASubObject, AType )) then
-                      ACollection.AddPair( AName, ASubObject );
+                  var ASubObject := TCollection( APropertyObject ).Items[ J ];
+                  var AName := APrefix + AProperty.Name + '[' + J.ToString() + ']';
+                  APropertyStack.Add( ASubObject );
+                  if( TClassManagement.IsDescendantOf( ASubObject, AType )) then
+                    ACollection.AddPair( AName, ASubObject );
 
-                    if( OWGetClassPropertiesOfTypePrefix( AName + '.', ASubObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
-                      Result := True;
+                  if( OWGetClassPropertiesOfTypePrefix( AName + '.', ASubObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
+                    Result := True;
 
-                    end;
-                  end
-
-                else if( TInterface.IfSupports<IEnumerateChildren>( APropertyObject, AEnumChildren )) then
-                  begin
-                  var J := 0;
-                  for var ASubObject in AEnumChildren do
-                    begin
-                    var AName := APrefix + AProperty.Name + '[' + J.ToString() + ']';
-                    APropertyStack.Add( ASubObject );
-                    if( TClassManagement.IsDescendantOf( ASubObject, AType )) then
-                      ACollection.AddPair( APrefix + AName, ASubObject );
-
-                    if( OWGetClassPropertiesOfTypePrefix( AName + '.', ASubObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
-                      Result := True;
-
-                    Inc( J );
-                    end;
                   end;
+                end
 
-                if( OWGetClassPropertiesOfTypePrefix( APrefix + AProperty.Name + '.', APropertyObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
-                  Result := True;
+              else if( TInterface.IfSupports<IEnumerateChildren>( APropertyObject, AEnumChildren )) then
+                begin
+                var J := 0;
+                for var ASubObject in AEnumChildren do
+                  begin
+                  var AName := APrefix + AProperty.Name + '[' + J.ToString() + ']';
+                  APropertyStack.Add( ASubObject );
+                  if( TClassManagement.IsDescendantOf( ASubObject, AType )) then
+                    ACollection.AddPair( APrefix + AName, ASubObject );
 
+                  if( OWGetClassPropertiesOfTypePrefix( AName + '.', ASubObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
+                    Result := True;
+
+                  Inc( J );
+                  end;
                 end;
 
-            end;
+              if( OWGetClassPropertiesOfTypePrefix( APrefix + AProperty.Name + '.', APropertyObject, AType, ACollection, SaveValue, ALevel + 1, APropertyStack )) then
+                Result := True;
+
+              end;
+
           end;
         end;
       end;
@@ -11961,7 +11974,8 @@ begin
     end;
 
 end;
-{$ELSE}
+//{$ELSE}
+(*
 function OWGetClassPropertiesOfTypePrefix( APrefix : String; AObject : TObject; AType : TClass; ACollection : IPairCollection<String, TObject>; SaveValue : Boolean; ALevel : Integer; APropertyStack : ILinkedList<TObject> ) : Boolean;
 var
   APropList     : PPropList;
@@ -12073,7 +12087,8 @@ begin
     end;
 
 end;
-{$ENDIF}
+*)
+//{$ENDIF}
 //---------------------------------------------------------------------------
 procedure OWGetClassPropertiesOfType( const ACollection : IPairCollection<String, TObject>; AObject : TObject; AType : TClass; ASaveValue : Boolean );
 var
@@ -12110,15 +12125,27 @@ end;
 function GetPinObjectOwnersList( APin : TPersistent; APinObjectOwnerProperty : TPersistent; APinOwnerComponent : TComponent; const AResult : IPropertyElements ) : Boolean;
 begin
   var AFound := False;
-  for var APropertyInfo in APinObjectOwnerProperty.ClassTypeInfo().GetSingleProperties( [ mvPublished ], TPersistent ) do
-    begin
+//  if( APinObjectOwnerProperty is TComponent ) then
+//    APinObjectOwnerProperty := TPersistent( TClassManagement.GetRealComponent( TComponent( APinObjectOwnerProperty )));
+
+  APinObjectOwnerProperty := TPersistent( GetObjectInstance( APinObjectOwnerProperty ));
+//  var AClassTypeInfo := GetObjectInstance( APinObjectOwnerProperty ).ClassTypeInfo();
+  var AClassTypeInfo := APinObjectOwnerProperty.ClassTypeInfo();
+  var ASinglePropertiesInfo : ISinglePropertiesInfo;
+  if( AClassTypeInfo.HasCustomAttribute( DynamicPropertyAttribute )) then
+    AClassTypeInfo := APinObjectOwnerProperty.TypeInfo();
+
+  ASinglePropertiesInfo := AClassTypeInfo.GetSingleProperties( [ mvPublished ], TPersistent );
+
+//  for var APropertyInfo in APinObjectOwnerProperty.ClassTypeInfo().GetSingleProperties( [ mvPublished ], TPersistent ) do
+//  APinObjectOwnerProperty := TPersistent( GetRealTypeInstance( APinObjectOwnerProperty ));
+  for var APropertyInfo in ASinglePropertiesInfo do
     if( APropertyInfo.Value[ APinObjectOwnerProperty ].AsObject() = APin ) then
       begin
       AResult.Add( TPropertyElement.Create( APin, APropertyInfo.Name ));
       AFound := True;
       Break;
       end;
-    end;
 
   if( AFound ) then
     begin
@@ -12163,13 +12190,14 @@ begin
 
         var AProcessed := False;
         var AEnumChildren : IEnumerateChildren;
+        var AInstanceProperty := TPersistent( GetObjectInstance( AProperty ));
         if( APropertyOwner.IfSupports<IEnumerateChildren>( AEnumChildren )) then
           begin
           var AIndex := 0;
           var ACollectionFound := False;
           for var ASubObject in AEnumChildren do
             begin
-            if( ASubObject = AProperty ) then
+            if( ASubObject = AInstanceProperty ) then
               begin
               var AObjectStr := '_Item' + AIndex.ToString();
 
@@ -12191,6 +12219,19 @@ begin
 
 //                Result.Add( TPropertyElement.Create( TPersistent( APropertyOwner ), AProperty.Name ));
               AResult.Insert( 0, TPropertyElement.Create( TPersistent( ASubObject ), AObjectStr, AObjectDisplayStr ));
+{
+              var ACollectionOwner := TExposedPersistent( APropertyOwner ).GetOwner();
+              var ARealInstance := GetObjectInstance( APropertyOwner );
+              for var APropertyInfo in ACollectionOwner.TypeInfo().GetSingleProperties( [ mvPublished ], TPersistent ) do
+                begin
+//                var ATest1 := APropertyInfo.Value[ ACollectionOwner ].AsObject();
+                if( APropertyInfo.Value[ ACollectionOwner ].AsObject() = ARealInstance ) then
+                  begin
+                  var AName := APropertyInfo.Name;
+                  AResult.Insert( 0, TPropertyElement.Create( APropertyOwner, AName, AName ));
+                  end;
+                end;
+ }
               ACollectionFound := True;
               Break;
               end;
@@ -12205,20 +12246,22 @@ begin
 //                Result.Append( OWGetClassPropertyItemsForPropertyObject( APin.Owner, APin, True ) );
 //                Break;
             end;
-
           end;
 
         if( not AProcessed ) then
+          begin
+          var AObjectInstance := GetRealTypeInstance( APropertyOwner );
           for var APropertyInfo in APropertyOwner.TypeInfo().GetSingleProperties( [ mvPublished ], TPersistent ) do
             begin
-            if( APropertyInfo.Value[ APropertyOwner ].AsObject() = AProperty ) then
+            if( APropertyInfo.Value[ AObjectInstance ].AsObject() = AInstanceProperty ) then
               begin
 //                var AName : String;
 //              if( AProperty.IfSupports<>(  )
-              AResult.Insert( 0, TPropertyElement.Create( AProperty, APropertyInfo.Name ));
+              AResult.Insert( 0, TPropertyElement.Create( AInstanceProperty, APropertyInfo.Name ));
               Break;
               end;
             end;
+          end;
 
         end;
 
@@ -12365,9 +12408,6 @@ function OWValueToItems( APinList : TOWBasicPinList; AAddRoot : Boolean ) : IPro
 begin
   Result := TPropertyElements.Create();
 
-  if( Result.Count > 0 ) then
-    Exit;
-
   if( APinList = NIL ) then
     Exit;
 
@@ -12383,7 +12423,7 @@ begin
   var APinObjectOwnerProperty := APinList.FOwnerProperty;
   if( APinObjectOwnerProperty <> NIL ) then
     begin
-    if( not GetPinObjectOwnersList( APinList, APinObjectOwnerProperty, APinList.Owner, Result )) then
+    if( not GetPinObjectOwnersList( APinList, APinObjectOwnerProperty, APinList.GetEmbeddedOwner(), Result )) then
       Exit;
 
     end
@@ -12404,6 +12444,10 @@ begin
 //    OWValueToItems( APinList, AAddRoot );
     end;
 }
+  if( Result.Count > 0 ) then
+    if( Result[ 0 ].Persistent = APinList.GetEmbeddedOwner() ) then
+      Result.Delete( 0 );
+
   Result.Insert( 0, TPropertyElement.Create( APinList.Owner, APinList.Owner.Name ));
 
   if( AAddRoot ) then
@@ -12570,12 +12614,12 @@ begin
   Result := FExtentionId;
 end;
 //---------------------------------------------------------------------------
-function TOWStreamInfoExtention.IsInModule( HInstance : NativeInt ) : Boolean;
+function TOWStreamInfoExtention.IsInModule( AHInstance : NativeInt ) : Boolean;
 begin
   var AClass := ClassType();
   while( True ) do
     begin
-    if( NativeInt( FindClassHInstance( AClass )) = HInstance ) then
+    if( NativeInt( FindClassHInstance( AClass )) = AHInstance ) then
       Exit( True );
 
     if( AClass = TOWStreamInfoExtention ) then
@@ -12664,7 +12708,7 @@ end;
 //---------------------------------------------------------------------------
 function TOWBasicPinList.IsPreviewPinList() : Boolean;
 begin
-  var AComponent := GetPinListOwner();
+  var AComponent := GetOwnerComponent();
   if( AComponent = NIL ) then
     Exit( False );
 
@@ -12675,7 +12719,7 @@ begin
   if( ARoot = NIL ) then
     Exit( True );
 
-  if( InheritsFromClassName( ARoot.ClassType(), 'TPreviewForm' )) then
+  if( InheritsFromClassName( ARoot.TypeInfo(), 'TPreviewForm' )) then
     Exit( True );
 
   if( ARoot.Name = 'Root' ) then
@@ -12812,7 +12856,7 @@ begin
   Result := TAutoReverseEnumeratorHost<TOWBasicPin>.Create( GetCount, GetPin );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPinList.Find( ACompareFunc : TFunc<TOWBasicPin, Boolean> ) : TOWBasicPin;
+function TOWBasicPinList.Find( const ACompareFunc : TFunc<TOWBasicPin, Boolean> ) : TOWBasicPin;
 begin
   for var AItem in Self do
     if( ACompareFunc( AItem )) then
@@ -12821,7 +12865,7 @@ begin
   Exit( NIL );
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPinList.Find( ACompareFunc : TFunc<TOWBasicPin, Boolean>; out ARes : TOWBasicPin ) : Boolean;
+function TOWBasicPinList.Find( const ACompareFunc : TFunc<TOWBasicPin, Boolean>; out ARes : TOWBasicPin ) : Boolean;
 begin
   for var AItem in Self do
     if( ACompareFunc( AItem )) then
@@ -12848,9 +12892,13 @@ begin
 
   var AOwnerName := GetOwnerName( False );
   if( AOwnerName = '' ) then
-    Exit( GetPinListOwner() );
+    Exit( GetOwnerComponent() );
 
-  Result := OWGetPropValue( GetPinListOwner(), AOwnerName, False ).AsType<TPersistent>();
+  var AValue : TValue;
+  if( OWGetPropValue( GetOwnerComponent(), AOwnerName, False, AValue )) then
+    Exit( AValue.AsType<TPersistent>() );
+
+  Result := NIL;
 end;
 //---------------------------------------------------------------------------
 function TOWBasicPinList.GetOwnerName( AIncludeRootForm : Boolean ) : String;
@@ -13118,6 +13166,8 @@ var
   APtr : ^T;
 
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPinList )
@@ -13146,6 +13196,8 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListOwnerSetter( AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   Result :=
     procedure( AInstance : TOWPinList )
     begin
@@ -13231,6 +13283,8 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListCustomOwnerSetter( const AProc : TProc<TOWPinList>; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
 begin
+//  AOwner := TClassManagement.GetRealComponent( AOwner );
+
   Result :=
     procedure( AInstance : TOWPinList )
     begin
@@ -13457,7 +13511,12 @@ begin
      
 end;
 //---------------------------------------------------------------------------
-function TOWPinList.GetPinListOwner() : TComponent;
+function TOWPinList.GetOwnerComponent() : TComponent;
+begin
+  Result := TClassManagement.GetRealComponent( FOwner );
+end;
+//---------------------------------------------------------------------------
+function TOWPinList.GetEmbeddedOwner() : TComponent;
 begin
   Result := FOwner;
 end;
@@ -13681,7 +13740,7 @@ begin
     FPinsList.Add( TTuple<String, TOWBasicPin>.Create( AName, AItem ));
     
   if( AItem <> NIL ) then
-    if( AItem.GetOwnerComponent() = FOwner ) then
+    if( AItem.GetOwnerComponent() = GetOwnerComponent() ) then
       begin
       AItem.SetOwnerPinList( Self );
 //      AItem.FName := '';
@@ -13717,7 +13776,7 @@ begin
 
   FPinsList.Insert( AIndex, TTuple<String, TOWBasicPin>.Create( AName, AItem ));
   if( AItem <> NIL ) then
-    if( AItem.GetOwnerComponent() = FOwner ) then
+    if( AItem.GetOwnerComponent() = GetOwnerComponent() ) then
       begin
       AItem.SetOwnerPinList( Self );
       OWNotifyChangePin( AItem, AItem.IsDebugPin() );
@@ -14457,7 +14516,7 @@ begin
 end;
 //---------------------------------------------------------------------------
 }
-constructor TOWPinListOwner.Create( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL; APinAddedFunction : TOWPinEvent = NIL );
+constructor TOWPinListOwner.Create( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; const APinCreateFunction : TOWPinCreateFunction; const APinDestroyFunction : TOWPinDestroyFunction = NIL; const APinAddedFunction : TOWPinEvent = NIL );
 var
   AWriteLock : ILockSection;
 
@@ -14475,7 +14534,7 @@ begin
   SetCount( FDefaultCount );
 end;
 //---------------------------------------------------------------------------
-constructor TOWPinListOwner.CreateEx( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; AMinPins : Integer; AMaxPins : Integer; APinCreateFunction : TOWPinCreateFunction; APinDestroyFunction : TOWPinDestroyFunction = NIL; APinAddedFunction : TOWPinEvent = NIL );
+constructor TOWPinListOwner.CreateEx( const AOnCreated : TProc<TOWPinList>; const AOwnerLock : IBasicLock; ADefaultCount : Integer; APinCategories : TOWPinCategories; AMinPins : Integer; AMaxPins : Integer; const APinCreateFunction : TOWPinCreateFunction; const APinDestroyFunction : TOWPinDestroyFunction = NIL; const APinAddedFunction : TOWPinEvent = NIL );
 var
   AWriteLock : ILockSection;
 
@@ -15147,7 +15206,7 @@ begin
     Exit( False );
 
   var ARoot := GetMainOwnerComponent( AComponent );
-  if( InheritsFromClassName( ARoot.ClassType(), 'TPreviewForm' )) then
+  if( InheritsFromClassName( ARoot.TypeInfo(), 'TPreviewForm' )) then
     Exit( True );
 
   if( ARoot.Name = 'Root' ) then
@@ -15534,24 +15593,25 @@ begin
       Break;
       end;
 
-  if( FPins.Count = 1 ) then
-    begin
-    // Remove the last reference.
-    var AItem := FPins[ 0 ];
-    if( AItem.RealPin.FDispatcher = Self ) then
-      AItem.RealPin.FDispatcher := NIL;
+  if( FInConnecting <= 0 ) then
+    if( FPins.Count = 1 ) then
+      begin
+      // Remove the last reference.
+      var AItem := FPins[ 0 ];
+      if( AItem.RealPin.FDispatcher = Self ) then
+        AItem.RealPin.FDispatcher := NIL;
 
-    if( AItem.RealPin.FConverterDispatcher = Self ) then
-      AItem.RealPin.FConverterDispatcher := NIL;
+      if( AItem.RealPin.FConverterDispatcher = Self ) then
+        AItem.RealPin.FConverterDispatcher := NIL;
 
-    if( AItem.ConnectionPin.FDispatcher = Self ) then
-      AItem.ConnectionPin.FDispatcher := NIL;
+      if( AItem.ConnectionPin.FDispatcher = Self ) then
+        AItem.ConnectionPin.FDispatcher := NIL;
 
-    if( AItem.ConnectionPin.FConverterDispatcher = Self ) then
-      AItem.ConnectionPin.FConverterDispatcher := NIL;
+      if( AItem.ConnectionPin.FConverterDispatcher = Self ) then
+        AItem.ConnectionPin.FConverterDispatcher := NIL;
 
-    FPins.Clear();
-    end;
+      FPins.Clear();
+      end;
 
   if( not FFromConverter ) then
     OWNotifyChangeDispatcher( Self );
@@ -16008,7 +16068,7 @@ begin
   Result := InheritsFrom( TOWNotifyOperationClass( ClassType() )); //( Self is AClass );
 end;
 //---------------------------------------------------------------------------
-function TOWNotifyOperation.IsType( AClasses : array of TOWNotifyOperationClass ) : Boolean; stdcall;
+function TOWNotifyOperation.IsType( const AClasses : array of TOWNotifyOperationClass ) : Boolean; stdcall;
 begin
   for var AClass in AClasses do
     if( IsType( AClass )) then
@@ -16036,6 +16096,11 @@ begin
   FPinClass := APinClass;
 end;
 //---------------------------------------------------------------------------
+constructor OWAutoManagePinListAttribute.Create( const APinClass : IAtttributeParameterInfo; AIsOwner : Boolean );
+begin
+  Create( ( APinClass as IClassTypeInfo ).MetaclassType, AIsOwner );
+end;
+//---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -16047,16 +16112,26 @@ begin
   FMax := AMax;
 end;
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-constructor OWAddPinAttribute.Create( AName : String; AValue : TClass );
+constructor OWAutoManagePinListOwnerAttribute.Create( const APinClass : IAtttributeParameterInfo; ACount : Integer; AMin : Integer; AMax : Integer );
 begin
-  inherited Create( AValue );
+  Create( ( APinClass as IClassTypeInfo ).MetaclassType, ACount, AMin, AMax );
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+constructor OWAddPinAttribute.Create( const AName : String; AValue : TClass );
+begin
+  Create( AName, AValue.ClassTypeInfo() );
+end;
+//---------------------------------------------------------------------------
+constructor OWAddPinAttribute.Create( const AName : String; const APinClass : IAtttributeParameterInfo );
+begin
+  inherited Create( APinClass );
   FName := AName;
 end;
 //---------------------------------------------------------------------------
-function OWAddPinAttribute.CreatePin( AOnCreated : TProc<TOWPin>; const ALockItem : ILockItem; out AResult : TOWBasicPin ) : Boolean;
+function OWAddPinAttribute.CreatePin( const AOnCreated : TProc<TOWPin>; const ALockItem : ILockItem; out AResult : TOWBasicPin ) : Boolean;
 begin
   Result := False;
 end;
@@ -16113,7 +16188,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWUnloadedPin.Create( ARoot : TComponent; AType : TOWPinType; APinIdentName : String; APinDisplayName : String; ACreatedFrom : String );
+constructor TOWUnloadedPin.Create( ARoot : TComponent; AType : TOWPinType; const APinIdentName : String; const APinDisplayName : String; const ACreatedFrom : String );
 begin
   inherited Create( NIL, NIL );
   FCreatedFrom := ACreatedFrom;
@@ -16855,27 +16930,61 @@ begin
   Exit( NIL );
 end;
 //---------------------------------------------------------------------------
-function OWGetPropValue( AInstance : TObject; const APropName : String; APreferStrings : Boolean ) : TValue;
+function OWGetPropValue( AInstance : TObject; const APropName : String; APreferStrings : Boolean; out AResult : TValue ) : Boolean;
+begin
+  var AName : String;
+  Result := OWGetPropValueAndRealName( AInstance, APropName, APreferStrings, AName, AResult );
+end;
+//---------------------------------------------------------------------------
+function OWGetPropValueAndRealName( AInstance : TObject; const APropName : String; APreferStrings : Boolean; out AName : String; out AResult : TValue ) : Boolean;
 
-  function GetPropValue( AInstance:  TObject; const APropName : String ): TValue;
+  function GetPropValue( AInstance : TObject; const APropName : String; out AName : String; out AResult : TValue ) : Boolean;
   begin
     var AType := AInstance.TypeInfo;
     for var AProperty in AType.GetSingleProperties( [ mvPublic, mvPublished ] ) do
       if( AProperty <> NIL ) then
+        begin
         if( AProperty.Name = APropName ) then
           try
-            Exit( AProperty.GetValue( AInstance ) );
+            AName := AProperty.Name;
+            AResult := AProperty.GetValue( AInstance );
+            Exit( True );
           except
             end;
 
+        for var AAttribute in AProperty.AccessAttributes.GetAll<OldNameAttribute>() do
+          if( AAttribute.Value = APropName ) then
+            try
+              AName := AProperty.Name;
+              AResult := AProperty.GetValue( AInstance );
+              Exit( True );
+            except
+              end;
+
+        end;
+
     for var AMethod in AType.GetMethods() do
       if( AMethod.Name = APropName ) then
-        Exit( AMethod.Invoke( AInstance, [] ) );
+        begin
+        if( AMethod.TypeInfo = NIL ) then
+          begin
+          AResult := TValue.Empty;
+          Exit( False );
+          end;
 
-    Exit( TValue.Empty );
+        AName := AMethod.Name;
+        AResult := AMethod.Invoke( AInstance, [] );
+        Exit( True );
+        end;
+
+    AResult := TValue.Empty;
+    Exit( False );
   end;
 
-  function GetSubProperty( ASubObject : TObject; ASubPropName : String ) : TValue;
+  function GetSubProperty( ASubObject : TObject; ASubPropName : String; out AResult : TValue ) : Boolean;
+  var
+    APersistentCollection : IPersistentCollection;
+
   begin
     if( ASubObject is TCollection ) then
       begin
@@ -16892,9 +17001,13 @@ function OWGetPropValue( AInstance : TObject; const APropName : String; APreferS
 
         var AIndex := StrToIntDef( AIndexStr, 0 );
         if( AIndex >= ACollection.Count ) then
-          Exit( NIL );
+          begin
+          AResult := NIL;
+          Exit( False );
+          end;
 
-        Exit( ACollection.Items[ AIndex ] );
+        AResult := ACollection.Items[ AIndex ];
+        Exit( True );
         end
 
       else
@@ -16907,7 +17020,7 @@ function OWGetPropValue( AInstance : TObject; const APropName : String; APreferS
         if( ASubSubProp <> '' ) then
           begin
           var AIndex := StrToIntDef( AIndexStr, 0 );
-          Exit( OWGetPropValue( ACollection.Items[ AIndex ], ASubSubProp, APreferStrings ));
+          Exit( OWGetPropValue( ACollection.Items[ AIndex ], ASubSubProp, APreferStrings, AResult ));
           end;
         end;
       end
@@ -16918,14 +17031,17 @@ function OWGetPropValue( AInstance : TObject; const APropName : String; APreferS
       Delete( ASubPropName, 1, 1 );
       var AIndex := StrToIntDef( ASubPropName, 0 );
       if( AIndex < AStrings.Count ) then
-        Exit( AStrings[ AIndex ] );
+        begin
+        AResult := AStrings[ AIndex ];
+        Exit( True );
+        end;
 
-      Exit( '' );
+      AResult := '';
+      Exit( False );
       end
 
-    else if( ASubObject is TPersistentCollection ) then
+    else if( ASubObject.IfSupports<IPersistentCollection>( APersistentCollection )) then
       begin
-      var APersistentCollection := TPersistentCollection( ASubObject );
       if( ASubPropName.StartsWith( '*._' )) then
         Delete( ASubPropName, 1, 2 )
 
@@ -16950,9 +17066,13 @@ function OWGetPropValue( AInstance : TObject; const APropName : String; APreferS
 
         var AIndex := StrToIntDef( AIndexStr, 0 );
         if( AIndex >= APersistentCollection.Count ) then
-          Exit( NIL );
+          begin
+          AResult := NIL;
+          Exit( False );
+          end;
 
-        Exit( APersistentCollection.Items[ AIndex ] );
+        AResult := APersistentCollection.Items[ AIndex ];
+        Exit( True );
         end
 
       else
@@ -16969,17 +17089,19 @@ function OWGetPropValue( AInstance : TObject; const APropName : String; APreferS
           begin
           var AIndex := StrToIntDef( AIndexStr, 0 );
           if( AIndex < APersistentCollection.Count ) then
-            Exit( OWGetPropValue( APersistentCollection.Items[ AIndex ], ASubSubProp, APreferStrings ));
+            Exit( OWGetPropValue( APersistentCollection.Items[ AIndex ], ASubSubProp, APreferStrings, AResult ));
 
-          Exit( APersistentCollection );
+          AResult := ASubObject; //APersistentCollection );
+          Exit( True );
           end;
         end;
       end;
 
-    Exit( OWGetPropValue( ASubObject, ASubPropName, APreferStrings ));
+    Exit( OWGetPropValue( ASubObject, ASubPropName, APreferStrings, AResult ));
   end;
 
 begin
+  AName := APropName;
   var AStartIndex := 0;
   if( APropName.StartsWith( '*._' )) then
     AStartIndex := 2;
@@ -16991,7 +17113,7 @@ begin
     var ASubPropName := MidStr( APropName, APos + 2, 200000 );
 
     var ASubObject := OWGetSubObject( AInstance, AObjectName );
-    Exit( GetSubProperty( ASubObject, ASubPropName ));
+    Exit( GetSubProperty( ASubObject, ASubPropName, AResult ));
 {
     if( ASubObject is TCollection ) then
       begin
@@ -17091,12 +17213,15 @@ begin
     end
 
   else if( AInstance = NIL ) then
-    Exit( TValue.Empty )
+    begin
+    AResult := TValue.Empty;
+    Exit( False )
+    end
 
   else if( AStartIndex > 0 ) then
-    Exit( GetSubProperty( AInstance, APropName ));
+    Exit( GetSubProperty( AInstance, APropName, AResult ));
 
-  Result := GetPropValue( AInstance, APropName );
+  Result := GetPropValue( AInstance, APropName, AName, AResult );
 end;
 //---------------------------------------------------------------------------
 procedure OWInitGlobals();
