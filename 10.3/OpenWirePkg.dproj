@@ -120,7 +120,7 @@
         <DCC_HppOutput>.\$(Platform)</DCC_HppOutput>
         <DCC_ObjOutput>.\$(Platform)\$(Config)</DCC_ObjOutput>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.1;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.21;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.21;Comments=</VerInfo_Keys>
         <DCC_BplOutput>.\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_DcpOutput>.\$(Platform)\$(Config)</DCC_DcpOutput>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -218,14 +218,14 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <VerInfo_Release>2</VerInfo_Release>
         <VerInfo_MinorVer>8</VerInfo_MinorVer>
         <DCC_BplOutput>$(windir)\System32</DCC_BplOutput>
-        <Debugger_HostApplication>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>C:\OpenWireIDE\Visuino Pro\10.3\Win32\Debug\VisuinoPro.exe</Debugger_HostApplication>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_Description>Mitov Runtime</DCC_Description>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <VerInfo_MajorVer>7</VerInfo_MajorVer>
         <VerInfo_Build>182</VerInfo_Build>
         <Debugger_DebugSourcePath>C:\OpenWireIDE\Arduino\;C:\Program Files (x86)\Embarcadero\Studio\20.0\OpenWire\Editor\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
-        <Debugger_RunParams>/rootsuffix Exp</Debugger_RunParams>
+        <Debugger_RunParams>D:\Test15_1_2.visuino</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <DCC_BplOutput>$(windir)\Sysnative</DCC_BplOutput>
@@ -283,7 +283,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
                     <VersionInfo Name="MajorVer">8</VersionInfo>
                     <VersionInfo Name="MinorVer">0</VersionInfo>
                     <VersionInfo Name="Release">0</VersionInfo>
-                    <VersionInfo Name="Build">1</VersionInfo>
+                    <VersionInfo Name="Build">21</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
                     <VersionInfo Name="PreRelease">False</VersionInfo>
                     <VersionInfo Name="Special">False</VersionInfo>
@@ -295,13 +295,13 @@ $(PostBuildEvent)]]></PostBuildEvent>
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">8.0.0.1</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">8.0.0.21</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">8.0.0.1</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">8.0.0.21</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
                 <Excluded_Packages>
