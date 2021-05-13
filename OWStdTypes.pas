@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2020 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,8 @@ type
     Count       : Cardinal;
 
   public
-    constructor Create( AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass );
+    constructor Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass ); overload;
+    constructor Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; const AValue : IAtttributeParameterInfo ); overload;
 
   end;
 //---------------------------------------------------------------------------
@@ -197,12 +198,14 @@ type
     ['{0B59821C-2927-41DD-BC4B-1AB541FF9B28}']
   end;
 //---------------------------------------------------------------------------
+{$WARN SYMBOL_DEPRECATED OFF}
 {$EXTERNALSYM TOWRealComplex}
 type TOWRealComplex = TComplex deprecated 'Use Mitov.Math.Complex.TComplex instead';
 {$EXTERNALSYM POWRealComplex}
 type POWRealComplex = PComplex deprecated 'Use Mitov.Math.Complex.PComplex instead';
 //---------------------------------------------------------------------------
 type TOWClockEvent = reference to procedure( ASender : TOWPin );
+{$WARN SYMBOL_DEPRECATED ON}
 
 type TOWPinNotificationEvent = reference to function( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 
@@ -433,7 +436,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AMaxConnections : Integer = -1; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AMaxConnections : Integer = -1; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -445,7 +448,7 @@ type
     FOnDisconnect : TOWPinEvent;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
 
   end;
 //---------------------------------------------------------------------------
@@ -457,7 +460,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -469,7 +472,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -481,7 +484,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -494,7 +497,7 @@ type
     procedure Clock( ASamples : Integer );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   end;
 //---------------------------------------------------------------------------
@@ -510,7 +513,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
 //---------------------------------------------------------------------------
@@ -526,7 +529,7 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
 
   end;
 //---------------------------------------------------------------------------
@@ -559,7 +562,7 @@ type
     procedure BeforeDisconnectFrom( const APin : TOWBasicPin ); override;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent; AOnPinDispatchEvent : TOWPinDispatchEvent );// overload; virtual;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent );// overload; virtual;
 
   end;
 //---------------------------------------------------------------------------
@@ -572,7 +575,7 @@ type
     function TryCustomDispatch( ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean; virtual;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnPinDispatchEvent : TOWPinDispatchEvent );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent );
 
   end;
 //---------------------------------------------------------------------------
@@ -585,7 +588,7 @@ type
     function TryCustomDispatch( ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnPinDispatchEvent : TOWPinDispatchEvent ); virtual;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ); virtual;
 
   end;
 //---------------------------------------------------------------------------
@@ -606,11 +609,11 @@ type
     procedure Send( AValue : T_Data ); virtual;
 
   public
-    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWBasicTypedSourcePin<T_Data>;
+    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWBasicTypedSourcePin<T_Data>;
 
   public
-    constructor CreateEx( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor CreateEx( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWPinNotificationEvent; const AOnDisconnect : TOWPinEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
     property Value : T_Data read FValue write SetValue;
@@ -633,10 +636,10 @@ type
     function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
-    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedSinkPin<T_Data>;
+    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedSinkPin<T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     property Value  : T_Data read FValue;
@@ -655,7 +658,7 @@ type
     class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedMultiSinkPin<T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
     property Value  : T_Data read FValue;
@@ -681,10 +684,10 @@ type
     procedure AfterConstruction(); override;
 
   public
-    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWBasicTypedStatePin<T_Data>;
+    class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWBasicTypedStatePin<T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     property Value : T_Data read FValue write SetValue;
@@ -723,7 +726,7 @@ type
     class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
     procedure SubmitValueRange( AValue : T_Data; AMin : T_Data; AMax : T_Data );
@@ -757,7 +760,7 @@ type
     class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedRangedSinkPin<T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     property Min    : T_Data read FMin;
@@ -808,7 +811,7 @@ type
     procedure SubmitRange( AMin : T_Data; AMax : T_Data );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AValue : T_Data; AMin : T_Data; AMax : T_Data; AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AValue : T_Data; AMin : T_Data; AMax : T_Data; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     property Min    : T_Data read FMin   write SetMin;
@@ -962,7 +965,7 @@ type
     function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<IStringArrayList>; AOnGetDataEvent : TOWStringListGetDataEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<IStringArrayList>; const AOnGetDataEvent : TOWStringListGetDataEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     procedure Send( AValue : IStringArrayList );
@@ -1092,7 +1095,7 @@ type
     procedure Send( AValue : Single );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
     property Value : Single read FValue write SetValue;
@@ -1119,7 +1122,7 @@ type
     procedure Send( AValue : Single );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<Single>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<Single>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     property Value : Single read FValue write SetValue;
@@ -1217,7 +1220,7 @@ type
     procedure SublitMinMaxChanges(); override;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
     procedure SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
@@ -1249,7 +1252,7 @@ type
     procedure SetValue( AValue : Int64 ); override;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWInt64DateTimeValueRangeChangeEvent; AOnRangeChange : TOWInt64DateTimeRangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWInt64DateTimeValueRangeChangeEvent; const AOnRangeChange : TOWInt64DateTimeRangeChangeEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 
   public
     procedure SubmitValueRange( AValue : Int64; AMin : Int64; AMax : Int64; AMinTime : TDateTime; AMaxTime : TDateTime );
@@ -1292,7 +1295,7 @@ type
     procedure Send( AValue : Real );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
     property Value : Real read FValue write SetValue;
@@ -1437,9 +1440,18 @@ uses
   System.UIConsts, Mitov.Utils, Mitov.TypeInfo, System.Rtti, Mitov.Elements,
   OpenWire.TypeConverters, Mitov.ClassManagement;
 
+var
+  GManagedDispatchSourcePinInit : TClassManagement.TInitClassDefaults;
+  GManagedStdStatePinInit : TClassManagement.TInitClassDefaults;
+  GManagedStdSinkPinInit : TClassManagement.TInitClassDefaults;
+  GManagedStdMultiSinkPinInit : TClassManagement.TInitClassDefaults;
+  GManagedClockSinkPinDefault : TClassManagement.TInitClassDefaults;
+  GManagedClockMultiSinkPinDefault : TClassManagement.TInitClassDefaults;
+  GManagedPinListOwnerDefault : TClassManagement.TInitClassDefaults;
+  GManagedPinListDefault : TClassManagement.TInitClassDefaults;
+
 //---------------------------------------------------------------------------
-function IncMilliSecond(const AValue: TDateTime;
-  const ANumberOfMilliSeconds: Int64): TDateTime;
+function IncMilliSecond( const AValue : TDateTime; const ANumberOfMilliSeconds : Int64 ): TDateTime;
 begin
   Result := ((AValue * MSecsPerDay) + ANumberOfMilliSeconds) / MSecsPerDay;
 end;
@@ -1447,7 +1459,14 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor OWAddPinsAttribute.Create( AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass );
+constructor OWAddPinsAttribute.Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass );
+begin
+  inherited Create( AName, AValue );
+  StartIndex := AStartIndex;
+  Count := ACount;
+end;
+//---------------------------------------------------------------------------
+constructor OWAddPinsAttribute.Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; const AValue : IAtttributeParameterInfo );
 begin
   inherited Create( AName, AValue );
   StartIndex := AStartIndex;
@@ -1499,7 +1518,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStdStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent; AOnPinDispatchEvent : TOWPinDispatchEvent );
+constructor TOWStdStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FOnDisconnect := AOnDisconnect;
@@ -1548,7 +1567,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStdSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnPinDispatchEvent : TOWPinDispatchEvent );
+constructor TOWStdSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FOnPinDispatchEvent := AOnPinDispatchEvent;
@@ -1573,7 +1592,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStdMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnPinDispatchEvent : TOWPinDispatchEvent );
+constructor TOWStdMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FOnPinDispatchEvent := AOnPinDispatchEvent;
@@ -1598,7 +1617,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWBasicDispatchSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AMaxConnections : Integer = -1; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWBasicDispatchSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AMaxConnections : Integer = -1; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FDataSection := TCriticalSection.Create();
@@ -1660,7 +1679,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWManagedDispatchSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWManagedDispatchSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, -1, APinNotificationEvent );
   FOnDisconnect := AOnDisconnect;
@@ -1669,7 +1688,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWDispatchSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWDispatchSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
@@ -1686,7 +1705,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWDispatchMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWDispatchMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
@@ -1709,7 +1728,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWDispatchStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWDispatchStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock );
   FPinNotificationEvent := APinNotificationEvent;
@@ -1732,7 +1751,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWClockSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   AddType( IOWClockStream, ClockNotification, True );
@@ -1759,7 +1778,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWClockSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinNotificationEvent );
   FOnClock := AOnClock;
@@ -1805,13 +1824,13 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWTypedSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
 end;
 //---------------------------------------------------------------------------
-class function TOWTypedSinkPin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedSinkPin<T_Data>;
+class function TOWTypedSinkPin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWTypedSinkPin<T_Data>;
 begin
   Result := Create( AOnCreated, AOwnerLock, AOnDataChange, AOnPinDispatchEvent );
 end;
@@ -1855,7 +1874,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedMultiSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWTypedMultiSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
@@ -1900,13 +1919,13 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWBasicTypedStatePin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWBasicTypedStatePin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
 end;
 //---------------------------------------------------------------------------
-class function TOWBasicTypedStatePin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<T_Data>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWBasicTypedStatePin<T_Data>;
+class function TOWBasicTypedStatePin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWBasicTypedStatePin<T_Data>;
 begin
   Result := Create( AOnCreated, AOwnerLock, AOnDataChange, AOnDisconnect, AOnPinDispatchEvent );
 end;
@@ -2028,20 +2047,20 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWBasicTypedSourcePin<T_Data>.CreateEx( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; APinNotificationEvent : TOWPinNotificationEvent; AOnDisconnect : TOWPinEvent = NIL );
+constructor TOWBasicTypedSourcePin<T_Data>.CreateEx( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWPinNotificationEvent; const AOnDisconnect : TOWPinEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnDisconnect );
   FPinNotificationEvent := APinNotificationEvent;
   FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-constructor TOWBasicTypedSourcePin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWBasicTypedSourcePin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   FComparer := TComparer<T_Data>.Default;
 end;
 //---------------------------------------------------------------------------
-class function TOWBasicTypedSourcePin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWBasicTypedSourcePin<T_Data>;
+class function TOWBasicTypedSourcePin<T_Data>.CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWBasicTypedSourcePin<T_Data>;
 begin
   Result := Create( AOnCreated, AOwnerLock, AOnDisconnect, APinNotificationEvent );
 end;
@@ -2405,7 +2424,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64TimeRangedSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWInt64TimeRangedSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   AddType( IOWDateTimeStream, TimeNotification, True );
@@ -2592,7 +2611,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWInt64TimeRangedStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWInt64DateTimeValueRangeChangeEvent; AOnRangeChange : TOWInt64DateTimeRangeChangeEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWInt64TimeRangedStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWInt64DateTimeValueRangeChangeEvent; const AOnRangeChange : TOWInt64DateTimeRangeChangeEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, 0, 0, 0, NIL, NIL, AOnDisconnect, AOnPinDispatchEvent );
   FOnRangeChange := AOnRangeChange;
@@ -3003,7 +3022,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStringListStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<IStringArrayList>; AOnGetDataEvent : TOWStringListGetDataEvent = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWStringListStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<IStringArrayList>; const AOnGetDataEvent : TOWStringListGetDataEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
@@ -3130,7 +3149,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   AddType( GetTypeData(System.TypeInfo(T_Interface))^.Guid, IntNotification, True );
@@ -3285,7 +3304,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWFloatIntSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWFloatIntSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   AddType( IOWFloatStream, FloatNotification, True );
@@ -3359,7 +3378,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWFloatIntStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWDataChangeEvent<Single>; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWFloatIntStatePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<Single>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
   FOnDataChange := AOnDataChange;
@@ -4313,7 +4332,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWStdComboSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDisconnect : TOWPinEvent = NIL; APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWStdComboSourcePin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited;
   FNotifyOnChangeOnly := True;
@@ -4468,7 +4487,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedRangedSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWTypedRangedSinkPin<T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinDispatchEvent );
   FOnRangeChange := AOnRangeChange;
@@ -4557,7 +4576,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedRangedStatePin<T_Interface, T_Interface_Ranged, T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AValue : T_Data; AMin : T_Data; AMax : T_Data; AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; AOnDisconnect : TOWPinEvent = NIL; AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+constructor TOWTypedRangedStatePin<T_Interface, T_Interface_Ranged, T_Data>.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AValue : T_Data; AMin : T_Data; AMax : T_Data; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
   FMin := AMin;
@@ -4773,7 +4792,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWClockMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AOnClock : TOWClockEvent; AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
+constructor TOWClockMultiSinkPin.Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinNotificationEvent );
   FOnClock := AOnClock;
@@ -5326,10 +5345,10 @@ begin
       ]
    );
 
-  TClassManagement.RegisterInitClassDefaults(
+  GManagedDispatchSourcePinInit := TClassManagement.RegisterInitClassDefaults(
       TOWManagedDispatchSourcePin.ClassTypeInfo()
     ,
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWDispatchSourcePinClass = class of TOWManagedDispatchSourcePin;
 
@@ -5337,11 +5356,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWSourcePin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWDispatchSourcePinClass( AClass ).Create(
+              TOWDispatchSourcePinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5353,11 +5372,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWDispatchSourcePinClass( AClass ).Create(
+              TOWDispatchSourcePinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5400,7 +5419,7 @@ begin
                   var AOffset : Integer := GetFieldOffset( AGetProc );
                   if( AOffset = AField.Offset ) then
                     begin
-                    AMember.Value[ AInstance ] := TOWDispatchSourcePinClass( AClass ).CreatePathLock( APath, AProperty.Name, ALockItem.GetLock(), NIL );
+                    AMember.Value[ AInstance ] := TOWDispatchSourcePinClass( AClass.MetaclassType ).CreatePathLock( APath, AProperty.Name, ALockItem.GetLock(), NIL );
                     ACreated := True;
                     Break;
                     end;
@@ -5412,15 +5431,15 @@ begin
           end;
 
         if( not ACreated ) then
-          AMember.Value[ AInstance ] := TOWDispatchSourcePinClass( AClass ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+          AMember.Value[ AInstance ] := TOWDispatchSourcePinClass( AClass.MetaclassType ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), NIL );
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults(
+  GManagedStdStatePinInit := TClassManagement.RegisterInitClassDefaults(
       TOWStdStatePin.ClassTypeInfo()
     ,
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWStdStatePinClass = class of TOWStdStatePin;
 
@@ -5428,11 +5447,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdStatePin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdStatePinClass( AClass ).Create(
+              TOWStdStatePinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5444,11 +5463,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdStatePinClass( AClass ).Create(
+              TOWStdStatePinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5460,23 +5479,23 @@ begin
           );
 {
         if( AInstance is TComponent ) then
-          AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL, NIL )
+          AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass.MetaclassType ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL, NIL )
 
         else if( AInstance is TPersistent ) then
           begin
           if( AOwner <> NIL ) then
-            AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL, NIL )
+            AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass.MetaclassType ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL, NIL )
 
           else
-            AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL, NIL );
+            AMember.Value[ AInstance ] := TOWStdStatePinClass( AClass.MetaclassType ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL, NIL );
 
           end;
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults( TOWStdSinkPin.ClassTypeInfo(),
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+  GManagedStdSinkPinInit := TClassManagement.RegisterInitClassDefaults( TOWStdSinkPin.ClassTypeInfo(),
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWStdSinkPinClass = class of TOWStdSinkPin;
 
@@ -5484,11 +5503,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdSinkPinClass( AClass ).Create(
+              TOWStdSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5500,11 +5519,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdSinkPinClass( AClass ).Create(
+              TOWStdSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5516,23 +5535,23 @@ begin
           );
 {
         if( AInstance is TComponent ) then
-          AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
+          AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass.MetaclassType ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
 
         else if( AInstance is TPersistent ) then
           begin
           if( AOwner <> NIL ) then
-            AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
+            AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
 
           else
-            AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+            AMember.Value[ AInstance ] := TOWStdSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
 
           end;
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults( TOWStdMultiSinkPin.ClassTypeInfo(),
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+  GManagedStdMultiSinkPinInit := TClassManagement.RegisterInitClassDefaults( TOWStdMultiSinkPin.ClassTypeInfo(),
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
 
@@ -5540,11 +5559,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdMultiSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdMultiSinkPinClass( AClass ).Create(
+              TOWStdMultiSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5556,11 +5575,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdMultiSinkPinClass( AClass ).Create(
+              TOWStdMultiSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5572,23 +5591,25 @@ begin
           );
 {
         if( AInstance is TComponent ) then
-          AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
+          AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
 
         else if( AInstance is TPersistent ) then
           begin
           if( AOwner <> NIL ) then
-            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
+            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
 
           else
-            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+            AMember.Value[ AInstance ] := TOWStdMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
 
           end;
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults( TOWClockSinkPin.ClassTypeInfo(),
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+  GManagedClockSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
+      TOWClockSinkPin.ClassTypeInfo()
+    ,
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWClockSinkPinClass = class of TOWClockSinkPin;
 
@@ -5596,11 +5617,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWClockSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWClockSinkPinClass( AClass ).Create(
+              TOWClockSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5612,11 +5633,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWClockSinkPinClass( AClass ).Create(
+              TOWClockSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5628,23 +5649,25 @@ begin
           );
 {
         if( AInstance is TComponent ) then
-          AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
+          AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass.MetaclassType ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
 
         else if( AInstance is TPersistent ) then
           begin
           if( AOwner <> NIL ) then
-            AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
+            AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
 
           else
-            AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+            AMember.Value[ AInstance ] := TOWClockSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
 
           end;
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults( TOWClockMultiSinkPin.ClassTypeInfo(),
-      procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
+  GManagedClockMultiSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
+      TOWClockMultiSinkPin.ClassTypeInfo()
+    ,
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
       type
         TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
 
@@ -5652,11 +5675,11 @@ begin
         TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWClockMultiSinkPinClass( AClass ).Create(
+              TOWClockMultiSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -5668,11 +5691,11 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWClockMultiSinkPinClass( AClass ).Create(
+              TOWClockMultiSinkPinClass( AClass.MetaclassType ).Create(
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AMember.Value[ AInstance ] := APin;
+                        AOnCreated( APin );
                       end
                     ,
                       APath, AName
@@ -5684,363 +5707,454 @@ begin
           );
 {
         if( AInstance is TComponent ) then
-          AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
+          AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TComponent( AInstance ), TComponent( AInstance ), ALockItem.GetLock(), NIL )
 
         else if( AInstance is TPersistent ) then
           begin
           if( AOwner <> NIL ) then
-            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
+            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AOwner ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL )
 
           else
-            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+            AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateLock( TPersistent( AInstance ).GetOwnerComponent(), TPersistent( AInstance ), ALockItem.GetLock(), NIL );
 
           end;
 }
       end
     );
 
-  TClassManagement.RegisterInitClassDefaults(
+  GManagedPinListOwnerDefault := TClassManagement.RegisterInitClassDefaults(
       TOWPinListOwner.ClassTypeInfo()
     ,
-        procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
-        begin
-          AMember.AccessAttributes.ForLast<OWAutoManagePinListOwnerAttribute>(
-              procedure( AAttribute : OWAutoManagePinListOwnerAttribute )
-              type
-                TOWPinListOwnerClass = class of TOWPinListOwner;
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
+      type
+        TOWPinListOwnerClass = class of TOWPinListOwner;
 
-              var
-                APinType        : ITypeInfo; // Keep here for proper capture!
+      var
+        APinType        : ITypeInfo; // Keep here for proper capture!
 //                AComponent      : TComponent;
-                APinCategories  : TOWPinCategories;
+        APinCategories  : TOWPinCategories;
 
-              begin
-                APinType := AAttribute.PinClass.ClassTypeInfo();
-                if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
-                  APinCategories := [pcSink]
+      begin
+        var AAttributes : IAttributesInfo := TAttributesInfo.CreateCopy( AMember.CustomAttributes );
 
-                else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
-                  APinCategories := [pcSource]
+        AAttributes.Append( AMember.TypeInfo.CustomAttributes );
 
-                else
-                  APinCategories := [pcState];
+        var AFieldInfo : IFieldInfo;
+        if( TInterface.IfSupports<IFieldInfo>( AMember, AFieldInfo )) then
+          for var AProperty in AInstance.TypeInfo().SingleProperties do
+            begin
+            var AField : IFieldInfo;
+            if( AProperty.GetStorageField( AField )) then
+              if( AField.Offset = AFieldInfo.Offset ) then
+                begin
+                AAttributes.Append( AProperty.CustomAttributes );
+                AAttributes.Append( AProperty.TypeInfo.CustomAttributes );
+                Break;
+                end;
 
-                TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
-                    procedure( AComponent : TComponent )
-                    begin
-                      TOWPinListOwnerClass( AClass ).CreateEx(
-                          TOWPinList.PinListCustomOwnerSetter(
-                              procedure( APinList : TOWPinList )
-                              begin
-                                AMember.Value[ AInstance ] := APinList;
-                              end
-                            ,
-                              AComponent, TPersistent( AInstance )
-                            )
-                        ,
-                          ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max
-                        ,
-                          function( APinList : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin
+            end;
+
+        for var AAttributeItem in AAttributes do
+          begin
+          if( AAttributeItem is OWAutoManagePinListOwnerAttribute ) then
+            begin
+            var AAttribute := OWAutoManagePinListOwnerAttribute( AAttributeItem );
+            APinType := AAttribute.PinClass.ClassTypeInfo();
+            if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
+              APinCategories := [pcSink]
+
+            else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
+              APinCategories := [pcSource]
+
+            else
+              APinCategories := [pcState];
+
+            TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+                procedure( AComponent : TComponent )
+                begin
+                  TOWPinListOwnerClass( AClass.MetaclassType ).CreateEx(
+                      TOWPinList.PinListCustomOwnerSetter(
+                          procedure( APinList : TOWPinList )
                           begin
-                            Result := CreatePinListItem( AOnCreated, AAttribute.PinClass, APinType, ALockItem );
+                            AOnCreated( APinList );
                           end
                         ,
-                          NIL
-                        );
-//                      AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), NIL );
-                    end
-                  ,
-                    procedure( const APath : IPropertyElements; const AName : String )
-                    begin
-                      TOWPinListOwnerClass( AClass ).CreateEx(
-                          TOWPinList.PinListCustomPathSetter(
-                              procedure( APinList : TOWPinList )
-                              begin
-                                AMember.Value[ AInstance ] := APinList;
-                              end
-                            ,
-                              APath, AName )
-                        ,
-                          ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max
-                        ,
-                          function( APinList : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin
+                          AComponent, TPersistent( AInstance )
+                        )
+                    ,
+                      ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max
+                    ,
+                      function( APinList : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin
+                      begin
+                        Result := CreatePinListItem( AOnCreated, AAttribute.PinClass, APinType, ALockItem );
+                      end
+                    ,
+                      NIL
+                    );
+//                      AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), NIL );
+                end
+              ,
+                procedure( const APath : IPropertyElements; const AName : String )
+                begin
+                  TOWPinListOwnerClass( AClass.MetaclassType ).CreateEx(
+                      TOWPinList.PinListCustomPathSetter(
+                          procedure( APinList : TOWPinList )
                           begin
-                            Result := CreatePinListItem( AOnCreated, AAttribute.PinClass, APinType, ALockItem );
+                            AOnCreated( APinList );
                           end
                         ,
-                          NIL
-                        );
-//                      AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass ).CreatePathLock( APath, AName, ALockItem.GetLock(), NIL );
-                    end
-                  );
+                          APath, AName )
+                    ,
+                      ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max
+                    ,
+                      function( APinList : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin
+                      begin
+                        Result := CreatePinListItem( AOnCreated, AAttribute.PinClass, APinType, ALockItem );
+                      end
+                    ,
+                      NIL
+                    );
+//                      AMember.Value[ AInstance ] := TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreatePathLock( APath, AName, ALockItem.GetLock(), NIL );
+                end
+              );
 
 {
-                if( AInstance is TComponent ) then
-                  AComponent := TComponent( AInstance )
+            if( AInstance is TComponent ) then
+              AComponent := TComponent( AInstance )
 
-                else if( AInstance is TPersistent ) then
-                  begin
-                  if( AOwner <> NIL ) then
-                    AComponent := TPersistent( AOwner ).GetOwnerComponent()
+            else if( AInstance is TPersistent ) then
+              begin
+              if( AOwner <> NIL ) then
+                AComponent := TPersistent( AOwner ).GetOwnerComponent()
 
-                  else
-                    AComponent := TPersistent( AInstance ).GetOwnerComponent();
+              else
+                AComponent := TPersistent( AInstance ).GetOwnerComponent();
 
-                  end
-
-                else
-                  AComponent := NIL;
-
-                APinType := AAttribute.PinClass.ClassTypeInfo();
-                if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
-                  APinCategories := [pcSink]
-
-                else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
-                  APinCategories := [pcSource]
-
-                else
-                  APinCategories := [pcState];
-
-                AMember.Value[ AInstance ] := TOWPinListOwnerClass( AClass ).CreateLockEx( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max,
-                  function( APinListOwner : TOWPinList ) : TOWPin
-                  begin
-                    Result := CreatePinListItem( AComponent, TPersistent( AInstance ), AAttribute.PinClass, APinType, ALockItem );
-                  end
-                ,
-                  NIL
-                );
-}
               end
-            )
 
-        end
-      );
+            else
+              AComponent := NIL;
 
-  TClassManagement.RegisterInitClassDefaults(
+            APinType := AAttribute.PinClass.ClassTypeInfo();
+            if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
+              APinCategories := [pcSink]
+
+            else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
+              APinCategories := [pcSource]
+
+            else
+              APinCategories := [pcState];
+
+            AMember.Value[ AInstance ] := TOWPinListOwnerClass( AClass.MetaclassType ).CreateLockEx( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), AAttribute.Count, APinCategories, AAttribute.Min, AAttribute.Max,
+              function( APinListOwner : TOWPinList ) : TOWPin
+              begin
+                Result := CreatePinListItem( AComponent, TPersistent( AInstance ), AAttribute.PinClass, APinType, ALockItem );
+              end
+            ,
+              NIL
+            );
+}
+          end;
+        end;
+      end
+    );
+
+  GManagedPinListDefault := TClassManagement.RegisterInitClassDefaults(
       TOWPinList.ClassTypeInfo()
     ,
-        procedure( const AOwner : TObject; const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ALockItem : ILockItem )
-        type
-          TOWPinListClass = class of TOWPinList;
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const ALockItem : ILockItem )
+      type
+        TOWPinListClass = class of TOWPinList;
 
-        begin
-          if( not AMember.AccessAttributes.ForLast<OWAutoManagePinListAttribute>(  True,
-              procedure( AAttribute : OWAutoManagePinListAttribute )
-              var
+      begin
+        if( not AMember.AccessAttributes.ForLast<OWAutoManagePinListAttribute>(  True,
+            procedure( AAttribute : OWAutoManagePinListAttribute )
+            var
 //                AComponent      : TComponent;
-                APinCategories  : TOWPinCategories;
+              APinCategories  : TOWPinCategories;
 
-              begin
-                var APinType := AAttribute.PinClass.ClassTypeInfo();
-                if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
-                  APinCategories := [pcSink]
+            begin
+              var APinType := AAttribute.PinClass.ClassTypeInfo();
+              if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
+                APinCategories := [pcSink]
 
-                else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
-                  APinCategories := [pcSource]
+              else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
+                APinCategories := [pcSource]
 
-                else
-                  APinCategories := [pcState];
+              else
+                APinCategories := [pcState];
 
-                TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
-                    procedure( AComponent : TComponent )
-                    begin
-                      TOWPinListClass( AClass ).Create(
-                          TOWPinList.PinListCustomOwnerSetter(
-                              procedure( APinList : TOWPinList )
-                              begin
-                                AMember.Value[ AInstance ] := APinList;
-                              end
-                            ,
-                              AComponent, TPersistent( AInstance )
-                            )
-                        ,
-                          ALockItem.GetLock(), APinCategories, AAttribute.IsOwner
-                        );
-
-                    end
-                  ,
-                    procedure( const APath : IPropertyElements; const AName : String )
-                    begin
-                      TOWPinListClass( AClass ).Create(
-                          TOWPinList.PinListCustomPathSetter(
-                              procedure( APinList : TOWPinList )
-                              begin
-                                AMember.Value[ AInstance ] := APinList;
-                              end
-                            ,
-                              APath, AName )
-                        ,
-                          ALockItem.GetLock(), APinCategories, AAttribute.IsOwner
-                        );
-
-                    end
-                  );
-{
-                if( AInstance is TComponent ) then
-                  AComponent := TComponent( AInstance )
-
-                else if( AInstance is TPersistent ) then
+              TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+                  procedure( AComponent : TComponent )
                   begin
-                  if( AOwner <> NIL ) then
-                    AComponent := TPersistent( AOwner ).GetOwnerComponent()
-
-                  else
-                    AComponent := TPersistent( AInstance ).GetOwnerComponent();
+                    TOWPinListClass( AClass.MetaclassType ).Create(
+                        TOWPinList.PinListCustomOwnerSetter(
+                            procedure( APinList : TOWPinList )
+                            begin
+                              AOnCreated( APinList );
+                            end
+                          ,
+                            AComponent, TPersistent( AInstance )
+                          )
+                      ,
+                        ALockItem.GetLock(), APinCategories, AAttribute.IsOwner
+                      );
 
                   end
+                ,
+                  procedure( const APath : IPropertyElements; const AName : String )
+                  begin
+                    TOWPinListClass( AClass.MetaclassType ).Create(
+                        TOWPinList.PinListCustomPathSetter(
+                            procedure( APinList : TOWPinList )
+                            begin
+                              AOnCreated( APinList );
+                            end
+                          ,
+                            APath, AName )
+                      ,
+                        ALockItem.GetLock(), APinCategories, AAttribute.IsOwner
+                      );
+
+                  end
+                );
+{
+              if( AInstance is TComponent ) then
+                AComponent := TComponent( AInstance )
+
+              else if( AInstance is TPersistent ) then
+                begin
+                if( AOwner <> NIL ) then
+                  AComponent := TPersistent( AOwner ).GetOwnerComponent()
 
                 else
-                  AComponent := NIL;
+                  AComponent := TPersistent( AInstance ).GetOwnerComponent();
 
-                AMember.Value[ AInstance ] := TOWPinListClass( AClass ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), APinCategories, AAttribute.IsOwner );
+                end
+
+              else
+                AComponent := NIL;
+
+              AMember.Value[ AInstance ] := TOWPinListClass( AClass.MetaclassType ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), APinCategories, AAttribute.IsOwner );
 }
-              end
-            )) then
-              AMember.AccessAttributes.ForLast<AutoManageAttribute>( True,
-                  procedure( AAttribute : AutoManageAttribute )
-                  var
+            end
+          )) then
+            AMember.AccessAttributes.ForLast<AutoManageAttribute>( True,
+                procedure( AAttribute : AutoManageAttribute )
+                var
 //                    AComponent      : TComponent;
-                    APinCategories  : TOWPinCategories;
+                  APinCategories  : TOWPinCategories;
 
-                  begin
-                    APinCategories := [];
+                begin
+                  APinCategories := [];
 
-                    AMember.AccessAttributes.ForEach<OWPinListCategoryAttribute>( True,
-                        procedure( AAttribute : OWPinListCategoryAttribute )
-                        begin
-                          APinCategories := APinCategories + [ AAttribute.Value ];
-                        end
-                      );
+                  var AAttributes : IAttributesInfo := TAttributesInfo.CreateCopy( AMember.CustomAttributes );
 
-                    AMember.AccessAttributes.ForEach<OWAddPinAttribute>( True,
-                        procedure( AAttribute : OWAddPinAttribute )
-                        begin
-                          if( AAttribute.Value.ClassTypeInfo().InheritsFrom( ASinkPinTypeInfo )) then
-                            APinCategories := APinCategories + [ pcSink ]
+                  AAttributes.Append( AMember.TypeInfo.CustomAttributes );
 
-                          else if( AAttribute.Value.ClassTypeInfo().InheritsFrom( ASourcePinTypeInfo )) then
-                            APinCategories := APinCategories + [ pcSource ]
-
-                          else
-                            APinCategories := APinCategories + [ pcState ];
-
-                        end
-                      );
-
-                    var APinList : TOWPinList := NIL;
-                    TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
-                        procedure( AComponent : TComponent )
-                        begin
-                          APinList := TOWPinListClass( AClass ).Create(
-                              TOWPinList.PinListCustomOwnerSetter(
-                                  procedure( APinList : TOWPinList )
-                                  begin
-                                    AMember.Value[ AInstance ] := APinList;
-                                  end
-                                ,
-                                  AComponent, TPersistent( AInstance )
-                                )
-                            ,
-                              ALockItem.GetLock(), APinCategories, True
-                            );
-
-                        end
-                      ,
-                        procedure( const APath : IPropertyElements; const AName : String )
-                        begin
-                          APinList := TOWPinListClass( AClass ).Create(
-                              TOWPinList.PinListCustomPathSetter(
-                                  procedure( APinList : TOWPinList )
-                                  begin
-                                    AMember.Value[ AInstance ] := APinList;
-                                  end
-                                ,
-                                  APath, AName )
-                            ,
-                              ALockItem.GetLock(), APinCategories, True
-                            );
-
-                        end
-                      );
-
-{
-                    AComponent := APinList.Owner;
-                    if( AInstance is TComponent ) then
-                      AComponent := TComponent( AInstance )
-
-                    else if( AInstance is TPersistent ) then
+                  var AFieldInfo : IFieldInfo;
+                  if( TInterface.IfSupports<IFieldInfo>( AMember, AFieldInfo )) then
+                    for var AProperty in AInstance.TypeInfo().SingleProperties do
                       begin
-                      if( AOwner <> NIL ) then
-                        AComponent := TPersistent( AOwner ).GetOwnerComponent()
+                      var AField : IFieldInfo;
+                      if( AProperty.GetStorageField( AField )) then
+                        if( AField.Offset = AFieldInfo.Offset ) then
+                          begin
+                          AAttributes.Append( AProperty.CustomAttributes );
+                          AAttributes.Append( AProperty.TypeInfo.CustomAttributes );
+                          Break;
+                          end;
+
+                      end;
+
+                  for var AAttributeItem in AAttributes do
+                    begin
+                    if( AAttributeItem is OWPinListCategoryAttribute ) then
+                      APinCategories := APinCategories + [ OWPinListCategoryAttribute( AAttributeItem ).Value ];
+
+                    if( AAttributeItem is OWAddPinAttribute ) then
+                      begin
+                      var AValueTypeInfo := OWAddPinAttribute( AAttributeItem ).Value as IClassTypeInfo;
+                      if( AValueTypeInfo.InheritsFrom( ASinkPinTypeInfo )) then
+                        APinCategories := APinCategories + [ pcSink ]
+
+                      else if( AValueTypeInfo.InheritsFrom( ASourcePinTypeInfo )) then
+                        APinCategories := APinCategories + [ pcSource ]
 
                       else
-                        AComponent := TPersistent( AInstance ).GetOwnerComponent();
+                        APinCategories := APinCategories + [ pcState ];
+
+                      end;
+                    end;
+
+                  var APinList : TOWPinList := NIL;
+                  TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+                      procedure( AComponent : TComponent )
+                      begin
+                        APinList := TOWPinListClass( AClass.MetaclassType ).Create(
+                            TOWPinList.PinListCustomOwnerSetter(
+                                procedure( APinList : TOWPinList )
+                                begin
+                                  AOnCreated( APinList );
+                                end
+                              ,
+                                AComponent, TPersistent( AInstance )
+                              )
+                          ,
+                            ALockItem.GetLock(), APinCategories, True
+                          );
 
                       end
+                    ,
+                      procedure( const APath : IPropertyElements; const AName : String )
+                      begin
+                        APinList := TOWPinListClass( AClass.MetaclassType ).Create(
+                            TOWPinList.PinListCustomPathSetter(
+                                procedure( APinList : TOWPinList )
+                                begin
+                                  AOnCreated( APinList );
+                                end
+                              ,
+                                APath, AName )
+                          ,
+                            ALockItem.GetLock(), APinCategories, True
+                          );
+
+                      end
+                    );
+
+{
+                  AComponent := APinList.Owner;
+                  if( AInstance is TComponent ) then
+                    AComponent := TComponent( AInstance )
+
+                  else if( AInstance is TPersistent ) then
+                    begin
+                    if( AOwner <> NIL ) then
+                      AComponent := TPersistent( AOwner ).GetOwnerComponent()
 
                     else
-                      AComponent := NIL;
+                      AComponent := TPersistent( AInstance ).GetOwnerComponent();
+
+                    end
+
+                  else
+                    AComponent := NIL;
 
 //                    if( APinCategories = [] ) then
 //                      APinCategories := [ pcState ];
 
-                    var APinList := TOWPinListClass( AClass ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), APinCategories, True );
+                  var APinList := TOWPinListClass( AClass.MetaclassType ).CreateLock( AComponent, TPersistent( AInstance ), ALockItem.GetLock(), APinCategories, True );
 }
-                    AMember.Value[ AInstance ] := APinList;
+                  AOnCreated( APinList );
 
-                    AMember.AccessAttributes.ForEach<OWAddPinAttribute>( True,
-                        procedure( AAttribute : OWAddPinAttribute )
-                        var
-                          AItem       : TOWBasicPin;
-                          AOnCreated  : TProc<TOWPin>;
+                  for var AAttributeItem in AAttributes do
+                    begin
+                    if( AAttributeItem is OWAddPinAttribute ) then
+                      begin
+                      var AValueTypeInfo := OWAddPinAttribute( AAttributeItem ).Value as IClassTypeInfo;
 
+                      if( AAttributeItem is OWAddPinsAttribute ) then
                         begin
-                          if( AAttribute is OWAddPinsAttribute ) then
-                            begin
-                            for var I := OWAddPinsAttribute( AAttribute ).StartIndex to OWAddPinsAttribute( AAttribute ).StartIndex + OWAddPinsAttribute( AAttribute ).Count - 1 do
-                              begin
-                              if( AAttribute.Name <> '' ) then
-                                AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AAttribute.Name + I.ToString() )
-
-                              else
-                                AOnCreated := TOWPin.PinListAddSetter( APinList );
-
-                              if( not AAttribute.CreatePin( AOnCreated, ALockItem, AItem ) ) then
-                                CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
-//                                AItem := CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
-
-                              end;
-                            end
+                        for var I := OWAddPinsAttribute( AAttributeItem ).StartIndex to OWAddPinsAttribute( AAttributeItem ).StartIndex + OWAddPinsAttribute( AAttributeItem ).Count - 1 do
+                          begin
+                          var AName := OWAddPinAttribute( AAttributeItem ).Name;
+                          var AOnCreated  : TProc<TOWPin>;
+                          if( AName <> '' ) then
+                            AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AName + I.ToString() )
 
                           else
+                            AOnCreated := TOWPin.PinListAddSetter( APinList );
+
+                          var AItem : TOWBasicPin;
+                          if( not OWAddPinsAttribute( AAttributeItem ).CreatePin( AOnCreated, ALockItem, AItem ) ) then
+                            CreatePinListItem( AOnCreated, AValueTypeInfo.MetaclassType, AValueTypeInfo, ALockItem );
+
+//                                AItem := CreatePinListItem( AOnCreated, AAttributeItem.Value, AAttributeItem.Value.ClassTypeInfo(), ALockItem );
+
+                          end;
+                        end
+
+                      else
+                        begin
+                        var AOnCreated  : TProc<TOWPin>;
+                        var AName := OWAddPinAttribute( AAttributeItem ).Name;
+                        if( AName <> '' ) then
+                          AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AName )
+
+                        else
+                          AOnCreated := TOWPin.PinListAddSetter( APinList );
+
+                        var AItem : TOWBasicPin;
+                        if( not OWAddPinsAttribute( AAttributeItem ).CreatePin( AOnCreated, ALockItem, AItem ) ) then
+                          CreatePinListItem( AOnCreated, AValueTypeInfo.MetaclassType, AValueTypeInfo, ALockItem );
+//                              AItem := CreatePinListItem( AOnCreated, AAttributeItem.Value, AAttributeItem.Value.ClassTypeInfo(), ALockItem );
+
+{
+                        if( AAttributeItem.Name <> '' ) then
+                          APinList.AddNamed( AItem, AAttributeItem.Name )
+
+                        else
+                          APinList.Add( AItem );
+}
+                        end;
+                      end;
+                    end;
+
+(*
+                  AMember.AccessAttributes.ForEach<OWAddPinAttribute>( True,
+                      procedure( AAttribute : OWAddPinAttribute )
+                      var
+                        AItem       : TOWBasicPin;
+                        AOnCreated  : TProc<TOWPin>;
+
+                      begin
+                        if( AAttribute is OWAddPinsAttribute ) then
+                          begin
+                          for var I := OWAddPinsAttribute( AAttribute ).StartIndex to OWAddPinsAttribute( AAttribute ).StartIndex + OWAddPinsAttribute( AAttribute ).Count - 1 do
                             begin
                             if( AAttribute.Name <> '' ) then
-                              AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AAttribute.Name )
+                              AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AAttribute.Name + I.ToString() )
 
                             else
                               AOnCreated := TOWPin.PinListAddSetter( APinList );
 
                             if( not AAttribute.CreatePin( AOnCreated, ALockItem, AItem ) ) then
                               CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
+//                                AItem := CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
+
+                            end;
+                          end
+
+                        else
+                          begin
+                          if( AAttribute.Name <> '' ) then
+                            AOnCreated := TOWPin.PinListAddNamedSetter( APinList, AAttribute.Name )
+
+                          else
+                            AOnCreated := TOWPin.PinListAddSetter( APinList );
+
+                          if( not AAttribute.CreatePin( AOnCreated, ALockItem, AItem ) ) then
+                            CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
 //                              AItem := CreatePinListItem( AOnCreated, AAttribute.Value, AAttribute.Value.ClassTypeInfo(), ALockItem );
 
 {
-                            if( AAttribute.Name <> '' ) then
-                              APinList.AddNamed( AItem, AAttribute.Name )
+                          if( AAttribute.Name <> '' ) then
+                            APinList.AddNamed( AItem, AAttribute.Name )
 
-                            else
-                              APinList.Add( AItem );
+                          else
+                            APinList.Add( AItem );
 }
-                            end;
+                          end;
 
-                        end
-                      );
+                      end
+                    );
+*)
+                end
+              );
 
-                  end
-                );
-
-        end
-      );
+      end
+    );
 
 end;
 //---------------------------------------------------------------------------
@@ -6049,6 +6163,17 @@ end;
 //---------------------------------------------------------------------------
 initialization
   InitializationSection();
+
+finalization
+  TClassManagement.UnregisterInitClassDefaults( GManagedDispatchSourcePinInit );
+  TClassManagement.UnregisterInitClassDefaults( GManagedStdStatePinInit );
+  TClassManagement.UnregisterInitClassDefaults( GManagedStdSinkPinInit );
+  TClassManagement.UnregisterInitClassDefaults( GManagedStdMultiSinkPinInit );
+
+  TClassManagement.UnregisterInitClassDefaults( GManagedClockSinkPinDefault );
+  TClassManagement.UnregisterInitClassDefaults( GManagedClockMultiSinkPinDefault );
+  TClassManagement.UnregisterInitClassDefaults( GManagedPinListOwnerDefault );
+  TClassManagement.UnregisterInitClassDefaults( GManagedPinListDefault );
 
 {$WARN SYMBOL_DEPRECATED OFF}
 
