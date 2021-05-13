@@ -1,0 +1,55 @@
+package OpenWireDsn;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE __DELPHI_DESIGN__}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'OpenWire Project (Design Time)'}
+{$LIBSUFFIX '270'}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  vclx,
+  Mitov_Runtime,
+  Mitov_VCL_Runtime,
+  OpenWirePkg,
+  Mitov_Delphi_Design,
+  designide;
+
+contains
+  OpenWirePinEditors in '..\OpenWirePinEditors.pas' {OWPinEditorForm},
+  OWStateEditors in '..\OWStateEditors.pas' {OWStatePinForm},
+  OWAboutFormUnit in '..\OWAboutFormUnit.pas' {OWAboutForm},
+  OWDesignTypes in '..\OWDesignTypes.pas',
+  OWAfterPinSelectFormUnit in '..\OWAfterPinSelectFormUnit.pas' {OWAfterPinSelectForm},
+  OpenWire.Delphi.PropertyEditors in '..\OpenWire.Delphi.PropertyEditors.pas',
+  OpenWire.Design in '..\OpenWire.Design.pas';
+
+end.
+
+
+
