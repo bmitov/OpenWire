@@ -14,7 +14,6 @@ object OWAfterPinSelectForm: TOWAfterPinSelectForm
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object ListBox: TListBox
     Left = 0

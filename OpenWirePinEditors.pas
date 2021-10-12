@@ -57,24 +57,28 @@ type
     SourcesImageList: TImageList;
     Panel1: TPanel;
     Panel2: TPanel;
-    Panel3: TPanel;
-    ListView: TListView;
-    Panel4: TPanel;
-    FormsComboBox: TComboBox;
-    Label1: TLabel;
-    Panel5: TPanel;
-    LinksCountLabel: TLabel;
-    StaticLabel: TLabel;
     SinksImageList: TImageList;
     AboutPanel: TPanel;
     Image1: TImage;
-    AllPinsCheckBox: TCheckBox;
     LinkAllButton: TBitBtn;
     UnlinkAllButton: TBitBtn;
     RestoreButton: TBitBtn;
     OkButton: TBitBtn;
     CancelButton: TBitBtn;
     AfterPinButton: TBitBtn;
+    PageControl1: TPageControl;
+    TabSheet1: TTabSheet;
+    Panel3: TPanel;
+    ListView: TListView;
+    Panel4: TPanel;
+    Label1: TLabel;
+    FormsComboBox: TComboBox;
+    Panel5: TPanel;
+    LinksCountLabel: TLabel;
+    StaticLabel: TLabel;
+    AllPinsCheckBox: TCheckBox;
+    TabSheet2: TTabSheet;
+    DataTypesListView: TListView;
     procedure LinkAllButtonClick(Sender: TObject);
     procedure UnlinkAllButtonClick(Sender: TObject);
     procedure RestoreButtonClick(Sender: TObject);
@@ -97,8 +101,10 @@ type
     procedure ListViewKeyPress(Sender: TObject; var Key: Char);
     procedure ListViewDeletion(Sender: TObject; Item: TListItem);
     procedure AfterPinButtonClick(Sender: TObject);
+    procedure DataTypesListViewColumnClick(Sender: TObject;
+      Column: TListColumn);
   private
-    { Private declarations }
+    procedure PopulateDataTypes();
     procedure UpdateLinksCount();
     procedure PopulateAll();
     procedure PopulateAllEntries();
@@ -129,12 +135,13 @@ type
   public
     function ExecuteForSource( ADesigner : IDesigner; ASourcePin : TOWSourcePin ): Integer;
     function ExecuteForSink( ADesigner : IDesigner; ASinkPin : TOWSinkPin ): Integer;
-    function ExecuteForEventSink( ADesigner : IDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
+    function ExecuteForMultiSink( ADesigner : IDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
 
   private
-    FColumnToSort : Integer;
-    FDirection    : Boolean;
-    FAllSelected  : Boolean;
+    FColumnToSort         : Integer;
+    FDataTypeColumnToSort : Integer;
+    FDirection            : Boolean;
+    FAllSelected          : Boolean;
 
   public
     function  GetListItems() : TListItems;
@@ -681,7 +688,7 @@ begin
     Exit;
 
   try
-    if( GOWPinEditorForm.ExecuteForEventSink( ADesigner, AMultiSinkPin ) = mrOk ) then
+    if( GOWPinEditorForm.ExecuteForMultiSink( ADesigner, AMultiSinkPin ) = mrOk ) then
       begin
       for var I : Integer := 0 to GOWPinEditorForm.Items.Count - 1 do
         begin
@@ -1388,11 +1395,11 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.PopulateSingleFormInt( ACurrentRoot : TComponent; ARootComponent : TComponent; AOnlyConnected : Boolean; AFullPath : Boolean; AFilterPins : Boolean );
 var
-  ACollection     : IArrayPairList<String, TOWBasicPin>;
-  APair           : TPair<String, TOWBasicPin>;
-  AStr            : String;
-  ALinkType       : String;
-  APinStr         : String;
+  ACollection : IArrayPairList<String, TOWBasicPin>;
+  APair       : TPair<String, TOWBasicPin>;
+  AStr        : String;
+  ALinkType   : String;
+  APinStr     : String;
 
 begin
   Items.BeginUpdate();
@@ -1702,6 +1709,7 @@ function TOWPinEditorForm.ExecuteForSource( ADesigner : IDesigner; ASourcePin : 
 begin
   Designer := ADesigner;
   FPin := ASourcePin;
+  PopulateDataTypes();
   FSourcePin := ASourcePin;
   FSinkPin := NIL;
   FMultiSinkPin := NIL;
@@ -1724,6 +1732,7 @@ function  TOWPinEditorForm.ExecuteForSink( ADesigner : IDesigner; ASinkPin : TOW
 begin
   Designer := ADesigner;
   FPin := ASinkPin;
+  PopulateDataTypes();
   FSinkPin := ASinkPin;
   FSourcePin := NIL;
   FMultiSinkPin := NIL;
@@ -1742,10 +1751,11 @@ begin
   Result := ShowModal();
 end;
 //---------------------------------------------------------------------------
-function TOWPinEditorForm.ExecuteForEventSink( ADesigner : IDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
+function TOWPinEditorForm.ExecuteForMultiSink( ADesigner : IDesigner; AMultiSinkPin : TOWMultiSinkPin ): Integer;
 begin
   Designer := ADesigner;
   FPin := AMultiSinkPin;
+  PopulateDataTypes();
   FMultiSinkPin := AMultiSinkPin;
   FSinkPin := NIL;
   FSourcePin := NIL;
@@ -1762,6 +1772,38 @@ begin
   ListView.StateImages := SourcesImageList;
   OWLinkAwaitsLinkingAllForms();
   Result := ShowModal();
+end;
+//---------------------------------------------------------------------------
+procedure TOWPinEditorForm.PopulateDataTypes();
+begin
+  DataTypesListView.Items.BeginUpdate();
+  try
+    DataTypesListView.Items.Clear();
+    var AList := FPin.GetStreamDataList();
+    for var I := 0 to AList.Count - 1 do
+      begin
+      var AItem := AList[ I ];
+      var AListItem := DataTypesListView.Items.Add();
+      AListItem.Caption := I.ToString();
+      AListItem.ImageIndex := -1;
+
+      AListItem.SubItems.Add( OWGetDebugStreamTypeFromID( AItem.ID ));
+
+      if( AItem.Sends and AItem.Accepts ) then
+        AListItem.SubItems.Add( 'Sends/Accepts' )
+
+      else if( AItem.Sends ) then
+        AListItem.SubItems.Add( 'Sends' )
+
+      else if( AItem.Accepts ) then
+        AListItem.SubItems.Add( 'Accepts' );
+
+      end;
+
+  finally
+    DataTypesListView.Items.EndUpdate();
+    end;
+
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.UpdateLinksCount();
@@ -1784,6 +1826,25 @@ end;
 procedure TOWPinEditorForm.ClearData();
 begin
   ListView.Items.Clear();
+end;
+//---------------------------------------------------------------------------
+procedure TOWPinEditorForm.DataTypesListViewColumnClick(Sender: TObject;
+  Column: TListColumn);
+begin
+  DataTypesListView.Columns[ FDataTypeColumnToSort ].ImageIndex := -1;
+
+  if( FDataTypeColumnToSort = Column.Index ) then
+    FDirection := not FDirection
+
+  else
+    begin
+    FDirection := True;
+    FDataTypeColumnToSort := Column.Index;
+    end;
+
+  TCustomListView(Sender).AlphaSort();
+
+  DataTypesListView.Columns[ FDataTypeColumnToSort].ImageIndex := Integer( not FDirection );
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinEditorForm.ListViewChange(Sender: TObject; Item: TListItem;

@@ -4,7 +4,7 @@ object OWPinEditorForm: TOWPinEditorForm
   HelpContext = 11
   Caption = 'Connections'
   ClientHeight = 321
-  ClientWidth = 663
+  ClientWidth = 656
   Color = clBtnFace
   Constraints.MinHeight = 302
   Constraints.MinWidth = 320
@@ -19,10 +19,9 @@ object OWPinEditorForm: TOWPinEditorForm
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
-    Left = 578
+    Left = 571
     Top = 0
     Width = 85
     Height = 321
@@ -330,119 +329,171 @@ object OWPinEditorForm: TOWPinEditorForm
       OnClick = AfterPinButtonClick
     end
   end
-  object Panel3: TPanel
+  object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 578
+    Width = 571
     Height = 321
+    ActivePage = TabSheet1
     Align = alClient
-    BevelOuter = bvNone
     TabOrder = 1
-    object ListView: TListView
-      Left = 0
-      Top = 29
-      Width = 578
-      Height = 273
-      Align = alClient
-      Columns = <
-        item
-          Caption = 'Sink pin'
-          ImageIndex = 0
-          Width = 100
-        end
-        item
-          Caption = 'Component'
-          Width = 130
-        end
-        item
-          Caption = 'Connected to'
-          Width = 150
-        end
-        item
-          Caption = 'After Pin'
-          Width = 100
-        end
-        item
-          AutoSize = True
-          Caption = 'Connection Type'
-        end>
-      GridLines = True
-      HideSelection = False
-      ReadOnly = True
-      RowSelect = True
-      ShowWorkAreas = True
-      SmallImages = ImageList1
-      SortType = stText
-      StateImages = SourcesImageList
-      TabOrder = 0
-      ViewStyle = vsReport
-      OnChange = ListViewChange
-      OnColumnClick = ListViewColumnClick
-      OnCompare = ListViewCompare
-      OnDeletion = ListViewDeletion
-      OnKeyPress = ListViewKeyPress
-      OnMouseDown = ListViewMouseDown
-    end
-    object Panel4: TPanel
-      Left = 0
-      Top = 0
-      Width = 578
-      Height = 29
-      Align = alTop
-      BevelOuter = bvNone
-      Caption = 'Panel4'
-      TabOrder = 1
-      DesignSize = (
-        578
-        29)
-      object Label1: TLabel
-        Left = 6
-        Top = 8
-        Width = 29
-        Height = 13
-        Caption = 'Form :'
-      end
-      object FormsComboBox: TComboBox
-        Left = 37
-        Top = 4
-        Width = 535
-        Height = 21
-        Style = csDropDownList
-        Anchors = [akLeft, akTop, akRight]
+    object TabSheet1: TTabSheet
+      Caption = 'Connections'
+      object Panel3: TPanel
+        Left = 0
+        Top = 0
+        Width = 563
+        Height = 293
+        Align = alClient
+        BevelOuter = bvNone
         TabOrder = 0
-        OnChange = FormsComboBoxChange
+        object ListView: TListView
+          Left = 0
+          Top = 29
+          Width = 563
+          Height = 245
+          Align = alClient
+          Columns = <
+            item
+              Caption = 'Sink pin'
+              ImageIndex = 0
+              Width = 100
+            end
+            item
+              Caption = 'Component'
+              Width = 130
+            end
+            item
+              Caption = 'Connected to'
+              Width = 150
+            end
+            item
+              Caption = 'After Pin'
+              Width = 100
+            end
+            item
+              AutoSize = True
+              Caption = 'Connection Type'
+            end>
+          GridLines = True
+          HideSelection = False
+          ReadOnly = True
+          RowSelect = True
+          ShowWorkAreas = True
+          SmallImages = ImageList1
+          SortType = stText
+          StateImages = SourcesImageList
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnChange = ListViewChange
+          OnColumnClick = ListViewColumnClick
+          OnCompare = ListViewCompare
+          OnDeletion = ListViewDeletion
+          OnKeyPress = ListViewKeyPress
+          OnMouseDown = ListViewMouseDown
+        end
+        object Panel4: TPanel
+          Left = 0
+          Top = 0
+          Width = 563
+          Height = 29
+          Align = alTop
+          BevelOuter = bvNone
+          Caption = 'Panel4'
+          TabOrder = 1
+          DesignSize = (
+            563
+            29)
+          object Label1: TLabel
+            Left = 6
+            Top = 8
+            Width = 29
+            Height = 13
+            Caption = 'Form :'
+          end
+          object FormsComboBox: TComboBox
+            Left = 38
+            Top = 2
+            Width = 523
+            Height = 21
+            Style = csDropDownList
+            Anchors = [akLeft, akTop, akRight]
+            TabOrder = 0
+            OnChange = FormsComboBoxChange
+          end
+        end
+        object Panel5: TPanel
+          Left = 0
+          Top = 274
+          Width = 563
+          Height = 19
+          Align = alBottom
+          BevelOuter = bvNone
+          TabOrder = 2
+          object LinksCountLabel: TLabel
+            Left = 42
+            Top = 3
+            Width = 79
+            Height = 13
+            Caption = 'LinksCountLabel'
+          end
+          object StaticLabel: TLabel
+            Left = 8
+            Top = 3
+            Width = 31
+            Height = 13
+            Caption = 'Links :'
+          end
+          object AllPinsCheckBox: TCheckBox
+            Left = 88
+            Top = 2
+            Width = 209
+            Height = 17
+            Caption = 'Show all compatible pins'
+            TabOrder = 0
+            OnClick = FormsComboBoxChange
+          end
+        end
       end
     end
-    object Panel5: TPanel
-      Left = 0
-      Top = 302
-      Width = 578
-      Height = 19
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 2
-      object LinksCountLabel: TLabel
-        Left = 42
-        Top = 3
-        Width = 79
-        Height = 13
-        Caption = 'LinksCountLabel'
-      end
-      object StaticLabel: TLabel
-        Left = 8
-        Top = 3
-        Width = 31
-        Height = 13
-        Caption = 'Links :'
-      end
-      object AllPinsCheckBox: TCheckBox
-        Left = 88
-        Top = 2
-        Width = 209
-        Height = 17
-        Caption = 'Show all compatible pins'
+    object TabSheet2: TTabSheet
+      Caption = 'Data Types'
+      ImageIndex = 1
+      object DataTypesListView: TListView
+        Left = 0
+        Top = 0
+        Width = 563
+        Height = 293
+        Align = alClient
+        Columns = <
+          item
+            Caption = 'Index'
+            Width = 60
+          end
+          item
+            AutoSize = True
+            Caption = 'Data Type'
+            ImageIndex = 0
+          end
+          item
+            Caption = 'Direction'
+            Width = 100
+          end>
+        GridLines = True
+        HideSelection = False
+        ReadOnly = True
+        RowSelect = True
+        ShowWorkAreas = True
+        SmallImages = ImageList1
+        SortType = stText
+        StateImages = SourcesImageList
         TabOrder = 0
-        OnClick = FormsComboBoxChange
+        ViewStyle = vsReport
+        OnColumnClick = DataTypesListViewColumnClick
+        OnCompare = ListViewCompare
+        OnDeletion = ListViewDeletion
+        OnKeyPress = ListViewKeyPress
+        OnMouseDown = ListViewMouseDown
       end
     end
   end

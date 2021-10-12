@@ -39,7 +39,7 @@ procedure Register;
 implementation
 
 uses
-  System.SysUtils, System.Rtti, OWPins;
+  System.SysUtils, System.Rtti, OWPins, Mitov.Design.Components;
 
 {$IFNDEF VCL_EDITORS}
 function TOWPinListOwnerPropertyEditor.GetDisplayValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
@@ -67,13 +67,17 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWPinListOwnerPropertyEditor.SetStringValue( const AValue : String );
+var
+  AModification : IModificationInstance;
+
 begin
   var APinList := GetInstanceValues()[ 0 ].AsType<TOWPinListOwner>;
   var ANewValue := StrToIntDef( AValue, APinList.Count );
   if( ANewValue <> APinList.Count ) then
     begin
+    AModification := BeginModify();
     APinList.Count := ANewValue;
-    Modified();
+//    Modified();
     end;
 
 end;

@@ -375,10 +375,10 @@ type
     Value : IStringArrayList;
 
   public
-    class function Create( AValue : IStringArrayList ) : IOWNotifyOperation;
+    class function Create( const AValue : IStringArrayList ) : IOWNotifyOperation;
 
   public
-    constructor CreateObject( AValue : IStringArrayList );
+    constructor CreateObject( const AValue : IStringArrayList );
 
   end;
 //---------------------------------------------------------------------------
@@ -413,7 +413,7 @@ type
     class function GetHostedTypeInfo() : PTypeInfo; override; stdcall;
 
   public
-    constructor Create( AValue : IArrayList<T> );
+    constructor Create( const AValue : IArrayList<T> );
 
   end;
 //---------------------------------------------------------------------------
@@ -433,7 +433,7 @@ type
     function  Notify( const AOperation : IOWNotifyOperation ) : TOWNotifyResult; override;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; AMaxConnections : Integer = -1; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
@@ -457,7 +457,7 @@ type
     FPinNotificationEvent : TOWBasicPinNotificationEvent;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
@@ -469,7 +469,7 @@ type
     FPinNotificationEvent : TOWBasicPinNotificationEvent;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
@@ -481,7 +481,7 @@ type
     FPinNotificationEvent : TOWBasicPinNotificationEvent;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
@@ -491,7 +491,7 @@ type
   [OWDataType( IOWClockStream )]
   TOWClockSourcePin = class( TOWManagedDispatchSourcePin, IOWClockStream )
   protected
-    function ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function  ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   public
     procedure Clock( ASamples : Integer );
@@ -507,10 +507,10 @@ type
     FOnClock  : TOWClockEvent;
 
   protected
-    function ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function  ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
@@ -523,10 +523,10 @@ type
     FOnClock  : TOWClockEvent;
 
   protected
-    function ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function  ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   protected
-    function DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
+    function  DispatchData( AOtherPin : TOWBasicPin; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
@@ -536,8 +536,8 @@ type
   [OWDataType( IOWDataStream )]
   TOWStdSourcePin = class( TOWClockSourcePin )
   protected
-    function Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override;
-    function IntNotificationHandler( const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
+    function  Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override;
+    function  IntNotificationHandler( const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual;
 
   protected
     procedure BeforeDisconnectFrom( const APin : TOWBasicPin ); override;
@@ -925,7 +925,7 @@ type
     constructor CreateConnect( const AOnCreated : TProc<TOWPin>; AOnConnect : TOWPinEvent );
 
   public
-    procedure Send( AValue : IStringArrayList );
+    procedure Send( const AValue : IStringArrayList );
 
   protected
     function  Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override;
@@ -1298,8 +1298,8 @@ type
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); override;
 
   public
-    property Value : Real read FValue write SetValue;
-    property NotifyOnChangeOnly  : Boolean read FNotifyOnChangeOnly write FNotifyOnChangeOnly;
+    property Value : Real                   read FValue               write SetValue;
+    property NotifyOnChangeOnly  : Boolean  read FNotifyOnChangeOnly  write FNotifyOnChangeOnly;
 
   end;
 //---------------------------------------------------------------------------
@@ -1341,7 +1341,7 @@ type
     constructor CreateConnect( const AOnCreated : TProc<TOWPin>; AOnConnect : TOWPinEvent );
 
   public
-    procedure Send( AValue : IArrayList<T> );
+    procedure Send( const AValue : IArrayList<T> );
 
   protected
     function  Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override;
@@ -2950,7 +2950,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWStringListSourcePin.Send( AValue : IStringArrayList );
+procedure TOWStringListSourcePin.Send( const AValue : IStringArrayList );
 begin
   Notify( TOWSuppliedStringListOperation.Create( AValue ));
 end;
@@ -3625,6 +3625,134 @@ end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 type
+  [OWConvertDataType( IOWInt64Stream, IOWCardinalStream )]
+  TOWInt64ToCardinalFormatConverter = class( TOWTypedFormatConverter<IOWCardinalStream, Int64, Cardinal, TOWInt64SinkPin, TOWCardinalSourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWInt64ToCardinalFormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWIntegerStream, IOWUInt64Stream )]
+  TOWIntegerToUInt64FormatConverter = class( TOWTypedFormatConverter<IOWUInt64Stream, Integer, UInt64, TOWIntegerSinkPin, TOWUInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Integer; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWIntegerToUInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Integer; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWUInt64Stream, IOWInt64Stream )]
+  TOWUInt64ToInt64FormatConverter = class( TOWTypedFormatConverter<IOWInt64Stream, UInt64, Int64, TOWUInt64SinkPin, TOWInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWUInt64ToInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWIntegerStream, IOWInt64Stream )]
+  TOWIntegerToInt64FormatConverter = class( TOWTypedFormatConverter<IOWInt64Stream, Integer, Int64, TOWIntegerSinkPin, TOWInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Integer; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWIntegerToInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Integer; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWUInt64Stream, IOWCardinalStream )]
+  TOWUInt64ToCardinalFormatConverter = class( TOWTypedFormatConverter<IOWCardinalStream, UInt64, Cardinal, TOWUInt64SinkPin, TOWCardinalSourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWUInt64ToCardinalFormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWInt64Stream, IOWUInt64Stream )]
+  TOWInt64ToUInt64FormatConverter = class( TOWTypedFormatConverter<IOWUInt64Stream, Int64, UInt64, TOWInt64SinkPin, TOWUInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWInt64ToUInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWInt64Stream, IOWIntegerStream )]
+  TOWInt64ToIntegerFormatConverter = class( TOWTypedFormatConverter<IOWIntegerStream, Int64, Integer, TOWInt64SinkPin, TOWIntegerSourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWInt64ToIntegerFormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Int64; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWCardinalStream, IOWUInt64Stream )]
+  TOWCardinalToUInt64FormatConverter = class( TOWTypedFormatConverter<IOWUInt64Stream, Cardinal, UInt64, TOWCardinalSinkPin, TOWUInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Cardinal; AOnConnect : Boolean ); override;
+
+  end;
+//------------------------------------------------------------------------------
+procedure TOWCardinalToUInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Cardinal; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
   [OWConvertDataType( IOWIntegerStream, IOWStringStream )]
   TOWIntToStringFormatConverter = class( TOWTypedFormatConverter<IOWStringStream, Integer, String, TOWIntegerSinkPin, TOWStringSourcePin> )
   protected
@@ -3681,6 +3809,38 @@ type
   end;
 //---------------------------------------------------------------------------
 procedure TOWCardinalToIntegerFormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Cardinal; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWCardinalStream, IOWInt64Stream )]
+  TOWCardinalToInt64FormatConverter = class( TOWTypedFormatConverter<IOWInt64Stream, Cardinal, Int64, TOWCardinalSinkPin, TOWInt64SourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : Cardinal; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWCardinalToInt64FormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : Cardinal; AOnConnect : Boolean );
+begin
+  Send( AValue );
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+type
+  [OWConvertDataType( IOWUInt64Stream, IOWIntegerStream )]
+  TOWUInt64ToIntegerFormatConverter = class( TOWTypedFormatConverter<IOWIntegerStream, UInt64, Integer, TOWUInt64SinkPin, TOWIntegerSourcePin> )
+  protected
+    procedure SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean ); override;
+
+  end;
+//---------------------------------------------------------------------------
+procedure TOWUInt64ToIntegerFormatConverter.SinkOperationEvent( ASender : TOWPin; const AValue : UInt64; AOnConnect : Boolean );
 begin
   Send( AValue );
 end;
@@ -4898,7 +5058,7 @@ begin
   FOnConnect := AOnConnect;
 end;
 //---------------------------------------------------------------------------
-procedure TOWTypedListSourcePin<T; T_Interface>.Send( AValue : IArrayList<T> );
+procedure TOWTypedListSourcePin<T; T_Interface>.Send( const AValue : IArrayList<T> );
 begin
   Notify( TOWTypedListSuppliedOperation<T>.Create( AValue ));
 end;
@@ -5073,13 +5233,13 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWSuppliedStringListOperation.CreateObject( AValue : IStringArrayList );
+constructor TOWSuppliedStringListOperation.CreateObject( const AValue : IStringArrayList );
 begin
   inherited CreateObject( AValue.Count );
   Value := AValue;
 end;
 //---------------------------------------------------------------------------
-class function TOWSuppliedStringListOperation.Create( AValue : IStringArrayList ) : IOWNotifyOperation;
+class function TOWSuppliedStringListOperation.Create( const AValue : IStringArrayList ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AValue );
 end;
@@ -5210,7 +5370,7 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedListSuppliedOperation<T>.Create( AValue : IArrayList<T> );
+constructor TOWTypedListSuppliedOperation<T>.Create( const AValue : IArrayList<T> );
 begin
   inherited Create( AValue.Count );
   Value := AValue;
@@ -5303,6 +5463,19 @@ begin
       [
         TOWIntToFloatFormatConverter,
         TOWIntToCardinalFormatConverter,
+        TOWUInt64ToInt64FormatConverter,
+        TOWUInt64ToCardinalFormatConverter,
+        TOWCardinalToUInt64FormatConverter,
+
+        TOWInt64ToCardinalFormatConverter,
+        TOWCardinalToInt64FormatConverter,
+
+        TOWUInt64ToIntegerFormatConverter,
+        TOWIntegerToUInt64FormatConverter,
+
+        TOWInt64ToUInt64FormatConverter,
+        TOWIntegerToInt64FormatConverter,
+        TOWInt64ToIntegerFormatConverter,
         TOWIntToRealFormatConverter,
         TOWIntToStringFormatConverter,
         TOWInt64ToFloatFormatConverter,

@@ -37,6 +37,15 @@
   {$DEFINE RX10_4_Up}
 {$ENDIF}
 
+{$IF CompilerVersion = 35} // Delphi RX 11.0 Alexandria
+  {$DEFINE RX11_0}
+  {$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+{$ENDIF}
+
+{$IF CompilerVersion > 34} // Delphi RX 10.4 Sidney
+  {$DEFINE RX11_0_Up}
+{$ENDIF}
+
 {$IF CompilerVersion > 30} // Delphi RX 10.1 Berlin
   {$DEFINE RX10_1Up}
   {$DEFINE RX1Up}
