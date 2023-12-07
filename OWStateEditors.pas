@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,20 +12,15 @@ unit OWStateEditors;
 interface
 
 uses
-  Windows,
-  Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  Vcl.ImgList, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, Contnrs, OWPins, OWDesignTypes, Vcl.ActnList,
-  System.Actions, System.ImageList;
+  WinApi.Windows,
+  WinApi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
+  Vcl.ImgList, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, OWPins, OWDesignTypes, Vcl.ActnList,
+  System.Actions, System.ImageList, Mitov.Containers.List,
+  Vcl.BaseImageCollection, Vcl.ImageCollection, Vcl.VirtualImageList,
+  Mitov.BasicOKCancelFormUnit;
 
 type
-  TOWStatePinForm = class(TForm)
-    Panel1: TPanel;
-    Panel2: TPanel;
-    OkButton: TBitBtn;
-    CancelButton: TBitBtn;
-    AboutPanel: TPanel;
-    Image1: TImage;
-    RestoreButton: TBitBtn;
+  TOWStatePinForm = class( TMitov_BasicOKCancelForm )
     Panel3: TPanel;
     Panel4: TPanel;
     Label1: TLabel;
@@ -35,13 +30,18 @@ type
     StaticLabel: TLabel;
     ImageList1: TImageList;
     PinsImageList: TImageList;
-    RenameButton: TBitBtn;
     ActionList1: TActionList;
     RenameAction: TAction;
     ActionImageList: TImageList;
     TreeView: TTreeView;
     Panel6: TPanel;
     StatesImageList: TImageList;
+    ImageCollection: TImageCollection;
+    VirtualImageList: TVirtualImageList;
+    AboutPanel: TPanel;
+    Image1: TImage;
+    RestoreButton: TButton;
+    RenameButton: TButton;
     procedure Image1Click(Sender: TObject);
     procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -73,11 +73,11 @@ type
     procedure TreeViewExpanded(Sender: TObject; Node: TTreeNode);
     
   private
-    Designer      : TOWPropertyDesigner;
-    StatePin      : TOWStatePin;
-    Root          : TComponent;
-    PinsList      : TObjectList;
-    ListUpdating  : Boolean;
+    FDesigner     : TOWPropertyDesigner;
+    FStatePin     : TOWStatePin;
+    FRoot         : TComponent;
+    FPinsList     : IObjectOwnerArrayList<TOWEPinEntry>;
+    FListUpdating : Boolean;
 
   public
     AllSelected  : Boolean;
@@ -116,7 +116,7 @@ implementation
 {$R *.DFM}
 
 uses
-  System.Generics.Collections, Mitov.Containers.Dictionary,
+  System.Generics.Collections, Mitov.Containers.Common, Mitov.Containers.Dictionary,
   ToolsAPI,
   System.UITypes, OWAboutFormUnit, Mitov.Utils;
 
@@ -156,62 +156,52 @@ var GOWStatePinEditorForm : TOWStatePinForm;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.FillFormsInfo();
-var
-  ACurProject : IOTAProject;
-  AModuleInfo : IOTAModuleInfo;
-
 begin
-  var AFormNames := TOWModulesColection.Create();
-  try
+  var AFormNamesObj := TOWModulesColection.Create();
+  var AFormNames : IStringArrayList := AFormNamesObj;
 //{$IFNDEF BDS2005_OR_2006_BUG}
 //    Designer.GetProjectModules( AFormNames.GetModules );
 
 //{$ELSE}
     // Workaround for BDS 2005 and 2006 bug.
-    ACurProject := GetActiveProject();
+  var ACurProject := GetActiveProject();
 
-    if( ACurProject <> NIL ) then
-      for var I : Integer := 0 to ACurProject.GetModuleCount() - 1 do
-        begin
-        AModuleInfo := ACurProject.GetModule( I );
-        AFormNames.GetModules( AModuleInfo.FileName, AModuleInfo.Name, AModuleInfo.FormName, AModuleInfo.DesignClass, NIL );
-        end;
+  if( ACurProject <> NIL ) then
+    for var I : Integer := 0 to ACurProject.GetModuleCount() - 1 do
+      begin
+      var AModuleInfo := ACurProject.GetModule( I );
+      AFormNamesObj.GetModules( AModuleInfo.FileName, AModuleInfo.Name, AModuleInfo.FormName, AModuleInfo.DesignClass, NIL );
+      end;
 
 //{$ENDIF}
 
-    FormsComboBox.Items.Clear();
+  FormsComboBox.Items.Clear();
 
-    if( AFormNames.Count = 0 ) then
-      AFormNames.Add( Root.Name );
+  if( AFormNames.Count = 0 ) then
+    AFormNames.Add( FRoot.Name );
 
-    for var I : Integer := 0 to AFormNames.Count - 1 do
+  for var AName in AFormNames do
+    if( OWCanAccessRootFromName( FDesigner, AName ) ) then
       begin
-      if( OWCanAccessRootFromName( Designer, AFormNames.Strings[ I ] ) ) then
+      if( AName = FRoot.Name ) then
         begin
-        if( AFormNames.Strings[ I ] = Root.Name ) then
-          begin
-          FormsComboBox.Items.Add( AFormNames.Strings[ I ] + '  (Current)' );
-          FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
-          end
+        FormsComboBox.Items.Add( AName + '  (Current)' );
+        FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
+        end
 
-        else
-          FormsComboBox.Items.Add( AFormNames.Strings[ I ] );
-        end;
+      else
+        FormsComboBox.Items.Add( AName );
+
       end;
 
-    if( AFormNames.Count > 1 ) then
-      FormsComboBox.Items.Add( 'All forms' );
+  if( AFormNames.Count > 1 ) then
+    FormsComboBox.Items.Add( 'All forms' );
 
-    PopulateAllEntries();
-    if( AllSelected ) then
-      FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
+  PopulateAllEntries();
+  if( AllSelected ) then
+    FormsComboBox.ItemIndex := FormsComboBox.Items.Count - 1;
 
-    FormsComboBoxChange( Self );
-
-  finally
-    AFormNames.DisposeOf();
-    end;
-
+  FormsComboBoxChange( Self );
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateAll();
@@ -223,20 +213,20 @@ begin
     PopulateSingleForm( NIL, ACurrentRoot, False, True );
     end;
 
-  RootFromName( Root.Name );
+  RootFromName( FRoot.Name );
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateAllEntries();
 begin
-  PinsList.Clear();
+  FPinsList.Clear();
   for var I : Integer := 0 to FormsComboBox.Items.Count - 2 do
     begin
     var ACurrentRoot : TComponent := RootFromName( FormsComboBox.Items.Strings[ I ] );
     PopulateSingleFormEntries( NIL, ACurrentRoot, True );
     end;
 
-  PopulateSingleFormEntries( NIL, Root, False );
-  RootFromName( Root.Name );
+  PopulateSingleFormEntries( NIL, FRoot, False );
+  RootFromName( FRoot.Name );
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateForm( ARootComponent : TComponent );
@@ -267,7 +257,7 @@ begin
 
       else
         begin
-        if( TOWEPinEntry( ACurItem.Data ).Dispatcher.IsConnectedTo( StatePin ) )then
+        if( TOWEPinEntry( ACurItem.Data ).Dispatcher.IsConnectedTo( FStatePin ) )then
           ACounter := ACurItem.Count - 1
 
         else
@@ -286,16 +276,16 @@ end;
 //---------------------------------------------------------------------------
 function  TOWStatePinForm.ExecuteForState( ADesigner : TOWPropertyDesigner; AStatePin : TOWStatePin ): Integer;
 begin
-  Designer := ADesigner;
-  StatePin := AStatePin;
-  Root := ADesigner.GetRoot();
+  FDesigner := ADesigner;
+  FStatePin := AStatePin;
+  FRoot := ADesigner.GetRoot();
 
 //  LinkAllButton.Visible := True;
 //  UnlinkAllButton.Visible := True;
 
 //  ListView.Columns.Items[0].Caption := 'Sink pin';
 //  ListView.Columns.Items[2].Caption := 'Connected to';
-  Caption := 'Connections - State Pin : ' + OWValueToString( StatePin, False, False );
+  Caption := 'Connections - State Pin : ' + OWValueToString( FStatePin, False, False );
 
 //  ListView.StateImages := SourcesImageList;
   OWLinkAwaitsLinkingAllForms();
@@ -305,10 +295,13 @@ end;
 procedure TOWStatePinForm.Image1Click(Sender: TObject);
 begin
   AboutPanel.BevelInner := bvLowered;
-  var AboutForm := TOWAboutForm.Create( Self );
-  AboutForm.ShowModal();
-  AboutForm.DisposeOf();
-  AboutPanel.BevelInner := bvRaised;
+  try
+    var AForm := TSmartPointer.Create( TOWAboutForm.Create( Self ));
+    AForm.ShowModal();
+  finally
+    AboutPanel.BevelInner := bvRaised;
+    end;
+
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.Image1MouseDown(Sender: TObject;
@@ -331,10 +324,10 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.FormsComboBoxChange(Sender: TObject);
 var
-  SelectedRoot : TComponent;
+  ASelectedRoot : TComponent;
 
 begin
-  SelectedRoot := NIL;
+  ASelectedRoot := NIL;
   AllSelected := False;
   if( FormsComboBox.Items.Count > 1 ) then
     if( FormsComboBox.ItemIndex = FormsComboBox.Items.Count - 1 ) then
@@ -347,20 +340,20 @@ begin
   if( FormsComboBox.ItemIndex <> -1 ) then
     begin
     var AFormName := FormsComboBox.Items.Strings[ FormsComboBox.ItemIndex ];
-    SelectedRoot := RootFromName( AFormName );
+    ASelectedRoot := RootFromName( AFormName );
     end;
 
-  PopulateForm( SelectedRoot );
+  PopulateForm( ASelectedRoot );
 end;
 //---------------------------------------------------------------------------
 function TOWStatePinForm.RootFromName( const ARootName : String ) : TComponent;
 begin
-  var RealName := ARootName;
-  var iPos := Pos( ' ', RealName );
-  if( iPos > 0 ) then
-    Delete( RealName, iPos, 10000 );
+  var ARealName := ARootName;
+  var APos := Pos( ' ', ARealName );
+  if( APos > 0 ) then
+    Delete( ARealName, APos, 10000 );
 
-  Result := Designer.GetComponent( RealName + SEPARATOR + RealName );
+  Result := FDesigner.GetComponent( ARealName + SEPARATOR + ARealName );
 
   var CurrentComp := Result;
   if( CurrentComp <> NIL ) then
@@ -376,7 +369,7 @@ begin
       end;
 
   if( Result = NIL ) then
-    Result := Root;
+    Result := FRoot;
 
 end;
 //---------------------------------------------------------------------------
@@ -387,9 +380,13 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateSingleForm( ACurrentRoot : TComponent; ARootComponent : TComponent; AOnlyConnected : Boolean; AFullPath : Boolean );
 begin
-  ListUpdating := True;
-  PopulateSingleStateForm( ACurrentRoot, ARootComponent, AOnlyConnected, AFullPath );
-  ListUpdating := False;
+  FListUpdating := True;
+  try
+    PopulateSingleStateForm( ACurrentRoot, ARootComponent, AOnlyConnected, AFullPath );
+  finally
+    FListUpdating := False;
+    end;
+
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateSingleFormEntries( ACurrentRoot : TComponent; ARootComponent : TComponent; AFullPath : Boolean );
@@ -398,29 +395,25 @@ begin
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateSingleStateForm( ACurrentRoot : TComponent; ARootComponent : TComponent; AOnlyConnected : Boolean; AFullPath : Boolean );
-var
-  ACollection : IArrayPairList<String, TOWBasicPin>;
-  APair       : TPair<String, TOWBasicPin>;
-
 begin
   Items.BeginUpdate();
   try
     if( ARootComponent = NIL ) then
-      ARootComponent := GetMainOwnerComponent( StatePin.Owner );
+      ARootComponent := GetMainOwnerComponent( FStatePin.Owner );
 
-    ACollection := TArrayPairList<String, TOWBasicPin>.Create();
-    OWGetPinValueList( ACollection.GetAsPairCollection(), ARootComponent, StatePin, False );
+    var ACollection : IArrayPairList<String, TOWBasicPin> := TArrayPairList<String, TOWBasicPin>.Create();
+    OWGetPinValueList( ACollection.GetAsPairCollection(), ARootComponent, FStatePin, False );
     if( TreeView.Items.Count = 0 ) then
       begin // First form
-      for var I := 0 to OWGetDispatcherCount() - 1 do
+      for var I : Integer := 0 to OWGetDispatcherCount() - 1 do
         begin
         var ADispatcher := OWGetDispatcher( I );
-        if( not StatePin.CanConnectToState( ADispatcher )) then
+        if( not FStatePin.CanConnectToState( ADispatcher )) then
           Continue;
           
         var AEntry := EntryFromDispatcher( ADispatcher );
         var ANode := TreeView.Items.AddObject( NIL, ADispatcher.Name, AEntry );
-        if( StatePin.IsConnectedToState( ADispatcher )) then
+        if( FStatePin.IsConnectedToState( ADispatcher )) then
           begin
           ANode.StateIndex := siRadioCheck;
           AEntry.SavedChecked := True;
@@ -432,7 +425,7 @@ begin
         ANode.ImageIndex := siLinkPlus;
         ANode.SelectedIndex := ANode.ImageIndex;
 
-        for var J := 0 to ADispatcher.PinCount - 1 do
+        for var J : Integer := 0 to ADispatcher.PinCount - 1 do
           begin
           var APin := ADispatcher.Pins[ J ];
           var APinName := APin.GetFullName( True );
@@ -444,7 +437,7 @@ begin
               end;
 
           var ASubNode := TreeView.Items.AddChildObject( ANode, APinName, EntryFromPin( APin ));
-          if( APin.GetRootName() <> GetMainOwnerComponent( StatePin.Owner ).Name ) then
+          if( APin.GetRootName() <> GetMainOwnerComponent( FStatePin.Owner ).Name ) then
             begin
             if( APin.GetIsRealPin() ) then
               ASubNode.StateIndex := siCrosForm
@@ -457,7 +450,7 @@ begin
           else
             ASubNode.StateIndex := siDotLine;
           
-          if( APin = StatePin ) then
+          if( APin = FStatePin ) then
             ASubNode.ImageIndex := siPinRed
 
           else
@@ -475,13 +468,13 @@ begin
             APinName := OWValueToString( ADispatcher.Pins[ J ], '.', False, False );
 
           ASubNode := TreeView.Items.AddChildObject( ANode, APinName, ADispatcher.Pins[ J ] );
-          if( OWGetMainOwnerComponent( ADispatcher.Pins[ J ].Owner ) <> OWGetMainOwnerComponent( StatePin.Owner ) ) then
+          if( OWGetMainOwnerComponent( ADispatcher.Pins[ J ].Owner ) <> OWGetMainOwnerComponent( FStatePin.Owner ) ) then
             ASubNode.StateIndex := siCrosForm
 
           else
             ASubNode.StateIndex := siDotLine;
 
-          if( ADispatcher.Pins[ J ] = StatePin ) then
+          if( ADispatcher.Pins[ J ] = FStatePin ) then
             ASubNode.ImageIndex := siPinRed
 
           else
@@ -490,7 +483,7 @@ begin
           ASubNode.SelectedIndex := ASubNode.ImageIndex;
           end;
 }
-        if( StatePin.IsConnectedToState( ADispatcher )) then
+        if( FStatePin.IsConnectedToState( ADispatcher )) then
           begin
           ANode.Expand( False );
           ANode.ImageIndex := siLinkMinus;
@@ -499,10 +492,10 @@ begin
         end;
       end;
 
-    for APair in ACollection do
+    for var APair in ACollection do
       begin
       var AOtherPin := APair.Value;
-      if( AOtherPin = StatePin ) then
+      if( AOtherPin = FStatePin ) then
         Continue;
 
       var AEntry := EntryFromPin( AOtherPin );
@@ -516,7 +509,7 @@ begin
           end
 
         else
-          if( not StatePin.IsLinkedTo( APair.Key )) then
+          if( not FStatePin.IsLinkedTo( APair.Key )) then
             Continue;
 
         end;
@@ -546,37 +539,37 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.PopulateSingleStateFormEntries( ACurrentRoot : TComponent; ARootComponent : TComponent; AFullPath : Boolean );
 var
-  ACollection : IArrayPairList<String, TOWBasicPin>;
-  APair       : TPair<String, TOWBasicPin>;
+  APair : TPair<String, TOWBasicPin>;
 
 begin
   if( ARootComponent = NIL ) then
-    ARootComponent := GetMainOwnerComponent( StatePin.Owner );
+    ARootComponent := GetMainOwnerComponent( FStatePin.Owner );
 
-  for var I := 0 to OWGetDispatcherCount() - 1 do
+  for var I : Integer := 0 to OWGetDispatcherCount() - 1 do
     begin
     var ADispatcher := OWGetDispatcher( I );
-    if( not StatePin.CanConnectToState( ADispatcher )) then
+    if( not FStatePin.CanConnectToState( ADispatcher )) then
       Continue;
 
     var AEntry := TOWEPinEntry.Create();
-    PinsList.Add( AEntry );
+    FPinsList.Add( AEntry );
     AEntry.Dispatcher := ADispatcher;
     AEntry.PinName := ADispatcher.Name;
 
 //      AEntry.CanConnect := True;
-    for var J := 0 to ADispatcher.PinCount - 1 do
+    for var J : Integer := 0 to ADispatcher.PinCount - 1 do
       begin
+      var APin := ADispatcher.Pins[ J ];
       AEntry := TOWEPinEntry.Create();
       AEntry.Dispatcher := ADispatcher;
-      AEntry.Pin := ADispatcher.Pins[ J ];
-      AEntry.PinName := ADispatcher.Pins[ J ].GetName();
-      PinsList.Add( AEntry );
+      AEntry.Pin := APin;
+      AEntry.PinName := APin.GetName();
+      FPinsList.Add( AEntry );
       end;
     end;
 
-  ACollection := TArrayPairList<String, TOWBasicPin>.Create();
-  OWGetPinValueList( ACollection.GetAsPairCollection(), ARootComponent, StatePin, False );
+  var ACollection : IArrayPairList<String, TOWBasicPin> := TArrayPairList<String, TOWBasicPin>.Create();
+  OWGetPinValueList( ACollection.GetAsPairCollection(), ARootComponent, FStatePin, False );
   for APair in ACollection do
     begin
     var AOtherPin := APair.Value;
@@ -584,7 +577,7 @@ begin
     if( not AOtherPin.IsStateConnected() ) then
       begin
       var AEntry := TOWEPinEntry.Create();
-      PinsList.Add( AEntry );
+      FPinsList.Add( AEntry );
 
       AEntry.Pin := AOtherPin;
       AEntry.PinName := AOtherPin.Name;
@@ -597,31 +590,23 @@ end;
 //---------------------------------------------------------------------------
 function TOWStatePinForm.EntryFromPin( APin : TOWBasicPin ) : TOWEPinEntry;
 begin
-  Result := NIL;
   if( APin = NIL ) then
-    Exit;
+    Exit( NIL );
 
-  for var I := 0 to PinsList.Count - 1 do
-    if( TOWEPinEntry( PinsList.Items[ I ] ).Pin = APin ) then
-      begin
-      Result := TOWEPinEntry( PinsList.Items[ I ] );
-      Break;
-      end;
+  for var AItem in FPinsList do
+    if( AItem.Pin = APin ) then
+      Exit( AItem );
 
-
+  Result := NIL;
 end;
 //---------------------------------------------------------------------------
 function TOWStatePinForm.EntryFromDispatcher( ADispatcher : TOWBasicStateDispatcher ) : TOWEPinEntry;
 begin
+  for var AItem in FPinsList do
+    if( AItem.Dispatcher = ADispatcher ) then
+      Exit( AItem );
+
   Result := NIL;
-  for var I := 0 to PinsList.Count - 1 do
-    if( TOWEPinEntry( PinsList.Items[ I ] ).Dispatcher = ADispatcher ) then
-      begin
-      Result := TOWEPinEntry( PinsList.Items[ I ] );
-      Break;
-      end;
-
-
 end;
 //---------------------------------------------------------------------------
 function TOWStatePinForm.GetTreeItems() : TTreeNodes;
@@ -631,18 +616,16 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.FormCreate(Sender: TObject);
 begin
-  PinsList     := TObjectList.Create();
-  PinsList.OwnsObjects := True;
+  FPinsList := TObjectOwnerArrayList<TOWEPinEntry>.Create();
 //  ColumnToSort := 0;
 //  Direction    := True;
-  AllSelected  := False;
+  AllSelected := False;
 //  Panel6.DoubleBuffered := True;
 //  TreeView.DoubleBuffered := True;
 end;
 //---------------------------------------------------------------------------
 procedure TOWStatePinForm.FormDestroy(Sender: TObject);
 begin
-  PinsList.DisposeOf();
   GOWStatePinEditorForm := NIL;
 end;
 //---------------------------------------------------------------------------
@@ -665,7 +648,6 @@ begin
 
       ACurItem := ACurItem.GetNextSibling();
       end;
-
     end
 
   else
@@ -720,7 +702,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWStatePinForm.TreeViewEdited(Sender: TObject; Node: TTreeNode; var S: String);
+procedure TOWStatePinForm.TreeViewEdited( Sender : TObject; Node : TTreeNode; var S : String );
 begin
   var AEntry := TOWEPinEntry( Node.Data );
   if( TOWStateDispatcher.IsUniqueName( S, True ) ) then
@@ -765,10 +747,6 @@ end;
 procedure TOWStatePinForm.TreeViewAdvancedCustomDrawItem(
   Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
   Stage: TCustomDrawStage; var PaintImages, DefaultDraw: Boolean);
-var
-  ANodeRect : TRect;
-  ABegRect  : TRect;
-
 begin
   if( Node = NIl ) then
     Exit;
@@ -790,8 +768,8 @@ begin
   else if( Stage = cdPostPaint ) then
     begin
 //    Exit;
-    ABegRect := Node.DisplayRect(True);
-    ANodeRect := ABegRect;
+    var ABegRect := Node.DisplayRect(True);
+    var ANodeRect := ABegRect;
 //    ANodeRect.Bottom := ANodeRect.Bottom - 1;
 //    ANodeRect.Right :=HeaderControl.Sections.Items[ 1 ].Left;
 //    if( ( not OkButton.Default ) and ( cdsFocused in State )) then
@@ -900,11 +878,14 @@ begin
     ChangeState( ANode )
 
   else if( htOnIcon in AHitTestRes ) then
+    begin
     if( ANode.Expanded ) then
       ANode.Collapse( False )
 
     else
       ANode.Expand( False );
+
+    end;
 
 end;
 //---------------------------------------------------------------------------
@@ -938,72 +919,68 @@ begin
   if( AStatePin = NIL ) then
     Exit;
 
-  try
-    if( GOWStatePinEditorForm.ExecuteForState( ADesigner, AStatePin ) = mrOk ) then
+  if( GOWStatePinEditorForm.ExecuteForState( ADesigner, AStatePin ) = mrOk ) then
+    begin
+    var ACurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
+    while ACurItem <> nil do
       begin
-      var ACurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
-      while ACurItem <> nil do
+      if( ACurItem.StateIndex = siRadioCheck ) then
         begin
-        if( ACurItem.StateIndex = siRadioCheck ) then
+        var AEntry := TOWEPinEntry( ACurItem.Data );
+        if( AEntry.Dispatcher <> NIL ) then
           begin
-          var AEntry := TOWEPinEntry( ACurItem.Data );
-          if( AEntry.Dispatcher <> NIL ) then
-            begin
-            if( not AStatePin.IsConnectedToState( AEntry.Dispatcher ) ) then
-              AStateChanged := True;
-
-            end
-
-          else
+          if( not AStatePin.IsConnectedToState( AEntry.Dispatcher ) ) then
             AStateChanged := True;
 
-          Break;
-          end;
+          end
 
-        ACurItem := ACurItem.GetNextSibling();
+        else
+          AStateChanged := True;
+
+        Break;
         end;
 
-      if( ACurItem = NIL ) then
-        AStateChanged := True;
-
-      if( AStateChanged ) then
-        begin
-        if( AStatePin <> NIL ) then
-          begin
-          var AStateRoot : TComponent := OWGetMainDesignOwner( AStatePin.Owner );
-          if( AStateRoot is TCustomForm ) then
-            if( Assigned( TCustomForm( AStateRoot ).Designer )) then
-              TCustomForm( AStateRoot ).Designer.Modified();
-
-          end;
-        end;
-
-      if( not AStateChanged ) then
-        Exit;
-
-      AStatePin.Disconnect();
-      ACurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
-      while ACurItem <> nil do
-        begin
-        if( ACurItem.StateIndex = siRadioCheck ) then
-          begin
-          var AEntry := TOWEPinEntry( ACurItem.Data );
-          if( AEntry.Dispatcher <> NIL ) then
-            AStatePin.ConnectToState( AEntry.Dispatcher )
-
-          else if( AEntry.Pin <> NIL ) then
-            AStatePin.Connect( AEntry.Pin );
-
-          Break;
-          end;
-
-        ACurItem := ACurItem.GetNextSibling();
-        end;
-
-      Result := True;
+      ACurItem := ACurItem.GetNextSibling();
       end;
 
-  finally
+    if( ACurItem = NIL ) then
+      AStateChanged := True;
+
+    if( AStateChanged ) then
+      begin
+      if( AStatePin <> NIL ) then
+        begin
+        var AStateRoot : TComponent := OWGetMainDesignOwner( AStatePin.Owner );
+        if( AStateRoot is TCustomForm ) then
+          if( Assigned( TCustomForm( AStateRoot ).Designer )) then
+            TCustomForm( AStateRoot ).Designer.Modified();
+
+        end;
+      end;
+
+    if( not AStateChanged ) then
+      Exit;
+
+    AStatePin.Disconnect();
+    ACurItem := GOWStatePinEditorForm.TreeView.Items.GetFirstNode();
+    while ACurItem <> nil do
+      begin
+      if( ACurItem.StateIndex = siRadioCheck ) then
+        begin
+        var AEntry := TOWEPinEntry( ACurItem.Data );
+        if( AEntry.Dispatcher <> NIL ) then
+          AStatePin.ConnectToState( AEntry.Dispatcher )
+
+        else if( AEntry.Pin <> NIL ) then
+          AStatePin.Connect( AEntry.Pin );
+
+        Break;
+        end;
+
+      ACurItem := ACurItem.GetNextSibling();
+      end;
+
+    Result := True;
     end;
 
 end;
@@ -1016,7 +993,7 @@ initialization
 
 finalization
   if( GOWStatePinEditorForm <> NIL ) then
-    GOWStatePinEditorForm.DisposeOf();
+    GOWStatePinEditorForm.Free();
 
   GOWStatePinEditorForm := NIL;
 end.

@@ -22,7 +22,7 @@ object OWAboutForm: TOWAboutForm
     Top = 272
     Width = 157
     Height = 13
-    Caption = 'Copyright 1999-2021 Boian Mitov'
+    Caption = 'Copyright 1999-2023 Boian Mitov'
   end
   object OWLabel: TLabel
     Left = 120
@@ -2205,13 +2205,17 @@ object OWAboutForm: TOWAboutForm
       end
     end
   end
-  object BitBtn1: TBitBtn
+  object OKButton: TButton
     Left = 128
     Top = 296
     Width = 75
     Height = 25
-    Kind = bkOK
-    NumGlyphs = 2
+    Caption = 'OK'
+    Default = True
+    ImageIndex = 0
+    ImageMargins.Left = 5
+    Images = Mitov_SharedImagesModule.ImageList
+    ModalResult = 1
     TabOrder = 1
   end
 end

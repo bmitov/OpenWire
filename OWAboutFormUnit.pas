@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,15 +12,15 @@ unit OWAboutFormUnit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls;
+  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, Mitov.SharedImagesModuleUnit;
 
 type
-  TOWAboutForm = class(TForm)
+  TOWAboutForm = class( TForm )
     Panel2: TPanel;
     Panel3: TPanel;
     Image1: TImage;
-    BitBtn1: TBitBtn;
+    OKButton: TButton;
     Label1: TLabel;
     OWLabel: TLabel;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
@@ -37,7 +37,8 @@ type
 implementation
 
 {$IFNDEF FPC}
-uses ShellAPI;
+uses
+  WinApi.ShellAPI;
 {$ENDIF}
 
 {$IFNDEF FPC}

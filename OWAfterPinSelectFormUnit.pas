@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,18 +19,15 @@ uses
 {$IFDEF FPC}
   LCLIntf, LMessages, LResources,
 {$ELSE}
-  Windows, Messages,
+  WinApi.Windows, WinApi.Messages,
 {$ENDIF}
-  SysUtils, Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, OWPins;
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, OWPins,
+  Mitov.BasicOKCancelFormUnit;
 
 type
-  TOWAfterPinSelectForm = class(TForm)
+  TOWAfterPinSelectForm = class( TMitov_BasicOKCancelForm )
     ListBox: TListBox;
-    Panel1: TPanel;
-    Panel2: TPanel;
-    CancelButton: TBitBtn;
-    OkButton: TBitBtn;
     procedure ListBoxDblClick( Sender : TObject );
   private
     { Private declarations }
@@ -51,7 +48,7 @@ implementation
 //---------------------------------------------------------------------------
 procedure TOWAfterPinSelectForm.FillFromDisparcher( AExcludePin : TOWBasicPin; ADispatcher : TOWBasicStateDispatcher; ANotifyAfterPin : TOWBasicPin );
 var
-  NotifyAfterName : String;
+  ANotifyAfterName : String;
 
 begin
   ListBox.Items.Add( '(none)' );
@@ -66,10 +63,10 @@ begin
     end;
 
   if( ANotifyAfterPin <> NIL ) then
-    NotifyAfterName := ANotifyAfterPin.GetFullName( AExcludePin.GetRoot() <> ANotifyAfterPin.GetRoot() );
+    ANotifyAfterName := ANotifyAfterPin.GetFullName( AExcludePin.GetRoot() <> ANotifyAfterPin.GetRoot() );
 
-  if( NotifyAfterName <> '' ) then
-    ListBox.ItemIndex := ListBox.Items.IndexOf( NotifyAfterName );
+  if( ANotifyAfterName <> '' ) then
+    ListBox.ItemIndex := ListBox.Items.IndexOf( ANotifyAfterName );
 
   if( ListBox.ItemIndex < 0 ) then
     ListBox.ItemIndex := 0;
@@ -78,7 +75,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWAfterPinSelectForm.FillFromSourcePin( AExcludePin : TOWBasicPin; ASourcePin : TOWSourcePin; ANotifyAfterPin : TOWBasicPin );
 var
-  NotifyAfterName : String;
+  ANotifyAfterName : String;
 
 begin
   ListBox.Items.Add( '(none)' );
@@ -93,10 +90,10 @@ begin
     end;
 
   if( ANotifyAfterPin <> NIL ) then
-    NotifyAfterName := ANotifyAfterPin.GetFullName( APinRoot <> ANotifyAfterPin.GetRoot() );
+    ANotifyAfterName := ANotifyAfterPin.GetFullName( APinRoot <> ANotifyAfterPin.GetRoot() );
 
-  if( NotifyAfterName <> '' ) then
-    ListBox.ItemIndex := ListBox.Items.IndexOf( NotifyAfterName );
+  if( ANotifyAfterName <> '' ) then
+    ListBox.ItemIndex := ListBox.Items.IndexOf( ANotifyAfterName );
 
   if( ListBox.ItemIndex < 0 ) then
     ListBox.ItemIndex := 0;
