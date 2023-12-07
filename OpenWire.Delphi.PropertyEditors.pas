@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,8 +50,8 @@ type
     function  GetName(): String; override;
     function  GetValue() : String; override;
     function  GetValueW() : WideString; override;
-    procedure SetValue( const AValue : String); overload; override;
-    procedure SetValue( const AValue : WideString); overload; override;
+    procedure SetValue( const AValue : String ); overload; override;
+    procedure SetValue( const AValue : WideString ); overload; override;
     function  GetParentStrings() : IStringArrayList;
     procedure SetParentString( const AValue : String );
     function  ValueAvailable() : Boolean;
