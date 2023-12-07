@@ -13,7 +13,7 @@ unit OWLComps;
 interface
 
 uses
-  SysUtils, Classes,
+  System.Classes, System.SysUtils,
 {$IFDEF FMX}
   FMX.Types, FMX.Controls,
 {$ELSE}
@@ -31,11 +31,11 @@ type
     FNegativeInputPins  : TOWPinListOwner;
 
   private
-    FPositiveDataArray  : array of Single;
-    FNegativeDataArray  : array of Single;
+    FPositiveDataArray  : TArray<Single>;
+    FNegativeDataArray  : TArray<Single>;
 
   protected
-    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 
     function  CreatePositivePin( APinListOwner : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin;
     function  CreateNegativePin( APinListOwner : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin;
@@ -54,7 +54,7 @@ type
 
   end;
 
-  TOWLTestClock = class(TTimer)
+  TOWLTestClock = class( TTimer )
   protected // OpenWire support
     FOutputPin      : TOWFloatSourcePin;
     
@@ -98,16 +98,16 @@ type
   end;
 
 type
-  TOWLMultiply = class(TComponent)
+  TOWLMultiply = class( TComponent )
   protected // OpenWire support
     FOutputPin  : TOWFloatSourcePin;
     FInputPins  : TOWPinListOwner;
 
   private
-    FInputDataArray : array of Single;
+    FInputDataArray : TArray<Single>;
 
   protected
-    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 
     function  CreateInputPin( APinListOwner : TOWPinList; const AOnCreated : TProc<TOWPin> ) : TOWPin;
     procedure DestroyInputPin( APinListOwner : TOWPinList; APin : TOWBasicPin );
@@ -123,7 +123,7 @@ type
   end;
 
 type
-  TOWLDivide = class(TComponent)
+  TOWLDivide = class( TComponent )
   private
     FDivisible : Single;
     FDivider   : Single;
@@ -136,7 +136,7 @@ type
   protected
     procedure SendDivisibleData( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean );
     procedure SendDividerData( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean );
-    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+    function  PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 
   public
     constructor Create(AOwner : TComponent); override;
@@ -150,7 +150,7 @@ type
   end;
 
 type
-  TOWLLabel = class(TLabel)
+  TOWLLabel = class( TLabel )
   protected
     FInputPin : TOWFloatSinkPin;
 
@@ -172,7 +172,7 @@ implementation
 
 
 //---------------------------------------------------------------------------
-constructor TOWLAdd.Create(AOwner : TComponent);
+constructor TOWLAdd.Create( AOwner : TComponent );
 begin
   inherited;
   TOWFloatSourcePin.CreateEx( TOWPin.PinOwnerSetter<TOWFloatSourcePin>( FOutputPin, Self, Self ), NIL, PinNotification );
@@ -182,9 +182,9 @@ end;
 //---------------------------------------------------------------------------
 destructor TOWLAdd.Destroy();
 begin
-  FNegativeInputPins.DisposeOf();
-  FPositiveInputPins.DisposeOf();
-  FOutputPin.DisposeOf();
+  FNegativeInputPins.Free();
+  FPositiveInputPins.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ begin
   SetLength( FNegativeDataArray, APinListOwner.Count );
 end;
 //---------------------------------------------------------------------------
-function TOWLAdd.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+function TOWLAdd.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 begin
   var AValue : Single := 0.0;
 
@@ -259,8 +259,8 @@ end;
 //---------------------------------------------------------------------------
 destructor TOWLMultiply.Destroy();
 begin
-  FInputPins.DisposeOf();
-  FOutputPin.DisposeOf();
+  FInputPins.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ begin
   SetLength( FInputDataArray, APinListOwner.Count );
 end;
 //---------------------------------------------------------------------------
-function TOWLMultiply.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+function TOWLMultiply.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 begin
   var AValue : Single := 1;
 
@@ -316,13 +316,13 @@ end;
 //---------------------------------------------------------------------------
 destructor  TOWLDivide.Destroy();
 begin
-  FDividerInputPin.DisposeOf();
-  FDivisibleInputPin.DisposeOf();
-  FOutputPin.DisposeOf();
+  FDividerInputPin.Free();
+  FDivisibleInputPin.Free();
+  FOutputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
-function TOWLDivide.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; ADataTypeID : PDataTypeID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
+function TOWLDivide.PinNotification( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 var
   AValue  : Single;
   
@@ -364,7 +364,7 @@ end;
 //---------------------------------------------------------------------------
 destructor TOWLTestClock.Destroy();
 begin
-  FOutputPin.DisposeOf();
+  FOutputPin.Free();
   inherited;
 end;
 
@@ -453,7 +453,7 @@ end;
 //---------------------------------------------------------------------------
 destructor TOWLLabel.Destroy();
 begin
-  FInputPin.DisposeOf();
+  FInputPin.Free();
   inherited;
 end;
 //---------------------------------------------------------------------------
