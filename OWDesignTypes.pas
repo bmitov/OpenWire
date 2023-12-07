@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@ uses
 {$IFDEF FPC}
   LCLIntf, LMessages, LResources, PropEdits, ComponentEditors,
 {$ELSE}
-  Windows, Vcl.Graphics,
+  WinApi.Windows, Vcl.Graphics, Mitov.Containers.List,
 
   {$IFDEF __VSDESIGN__}
     Mitov.Design,
@@ -29,40 +29,32 @@ uses
     {$ELSE}
       DesignEditors,
       DesignIntf,
-      TypInfo,
+      System.TypInfo,
     {$ENDIF}
   {$ENDIF}
 
 {$ENDIF}
-    Vcl.Forms, Messages, Classes, Contnrs, OWPins, OWStdTypes, Mitov.Containers.Dictionary, Mitov.Utils;
+    Vcl.Forms, WinApi.Messages, System.Classes, OWPins, OWStdTypes, Mitov.Containers.Dictionary, Mitov.Utils,
+    Mitov.Attributes, Mitov.Containers.Common;
 
   type TOWPropNameString = String;
   type TOWPropertyDesigner = IDesigner;
 
 type
-  TOWEPinEntry = class
+  TOWEPinEntry = class( TBasicObject )
     public
-      Pin               : TOWBasicPin;
-      PinName           : String;
-      OwnerName         : String;
+      Pin           : TOWBasicPin;
+      PinName       : String;
+      OwnerName     : String;
 
-      SavedChecked      : Boolean;
-      Checked           : Boolean;
+      SavedChecked  : Boolean;
+      Checked       : Boolean;
 
-      Dispatcher        : TOWBasicStateDispatcher;
-
-  end;
-//---------------------------------------------------------------------------
-  TOWEPinsList = class( TObjectList )
-  protected
-    function GetItem( Index : Integer ) : TOWEPinEntry;
-
-  public
-    property Items[ Index : Integer ] : TOWEPinEntry read GetItem; default;
+      Dispatcher    : TOWBasicStateDispatcher;
 
   end;
 //---------------------------------------------------------------------------
-  TOWModulesColection = class(TStringList)
+  TOWModulesColection = class( TStringArrayList )
   public
     procedure GetModules( const AFileName, AUnitName, AFormName, ADesignClass : String; ACoClasses : TStrings );
 
@@ -110,14 +102,6 @@ var
 {$ENDIF}
 {$ENDIF}
 //---------------------------------------------------------------------------
-function TOWEPinsList.GetItem( Index : Integer ) : TOWEPinEntry;
-begin
-  Result := TOWEPinEntry( inherited Items[ Index ] );
-end;
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
 procedure TOWModulesColection.GetModules( const AFileName, AUnitName, AFormName, ADesignClass : String; ACoClasses : TStrings );
 begin
   if( AFormName <> '' ) then
@@ -149,7 +133,6 @@ end;
 procedure OWLinkAwaitsLinkingAllForms();
 var
   AModule         : IOTAModule;
-
   AModuleServices : IOTAModuleServices;
   AFormEditor     : INTAFormEditor;
 
@@ -175,14 +158,14 @@ begin
         if( AProject.GetModule( ModuleIndex ).GetFileName <> '' ) then
           begin
           try
-            var AModuleFileExt := UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName ));
+            var AModuleFileExt := TypeString( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName() )).ToUpperCase();
             if( ( AModuleFileExt <> '.CPP' ) and ( AModuleFileExt <> '.PAS' ) and ( AModuleFileExt <> '.DFM' )) then
                Continue;
 {
-            if( UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName )) = '.RES' ) then
+            if( TypeString( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName ) ).ToUpperCase() = '.RES' ) then
                Continue;
 
-            if( UpperCase( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName )) = '.DCP' ) then
+            if( TypeString( ExtractFileExt( AProject.GetModule( ModuleIndex ).GetFileName )).ToUpperCase() = '.DCP' ) then
                Continue;
 }
 
@@ -221,7 +204,7 @@ begin
 
   GPinsNeedRefresh := True;
 
-  MainThreadExecute( NIL, True, OWLinkAwaitsLinkingAllForms );
+  MainThread.Execute( NIL, True, OWLinkAwaitsLinkingAllForms );
 end;
 //---------------------------------------------------------------------------
 procedure OWGetPinValueList( ACollection : IPairCollection<String, TOWBasicPin>; AOwnerComponent : TComponent; APin : TOWPin; AFilterPins : Boolean );
@@ -258,15 +241,12 @@ end;
 //---------------------------------------------------------------------------
 procedure OWRequestRefreshEx( ADesigner : TOWPropertyDesigner );
 begin
-  var AFormNames := TOWModulesColection.Create();
-  try
-    ADesigner.GetProjectModules( AFormNames.GetModules );
-    for var I : Integer := 0 to AFormNames.Count - 1 do
-      OWCanAccessRootFromName( ADesigner, AFormNames.Strings[ I ] );
+  var AFormNamesObj := TOWModulesColection.Create();
+  var AFormNames : IStringArrayList := AFormNamesObj;
 
-  finally
-    AFormNames.DisposeOf();
-    end;
+  ADesigner.GetProjectModules( AFormNamesObj.GetModules );
+  for var AName in AFormNames do
+    OWCanAccessRootFromName( ADesigner, AName );
 
   OWRequestDesignerRefresh();
 end;
@@ -284,7 +264,7 @@ type
   IOWStreamInfoOWEditorExtention = interface( IOWStreamInfoExtention )
     ['{21C15026-CF32-4579-AE17-4EA6A065A7C5}']
 
-    [Result : weak]
+    [Result : Weak]
     function GetInstance() : TOWStreamInfoOWEditorExtention;
 
   end;
@@ -295,7 +275,7 @@ type
     FThickness  : Single;
 
   protected
-    [Result : weak]
+    [Result : Weak]
     function GetInstance() : TOWStreamInfoOWEditorExtention;
 
   public
@@ -374,6 +354,8 @@ begin
   OWRegisterStreamColorThickness( IOWStringListStream,      TColors.Teal, 2 );
   OWRegisterStreamColorThickness( IOWColorStream,           TColors.Navy, 1 );
   OWRegisterStreamColorThickness( IOWAlphaColorStream,      TColors.Lightblue, 1 );
+  OWRegisterStreamColorThickness( IOWRGBWColorStream,       TColors.Darkblue, 1 );
+  OWRegisterStreamColorThickness( IOWRGBWAlphaColorStream,  TColors.Lightsteelblue, 1 );
   OWRegisterStreamColorThickness( IOWIntRangedStream,       TColors.Fuchsia, 1 );
   OWRegisterStreamColorThickness( IOWInt64RangedStream,     TColors.Fuchsia, 1 );
   OWRegisterStreamColorThickness( IOWRealRangedStream,      TColors.Red, 1 );
