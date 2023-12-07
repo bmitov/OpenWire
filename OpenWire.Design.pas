@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2021 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,9 +25,11 @@ uses
 type
   TOWPinListOwnerPropertyEditor = class( TSinglePropertyEditor )
 {$IFNDEF VCL_EDITORS}
+  protected
+    function  GetStringValuesInternal( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList; override;
+
   public
     function  GetDisplayValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList; override;
-    function  GetStringValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList; override;
     procedure SetStringValue( const AValue : String ); override;
 {$ENDIF}
   end;
@@ -39,7 +41,7 @@ procedure Register;
 implementation
 
 uses
-  System.SysUtils, System.Rtti, OWPins, Mitov.Design.Components;
+  System.SysUtils, System.Rtti, OWPins, Mitov.Utils;
 
 {$IFNDEF VCL_EDITORS}
 function TOWPinListOwnerPropertyEditor.GetDisplayValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
@@ -58,7 +60,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-function TOWPinListOwnerPropertyEditor.GetStringValues( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
+function TOWPinListOwnerPropertyEditor.GetStringValuesInternal( const AObjectsList : IObjectArrayList = NIL ) : IStringArrayList;
 begin
   Result := TStringArrayList.Create();
   for var AValue in GetInstanceValues( AObjectsList ) do
@@ -68,14 +70,14 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWPinListOwnerPropertyEditor.SetStringValue( const AValue : String );
 var
-  AModification : IModificationInstance;
+  AModification : IManagedSection;
 
 begin
   var APinList := GetInstanceValues()[ 0 ].AsType<TOWPinListOwner>;
   var ANewValue := StrToIntDef( AValue, APinList.Count );
   if( ANewValue <> APinList.Count ) then
     begin
-    AModification := BeginModify();
+    AModification := BeginModify( False );
     APinList.Count := ANewValue;
 //    Modified();
     end;
