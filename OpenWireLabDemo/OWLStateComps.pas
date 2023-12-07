@@ -11,7 +11,7 @@ unit OWLStateComps;
 interface
 
 uses
-  Classes, Vcl.ComCtrls, OWStdTypes, OWPins;
+  System.Classes, Vcl.ComCtrls, OWStdTypes, OWPins;
 
 type
   TOWLTrackBar = class( TTrackBar )
@@ -66,7 +66,7 @@ end;
 
 destructor  TOWLTrackBar.Destroy;
 begin
-  FPositionPin.DisposeOf();
+  FPositionPin.Free();
   inherited;
 end;
 
@@ -85,7 +85,7 @@ begin
   FPositionPin.Value := Position;
 end;
 
-constructor TOWLProgressBar.Create(AOwner : TComponent);
+constructor TOWLProgressBar.Create( AOwner : TComponent );
 begin
   inherited;
   TOWFloatIntStatePin.Create( TOWPin.PinOwnerSetter<TOWFloatIntStatePin>( FPositionPin, Self, Self ), NIL, FloatChangeEvent );
@@ -93,7 +93,7 @@ end;
 
 destructor  TOWLProgressBar.Destroy;
 begin
-  FPositionPin.DisposeOf();
+  FPositionPin.Free();
   inherited;
 end;
 
