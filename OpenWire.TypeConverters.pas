@@ -3,7 +3,7 @@ unit OpenWire.TypeConverters;
 interface
 
 uses
-  OWPins, Mitov.Containers.List, Mitov.Containers.Dictionary, Mitov.Elements;
+  OWPins, Mitov.Containers.List, Mitov.Containers.Dictionary, Mitov.Elements, Mitov.Containers.Common;
 
 type
   TOWTypeConverterEntry = class;
@@ -11,12 +11,12 @@ type
   IOWTypeConverterEntry = interface
     ['{C8A8135F-6D0F-45CE-AFB5-12A414F3DFA2}']
 
-    [Result : weak]
+    [Result : Weak]
     function GetInstance() : TOWTypeConverterEntry;
 
   end;
 //---------------------------------------------------------------------------
-  TOWTypeConverterEntry = class( TInterfacedObject, IOWTypeConverterEntry )
+  TOWTypeConverterEntry = class( TBasicInterfacedObject, IOWTypeConverterEntry )
   protected
     FInputID          : TGUID;
     FOutputID         : TGUID;
@@ -26,13 +26,13 @@ type
     function GetConverterClass() : TOWFormatConverterClass;
 
   protected
-    [Result : weak]
+    [Result : Weak]
     function GetInstance() : TOWTypeConverterEntry;
 
   public
-    property InputID          : TGUID                               read FInputID;
-    property OutputID         : TGUID                               read FOutputID;
-    property ConverterClass   : TOWFormatConverterClass             read GetConverterClass;
+    property InputID : TGUID                                        read FInputID;
+    property OutputID : TGUID                                       read FOutputID;
+    property ConverterClass : TOWFormatConverterClass               read GetConverterClass;
     property ConverterClasses : IArrayList<TOWFormatConverterClass> read FConverterClasses;
 
   public
@@ -45,7 +45,7 @@ type
 //---------------------------------------------------------------------------
 procedure OWRegisterTypeConverter( const AInputID : TGUID; const AOutputID : TGUID; AConverterClass : TOWFormatConverterClass ); overload;
 procedure OWRegisterTypeConverter( AConverterClass : TOWFormatConverterClass ); overload;
-procedure OWRegisterTypeConverters( AConverterClasses : array of TOWFormatConverterClass );
+procedure OWRegisterTypeConverters( const AConverterClasses : TArray<TOWFormatConverterClass> );
 function  OWGetConverter( const AInputID : TGUID; const AOutputID : TGUID; out AConverterClass : TOWFormatConverterClass ) : Boolean;
 function  OWCanConvert( const AInputID : TGUID; const AOutputID : TGUID ) : Boolean;
 function  OWSetTypeConvertrsEnabled( AValue : Boolean ) : Boolean;
@@ -108,12 +108,12 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-function _OWGetTypeConverterEntry( AInputID : TGUID; AOutputID : TGUID; out AEntry  : TOWTypeConverterEntry ) : Boolean;
+function _OWGetTypeConverterEntry( const AInputID : TGUID; const AOutputID : TGUID; out AEntry : TOWTypeConverterEntry ) : Boolean;
 var
   AConverter  : IOWTypeConverterEntry;
 
 begin
-  if( GOWConverterTypes.GetValue( TRecTuple<TGUID,TGUID>.Create(AInputID, AOutputID), AConverter )) then
+  if( GOWConverterTypes.GetValue( TRecTuple<TGUID,TGUID>.Create( AInputID, AOutputID ), AConverter )) then
     begin
     AEntry := AConverter.GetInstance();
     Exit( True );
@@ -147,7 +147,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterTypeConverters( AConverterClasses : array of TOWFormatConverterClass );
+procedure OWRegisterTypeConverters( const AConverterClasses : TArray<TOWFormatConverterClass> );
 begin
   for var AConverterClass in AConverterClasses do
     OWRegisterTypeConverter( AConverterClass );
