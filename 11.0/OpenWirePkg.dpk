@@ -15,8 +15,8 @@ package OpenWirePkg;
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION OFF}
-{$OVERFLOWCHECKS OFF}
-{$RANGECHECKS OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES ON}
@@ -28,7 +28,7 @@ package OpenWirePkg;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Mitov Runtime'}
-{$LIBSUFFIX '280'}
+{$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -40,7 +40,6 @@ contains
   OWPins in '..\OWPins.pas',
   OWStdTypes in '..\OWStdTypes.pas',
   OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas',
-  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas',
-  OWUtils in '..\OWUtils.pas';
+  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas';
 
 end.

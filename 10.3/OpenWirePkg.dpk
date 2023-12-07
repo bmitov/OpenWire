@@ -40,7 +40,6 @@ contains
   OWPins in '..\OWPins.pas',
   OWStdTypes in '..\OWStdTypes.pas',
   OpenWire.TypeConverters in '..\OpenWire.TypeConverters.pas',
-  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas',
-  OWUtils in '..\OWUtils.pas';
+  Mitov.Categories.OpenWire in '..\Mitov.Categories.OpenWire.pas';
 
 end.

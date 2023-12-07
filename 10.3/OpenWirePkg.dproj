@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{57faa0c1-c69d-4109-b04c-7c37c0540526}</ProjectGuid>
         <MainSource>OpenWirePkg.dpk</MainSource>
@@ -97,6 +97,12 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSX32)'!=''">
+        <Cfg_2_OSX32>true</Cfg_2_OSX32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
         <Cfg_2_Win32>true</Cfg_2_Win32>
         <CfgParent>Cfg_2</CfgParent>
@@ -120,7 +126,7 @@
         <DCC_HppOutput>.\$(Platform)</DCC_HppOutput>
         <DCC_ObjOutput>.\$(Platform)\$(Config)</DCC_ObjOutput>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.35;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.35;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.101;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.101;Comments=</VerInfo_Keys>
         <DCC_BplOutput>.\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_DcpOutput>.\$(Platform)\$(Config)</DCC_DcpOutput>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -224,8 +230,9 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <VerInfo_MajorVer>7</VerInfo_MajorVer>
         <VerInfo_Build>182</VerInfo_Build>
-        <Debugger_DebugSourcePath>C:\OpenWireIDE\Arduino\;C:\Program Files (x86)\Embarcadero\Studio\20.0\OpenWire\Editor\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
-        <Debugger_RunParams>D:\Test15_1_2.visuino</Debugger_RunParams>
+        <Debugger_DebugSourcePath>C:\OpenWireIDE\Arduino\;C:\Program Files (x86)\Embarcadero\Studio\20.0\OpenWire\Editor\;C:\Program Files (x86)\Embarcadero\Studio\20.0\LabPacks\Mitov\Arduino\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
+        <Debugger_RunParams>-NBD D:\ik1_Write1_NoBoard.visuino</Debugger_RunParams>
+        <Debugger_CWD>C:\OpenWireIDE\Visuino Pro\10.3\Win32\Debug\</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <DCC_BplOutput>$(windir)\Sysnative</DCC_BplOutput>
@@ -237,6 +244,9 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>0</DCC_DebugInformation>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_OSX32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -256,7 +266,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="..\OWStdTypes.pas"/>
         <DCCReference Include="..\OpenWire.TypeConverters.pas"/>
         <DCCReference Include="..\Mitov.Categories.OpenWire.pas"/>
-        <DCCReference Include="..\OWUtils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -283,7 +292,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
                     <VersionInfo Name="MajorVer">8</VersionInfo>
                     <VersionInfo Name="MinorVer">0</VersionInfo>
                     <VersionInfo Name="Release">0</VersionInfo>
-                    <VersionInfo Name="Build">35</VersionInfo>
+                    <VersionInfo Name="Build">101</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
                     <VersionInfo Name="PreRelease">False</VersionInfo>
                     <VersionInfo Name="Special">False</VersionInfo>
@@ -295,13 +304,13 @@ $(PostBuildEvent)]]></PostBuildEvent>
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">8.0.0.35</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">8.0.0.101</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">8.0.0.35</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">8.0.0.101</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
                 <Excluded_Packages>
