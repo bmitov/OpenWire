@@ -484,6 +484,9 @@ type
     FOnDisconnect : TOWPinEvent;
 
   public
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWManagedDispatchSourcePin; virtual;
+
+  public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
 
   end;
@@ -565,6 +568,9 @@ type
     function  DispatchDataImpl( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
 
   public
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWClockSinkPin; virtual;
+
+  public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL );
 
   end;
@@ -579,6 +585,9 @@ type
 
   protected
     function  DispatchDataImpl( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; override; stdcall;
+
+  public
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWClockMultiSinkPin; virtual;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ); virtual;
@@ -625,7 +634,10 @@ type
     procedure BeforeDisconnectFrom( const APin : TOWBasicPin ); override;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent );// overload; virtual;
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdStatePin; virtual;
+
+  public
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent ); virtual;
 
   end;
 //---------------------------------------------------------------------------
@@ -645,6 +657,9 @@ type
     function  DispatchData( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
     function  DispatchDataImpl( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
     function  TryCustomDispatch( const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean; virtual;
+
+  public
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdSinkPin; virtual;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ); virtual;
@@ -667,6 +682,9 @@ type
     function  DispatchData( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
     function  DispatchDataImpl( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
     function  TryCustomDispatch( const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AResult : TOWNotifyResult ) : Boolean;
+
+  public
+    class function CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdMultiSinkPin; virtual;
 
   public
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ); virtual;
@@ -772,7 +790,7 @@ type
     class function CreateGeneric( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ) : TOWBasicTypedStatePin<T_Data>;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
     property Value : T_Data read FValue write SetValue;
@@ -900,7 +918,7 @@ type
     procedure SubmitRange( const AMin : T_Data; const AMax : T_Data );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AValue : T_Data; const AMin : T_Data; const AMax : T_Data; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AValue : T_Data; const AMin : T_Data; const AMax : T_Data; const AOnDataChange : TOWTypedValueRangeChangeEvent<T_Data>; const AOnRangeChange : TOWTypedRangeChangeEvent<T_Data> = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
     property Min : T_Data   read FMin   write SetMin;
@@ -1078,7 +1096,7 @@ type
     function  DispatchDataImpl( AOtherPin : TOWBasicPin; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult; virtual; stdcall;
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<IStringArrayList>; const AOnGetDataEvent : TOWStringListGetDataEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<IStringArrayList>; const AOnGetDataEvent : TOWStringListGetDataEvent = NIL; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
     procedure Send( AValue : IStringArrayList );
@@ -1239,7 +1257,7 @@ type
     procedure Send( AValue : Single );
 
   public
-    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<Single>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL );
+    constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<Single>; const AOnDisconnect : TOWPinEvent = NIL; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
     property Value : Single read FValue write SetValue;
@@ -1671,6 +1689,11 @@ begin
   FDispatchAsBasicStream := TypeInfo().AccessAttributes.GetAll<OWDispatchAsBasicStreamAttribute>().ToArray();
 end;
 //---------------------------------------------------------------------------
+class function TOWStdStatePin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdStatePin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnDisconnect, AOnPinDispatchEvent );
+end;
+//---------------------------------------------------------------------------
 function TOWStdStatePin.NotificationCall( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
 var
   ABasicInterf  : IOWBasicStream;
@@ -1737,6 +1760,11 @@ begin
   FDispatchAsBasicStream := TypeInfo().AccessAttributes.GetAll<OWDispatchAsBasicStreamAttribute>().ToArray();
 end;
 //---------------------------------------------------------------------------
+class function TOWStdSinkPin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdSinkPin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnPinDispatchEvent );
+end;
+//---------------------------------------------------------------------------
 function TOWStdSinkPin.NotificationCall( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
 var
   ABasicInterf  : IOWBasicStream;
@@ -1793,6 +1821,11 @@ begin
   FTryCustomFirst := ATypeInfo.HasCustomAttribute( OWTryCustomFirstAttribute );
 
   FDispatchAsBasicStream := TypeInfo().AccessAttributes.GetAll<OWDispatchAsBasicStreamAttribute>().ToArray();
+end;
+//---------------------------------------------------------------------------
+class function TOWStdMultiSinkPin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnPinDispatchEvent : TOWPinDispatchEvent ) : TOWStdMultiSinkPin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnPinDispatchEvent );
 end;
 //---------------------------------------------------------------------------
 function TOWStdMultiSinkPin.NotificationCall( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -1918,6 +1951,11 @@ constructor TOWManagedDispatchSourcePin.Create( const AOnCreated : TProc<TOWPin>
 begin
   inherited Create( AOnCreated, AOwnerLock, -1, APinNotificationEvent );
   FOnDisconnect := AOnDisconnect;
+end;
+//---------------------------------------------------------------------------
+class function TOWManagedDispatchSourcePin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDisconnect : TOWPinEvent = NIL; const APinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWManagedDispatchSourcePin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnDisconnect, APinNotificationEvent );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2064,6 +2102,11 @@ begin
   inherited Create( AOnCreated, AOwnerLock, AOnPinNotificationEvent );
   FOnClock := AOnClock;
   AddType( IOWClockStream, ClockNotification, True );
+end;
+//---------------------------------------------------------------------------
+class function TOWClockSinkPin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWClockSinkPin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnClock, AOnPinNotificationEvent );
 end;
 //---------------------------------------------------------------------------
 function TOWClockSinkPin.ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -5405,6 +5448,11 @@ begin
   AddType( IOWClockStream, ClockNotification, True );
 end;
 //---------------------------------------------------------------------------
+class function TOWClockMultiSinkPin.CreateAutomatic( AOwner : TObject; const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnClock : TOWClockEvent; const AOnPinNotificationEvent : TOWBasicPinNotificationEvent = NIL ) : TOWClockMultiSinkPin;
+begin
+  Result := Create( AOnCreated, AOwnerLock, AOnClock, AOnPinNotificationEvent );
+end;
+//---------------------------------------------------------------------------
 function TOWClockMultiSinkPin.ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
 var
   AInterf : IOWClockStream;
@@ -5983,7 +6031,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWSourcePin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWDispatchSourcePinClass( AClass.MetaclassType ).Create(
+              TOWDispatchSourcePinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -5999,7 +6049,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWDispatchSourcePinClass( AClass.MetaclassType ).Create(
+              TOWDispatchSourcePinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6028,7 +6080,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdStatePin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdStatePinClass( AClass.MetaclassType ).Create(
+              TOWStdStatePinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6044,7 +6098,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdStatePinClass( AClass.MetaclassType ).Create(
+              TOWStdStatePinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6071,7 +6127,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdSinkPinClass( AClass.MetaclassType ).Create(
+              TOWStdSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6087,7 +6145,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdSinkPinClass( AClass.MetaclassType ).Create(
+              TOWStdSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6114,7 +6174,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWStdMultiSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWStdMultiSinkPinClass( AClass.MetaclassType ).Create(
+              TOWStdMultiSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6130,7 +6192,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWStdMultiSinkPinClass( AClass.MetaclassType ).Create(
+              TOWStdMultiSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6159,7 +6223,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWClockSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWClockSinkPinClass( AClass.MetaclassType ).Create(
+              TOWClockSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6175,7 +6241,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWClockSinkPinClass( AClass.MetaclassType ).Create(
+              TOWClockSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6204,7 +6272,9 @@ begin
         TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
             procedure( AComponent : TComponent )
             begin
-              TOWClockMultiSinkPinClass( AClass.MetaclassType ).Create(
+              TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
@@ -6220,7 +6290,9 @@ begin
           ,
             procedure( const APath : IPropertyElements; const AName : String )
             begin
-              TOWClockMultiSinkPinClass( AClass.MetaclassType ).Create(
+              TOWClockMultiSinkPinClass( AClass.MetaclassType ).CreateAutomatic(
+                  AInstance
+                ,
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin

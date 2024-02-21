@@ -899,7 +899,7 @@ type
 
   protected
     procedure LinkToStateByName( const AIdentName : String ); virtual;
-    procedure CheckVirtualList(); virtual;
+    function  CheckVirtualList( AForceCheck : Boolean ) : Boolean; virtual;
     function  DoStateWrite() : Boolean; virtual;
     function  DoStateConverterWrite() : Boolean; virtual;
     function  DoFormWrite() : Boolean; virtual;
@@ -1069,7 +1069,7 @@ type
   protected
     function  GetSubmitFunctionID( const IID : TGUID ) : TOWSubmit;
     function  GetLinkNameID( const IID : TGUID ) : String;
-    procedure CheckVirtualList(); override;
+    function  CheckVirtualList( AForceCheck : Boolean ) : Boolean; override;
     function  CanConnectToInt( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : Boolean; override;
     function  GetNameInt() : String; override;
     function  GetFullIdentNameInt( AIncludeRootForm : Boolean; ALoadIndexed : Boolean ) : String; override;
@@ -1090,7 +1090,7 @@ type
     procedure SetRootAndName( ARoot : TComponent; const AName : String; AInDesignMode : Boolean ); override;
 
   public
-    function  ReadLock()  : ILockSection; override;
+    function  ReadLock() : ILockSection; override;
     function  WriteLock() : ILockSection; override;
 
   public
@@ -2085,6 +2085,9 @@ type
     procedure ConnectPin( ACurrentPinIndex : Integer; AType : TOWPinType; AToType : TOWPinType; const AIdent : String; const AIdentName : String );
 
   public
+    procedure SetOwnerComponent( AComponent : TComponent ); virtual;
+
+  public
     function  GetEmbeddedOwner() : TComponent; override;
 
   public
@@ -2169,9 +2172,10 @@ function  OWGetStreamTypeFromID( const AStreamTypeID : TGUID ) : String; overloa
 function  OWGetDebugStreamTypeFromID( const AStreamTypeID : TGUID; AIncludeGUID : Boolean = False ) : String;
 function  OWGetAllLinked() : Boolean;
 procedure OWGetClassPropertiesOfType( const ACollection : IPairCollection<String, TObject>; AObject : TObject; AType : TClass; ASaveValue : Boolean );
-procedure OWCheckUnloadedLinks( ARoot : TComponent );
-procedure OWClearPendingLinks();
+procedure OWCheckUnloadedLinks( ARoot : TComponent; AForceCheck : Boolean = False );
+procedure OWClearPendingLinks( AForceCheck : Boolean = False; ARoot : TComponent = NIL );
 procedure OWClearPendingPasteLinks();
+procedure OWSetCheckPartialPinNames( AValue : Boolean );
 function  OWGetClassPropertyNameForPropertyObject( AObject : TObject; APinObject : TObject; ASaveValue : Boolean; AIncludeInjecetd : Boolean ) : String;
 function  OWGetInjectedObject( AClass : TObject; APinObject : TObject; AReturnType : TBindingValueType; var AResultName : String ) : Boolean;
 function  OWGetInjectedClassPropertiesOfType( AClass : TObject; AType : TClass; const ACollection : IPairCollection<String, TObject>; ASaveValue : Boolean ) : Boolean;
@@ -2267,7 +2271,7 @@ type
 
   end;
 //---------------------------------------------------------------------------
-procedure OWRegisterStreamExtention( const AStreamTypeID : TGUID; AExtention : IOWStreamInfoExtention );
+procedure OWRegisterStreamExtention( const AStreamTypeID : TGUID; const AExtention : IOWStreamInfoExtention );
 function  OWGetStreamExtentionFromID( const AStreamTypeID : TGUID; const AExtentionID : TGUID; out AExtention : IOWStreamInfoExtention ) : Boolean;
 function  OWGetStreamIsCoreInterface( const AStreamTypeID : TGUID ) : Boolean;
 function  OWGetIsStreamInterface( const AStreamTypeID : TGUID ) : Boolean;
@@ -2308,6 +2312,9 @@ procedure OWNotifyChangePin( APin : TOWBasicPin; ADebugPinChange : Boolean );
 function  OWHasConnectedPins( AObject : TObject ) : Boolean;
 
 procedure OWRemovePinFromDictionaries( APin : TOWBasicPin );
+
+procedure OWAddRootAlias( const ARootName : String; const AAliasName : String );
+procedure OWRemoveRootAlias( const ARootName : String; const AAliasName : String );
 //---------------------------------------------------------------------------
 const
   GOWDISCONNECTED = '(Disconnected)';
@@ -2325,6 +2332,9 @@ var
   GIOWStream                : IInterfaceTypeInfo;
   GObjectInUseGetter        : TFunc<TObject, Boolean>;
   GSerializationLoadingEnd  : TProc;
+  GPendingExtensions        : TMultiProc;
+  GCheckPartialPinNames     : Boolean = True;
+  GRootAliasDictionary      : IDictionary<String, ILinkedList<String>>;
 
 type
   PGUID = ^TGUID;
@@ -3107,6 +3117,12 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
+procedure ProcessPendingExtensions();
+begin
+  GPendingExtensions.Notify();
+  GPendingExtensions.Clear();
+end;
+//---------------------------------------------------------------------------
 function GetStreamTypeEntry( const AID : TGUID ) : TOWStreamTypeEntry;
 begin
   if( GOWStreamTypes.GetValue( AID, Result )) then
@@ -3129,9 +3145,15 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure OWRegisterStreamExtention( const AStreamTypeID : TGUID; AExtention : IOWStreamInfoExtention );
+procedure OWRegisterStreamExtention( const AStreamTypeID : TGUID; const AExtention : IOWStreamInfoExtention );
 begin
-  GetStreamTypeEntry( AStreamTypeID ).Extentions[ AExtention.GetExtentionId() ] := AExtention;
+  GPendingExtensions.Add(
+      procedure()
+      begin
+        GetStreamTypeEntry( AStreamTypeID ).Extentions[ AExtention.GetExtentionId() ] := AExtention;
+      end
+    );
+
 end;
 //---------------------------------------------------------------------------
 function OWGetStreamIsCoreInterface( const AStreamTypeID : TGUID ) : Boolean;
@@ -3139,6 +3161,7 @@ var
   AEntry  : TOWStreamTypeEntry;
 
 begin
+  ProcessPendingExtensions();
   if( GOWStreamTypes.GetValue( AStreamTypeID, AEntry )) then
     Exit( AEntry.GetIsCoreInterface() );
 
@@ -3147,6 +3170,7 @@ end;
 //---------------------------------------------------------------------------
 function OWGetIsStreamInterface( const AStreamTypeID : TGUID ) : Boolean;
 begin
+  ProcessPendingExtensions();
   Result := GOWStreamTypes.ContainsKey( AStreamTypeID );
 end;
 //---------------------------------------------------------------------------
@@ -3155,6 +3179,7 @@ var
   AEntry  : TOWStreamTypeEntry;
 
 begin
+  ProcessPendingExtensions();
   if( GOWStreamTypes.GetValue( AStreamTypeID, AEntry )) then
     if( AEntry.Extentions.GetValue( AExtentionID, AExtention )) then
       Exit( True );
@@ -3165,7 +3190,13 @@ end;
 //---------------------------------------------------------------------------
 procedure OWRegisterDefaultHandler( const AStreamTypeID : TGUID; ASendFunction : TOWGlobalSubmit );
 begin
-  GetStreamTypeEntry( AStreamTypeID ).SendFunction := ASendFunction;
+  GPendingExtensions.Add(
+      procedure()
+      begin
+        GetStreamTypeEntry( AStreamTypeID ).SendFunction := ASendFunction;
+      end
+    );
+
 end;
 //---------------------------------------------------------------------------
 procedure OWRegisterPinProxyClass( AClass : TOWPinProxyClass );
@@ -3241,20 +3272,26 @@ begin
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWCheckUnloadedLinks( ARoot : TComponent );
+procedure OWCheckUnloadedLinks( ARoot : TComponent; AForceCheck : Boolean = False );
 begin
   GlobalStorageSection.Enter();
   try
-    if( ARoot = NIL ) then
+    if(( GOWUnloadedPins[ False ].Count <> 0 ) or ( GOWUnloadedPins[ True ].Count <> 0 )) then
       begin
-      for var APin in GOWPins do
-        APin.CheckVirtualList();
+      if( ARoot = NIL ) then
+        begin
+        for var APin in GOWPins.GetReverse() do
+          if( not APin.CheckVirtualList( AForceCheck )) then
+            Break;
 
-      end
+        end
 
-    else
-      for var APin in GOWPins.GetRootPinsList( ARoot ) do
-        APin.CheckVirtualList();
+      else
+        for var APin in GOWPins.GetRootPinsList( ARoot ) do
+          if( not APin.CheckVirtualList( AForceCheck )) then
+            Break;
+
+      end;
 
   except
     end;
@@ -3276,28 +3313,57 @@ begin
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWClearPendingLinks();
+procedure OWInvalidateCaches();
 begin
   GlobalStorageSection.Enter();
   try
     for var APin in GOWPins do
-      APin.CheckVirtualList();
+      APin.InvalidateCaches( NIL );
 
-    for var AIndex := False to True do
-      while( True ) do
-        try
-          var ACount := GOWUnloadedPins[ AIndex ].Count;
-          if( ACount <= 0 ) then
+  except
+    end;
+
+  GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
+procedure OWClearPendingLinks( AForceCheck : Boolean = False; ARoot : TComponent = NIL );
+begin
+  GlobalStorageSection.Enter();
+  try
+    if(( GOWUnloadedPins[ False ].Count <> 0 ) or ( GOWUnloadedPins[ True ].Count <> 0 )) then
+      begin
+      if( ARoot = NIL ) then
+        begin
+        for var APin in GOWPins.GetReverse() do
+          if( not APin.CheckVirtualList( AForceCheck )) then
             Break;
 
-          Dec( ACount );
-          var APinList := GOWUnloadedPins[ AIndex ][ ACount ].FOwnerPinList;
-          if( APinList <> NIL ) then
-            APinList.FUnloadedCount := 0;
+        end
 
-          GOWUnloadedPins[ AIndex ].Delete( ACount );
-        except
-          end;
+      else
+        begin
+        for var APin in GOWPins.GetRootPinsList( ARoot ) do
+          if( not APin.CheckVirtualList( AForceCheck )) then
+            Break;
+
+        end;
+
+      for var AIndex := False to True do
+        while( True ) do
+          try
+            var ACount := GOWUnloadedPins[ AIndex ].Count;
+            if( ACount <= 0 ) then
+              Break;
+
+            Dec( ACount );
+            var APinList := GOWUnloadedPins[ AIndex ][ ACount ].FOwnerPinList;
+            if( APinList <> NIL ) then
+              APinList.FUnloadedCount := 0;
+
+            GOWUnloadedPins[ AIndex ].Delete( ACount );
+          except
+            end;
+      end;
 
     OWClearLoadingMaps();
   except
@@ -3306,26 +3372,36 @@ begin
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
+procedure OWSetCheckPartialPinNames( AValue : Boolean );
+begin
+  GCheckPartialPinNames := AValue;
+end;
+//---------------------------------------------------------------------------
 procedure OWClearPendingPasteLinks();
 begin
   GlobalStorageSection.Enter();
   try
-    for var APin in GOWPins do
-      APin.CheckVirtualList();
+    if(( GOWUnloadedPins[ False ].Count <> 0 ) or ( GOWUnloadedPins[ True ].Count <> 0 )) then
+      begin
+      for var APin in GOWPins.GetReverse() do
+        if( not APin.CheckVirtualList( False )) then
+          Break;
 
-    for var AIndex := False to True do
-      for var I := GOWUnloadedPins[ AIndex ].Count - 1 downto 0 do
-        begin
-        var APin := GOWUnloadedPins[ AIndex ][ I ];
-        if( APin is TOWUnloadedPastePin ) then
+      for var AIndex := False to True do
+        for var I := GOWUnloadedPins[ AIndex ].Count - 1 downto 0 do
           begin
-          var APinList := GOWUnloadedPins[ AIndex ][ I ].FOwnerPinList;
-          if( APinList <> NIL ) then
-            Dec( APinList.FUnloadedCount );
+          var APin := GOWUnloadedPins[ AIndex ][ I ];
+          if( APin is TOWUnloadedPastePin ) then
+            begin
+            var APinList := GOWUnloadedPins[ AIndex ][ I ].FOwnerPinList;
+            if( APinList <> NIL ) then
+              Dec( APinList.FUnloadedCount );
 
-          GOWUnloadedPins[ AIndex ].Delete( I );
+            GOWUnloadedPins[ AIndex ].Delete( I );
+            end;
           end;
-        end;
+
+      end;
 
   except
     end;
@@ -3438,6 +3514,33 @@ begin
     end;
 
   GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
+procedure OWAddRootAlias( const ARootName : String; const AAliasName : String );
+begin
+  if( GRootAliasDictionary = NIL ) then
+    GRootAliasDictionary := TDictionary<String, ILinkedList<String>>.Create();
+
+  GRootAliasDictionary.GetOrAddValue( ARootName,
+      function() : ILinkedList<String>
+      begin
+        Result := TLinkedList<String>.Create();
+      end
+    ).Add( AAliasName );
+
+end;
+//---------------------------------------------------------------------------
+procedure OWRemoveRootAlias( const ARootName : String; const AAliasName : String );
+begin
+  var AList : ILinkedList<String>;
+  if( GRootAliasDictionary.GetValue( ARootName, AList )) then
+    begin
+    AList.RemoveOne( AAliasName );
+    if( AList.Count = 0 ) then
+      GRootAliasDictionary.Remove( ARootName );
+
+    end;
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -4558,6 +4661,9 @@ function TOWBasicPin.GetStreamInterfaces() : IArrayList<TGUID>;
 begin
   if( FStreamInterfaces = NIL ) then
     begin
+    if( GIOWStream = NIL ) then
+      GIOWStream := TRttiInfo.GetInterfaceTypes( IOWStream )[ 0 ];
+
     FStreamInterfaces := TArrayList<TGUID>.Create();
     var AIntfTable := ClassType().GetInterfaceTable();
     if( AIntfTable <> NIL ) then
@@ -4582,6 +4688,10 @@ begin
 
   var AIntfTable := ClassType().GetInterfaceTable();
   if( AIntfTable <> NIL ) then
+    begin
+    if( GIOWStream = NIL ) then
+      GIOWStream := TRttiInfo.GetInterfaceTypes( IOWStream )[ 0 ];
+
     for var I : Integer := 0 to AIntfTable.EntryCount - 1 do
       begin
       var AGUID := AIntfTable.Entries[ I ].IID;
@@ -4591,6 +4701,7 @@ begin
           Result.Add( TDataStreamInfo.Create( AGUID, True, False ) );
 
       end;
+    end;
 
   var AUpstreamOnly : IArrayList<TDataStreamInfo> := TArrayList<TDataStreamInfo>.Create();
   for var I : Integer := 0 to DataTypesCount - 1 do
@@ -4983,8 +5094,9 @@ begin
   Result := DoStateWrite();
 end;
 //---------------------------------------------------------------------------
-procedure TOWBasicPin.CheckVirtualList();
+function TOWBasicPin.CheckVirtualList( AForceCheck : Boolean ) : Boolean;
 begin
+  Result := True;
 end;
 //---------------------------------------------------------------------------
 procedure TOWBasicPin.ReadConnectionsData( AReader : TReader );
@@ -5033,7 +5145,7 @@ var
 
 begin
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   if( AReader.NextValue() = vaList ) then
     begin
@@ -5913,7 +6025,7 @@ begin
   FOwnerPinList := AValue;
   InvalidateCaches( NIL );
   if( AValue <> NIL ) then
-    CheckVirtualList();
+    CheckVirtualList( False );
 
 end;
 //---------------------------------------------------------------------------
@@ -6339,26 +6451,34 @@ begin
   Result := FindConnectionID( AOtherPin, AConverter, AConverterClass, True, GUID_NULL );
 end;
 //---------------------------------------------------------------------------
-procedure TOWPin.CheckVirtualList();
-var
-  AUnloadedPin : TOWUnloadedPin;
-
+function TOWPin.CheckVirtualList( AForceCheck : Boolean ) : Boolean;
 begin
+  if( not AForceCheck ) then
+    if( GetIsSerializationLoading() ) then
+      Exit( False );
+
   for var AIndex := False to True do
     if( GOWUnloadedPins[ AIndex ].Count <> 0 ) then
       try
         var AIdentName := GetFullIdentName( False, AIndex );
         if( AIdentName = '' ) then
-          Exit;
+          Exit( True );
 
         var AIdentName_Root := GetFullIdentName( True, AIndex );
         var ARoot := GetRoot();
 
         while True do
           begin
+          var AUnloadedPin : TOWUnloadedPin;
           if( not GOWUnloadedPins[ AIndex ].GetByIdentName( ARoot, AIdentName_Root, AUnloadedPin )) then
+            begin
+            if( not GCheckPartialPinNames ) then
+              Break;
+
             if( not GOWUnloadedPins[ AIndex ].GetByIdentName( ARoot, AIdentName, AUnloadedPin )) then
               Break;
+
+            end;
 
           AUnloadedPin.PopulatePinAndDestroy( Self )
           end;
@@ -6366,6 +6486,7 @@ begin
       except
         end;
 
+  Result := (( GOWUnloadedPins[ False ].Count <> 0 ) or ( GOWUnloadedPins[ True ].Count <> 0 ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWPin.DefineProperties( AFiler : TFiler );
@@ -6387,7 +6508,7 @@ begin
   AReader.ReadString( 'StateName',
       procedure( const AName : String )
       begin
-        CheckVirtualList();
+        CheckVirtualList( False );
         LinkToStateByName( AName );
       end
     );
@@ -6623,6 +6744,7 @@ var
 begin
   AReadLock := ReadLock();
 
+  ProcessPendingExtensions();
   if( GOWStreamTypes.GetValue( ADataTypeID, AEntry )) then
     if( Assigned( AEntry.SendFunction )) then
       begin
@@ -6834,7 +6956,7 @@ var
 
 begin
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   AReader.ReadListBegin();
   while not AReader.EndOfList do
@@ -7063,7 +7185,7 @@ begin
   AReader.ReadArray( 'SinkPins',
       procedure( const AArrayReader : ISequentialReader )
       begin
-        CheckVirtualList();
+        CheckVirtualList( False );
         AArrayReader.ReadNextNesteds(
             procedure( const AReader : IReader )
             begin
@@ -10078,7 +10200,7 @@ begin
   AWriteLock := WriteLock();
   inherited;
 
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   var AOptions := AReader.GetOptions();
 
@@ -10255,7 +10377,7 @@ var
 
 begin
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   if( AReader.NextValue() = vaIdent ) then
     begin
@@ -11501,7 +11623,7 @@ var
 
 begin
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   AReader.ReadListBegin();
   if( AReader.NextValue() = vaList ) then
@@ -11669,7 +11791,7 @@ var
 
 begin
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   var ABaseAfterPin : TOWBasicPin := NIL;
   if( AReader.NextValue() = vaList ) then
@@ -11830,7 +11952,7 @@ begin
     end;
 
   AWriteLock := WriteLock();
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   var AReadName := AIdent;
 
@@ -11909,7 +12031,7 @@ begin
   AWriteLock := WriteLock();
   inherited;
 
-  CheckVirtualList();
+  CheckVirtualList( False );
 
   var AOptions := AReader.GetOptions();
 
@@ -13841,6 +13963,58 @@ end;
 function TOWPinList.GetEmbeddedOwner() : TComponent;
 begin
   Result := FOwner;
+end;
+//---------------------------------------------------------------------------
+procedure TOWPinList.SetOwnerComponent( AComponent : TComponent );
+var
+  AWriteLock  : ILockSection;
+
+begin
+  AWriteLock := WriteLock();
+  AComponent := TClassManagement.GetRealComponent( AComponent );
+  if( FOwner = AComponent ) then
+    Exit;
+
+  OWNotifyRemovePinList( Self );
+
+  FOwner := AComponent;
+{
+  if( FOwner <> NIL ) then
+    begin
+    FRoot := NIL;
+    FLoadName := '';
+    end;
+
+  if( AComponent <> NIL ) then
+    if( csDesigning in AComponent.ComponentState ) then
+      for var I : Integer := 0 to ConnectedDispatcherCount - 1 do
+        begin
+        var ADispatcher := ConnectedDispatcher[ I ];
+        if( GRunDispatchers.Query().Contains( ADispatcher ) ) then
+          begin
+          var AFound := False;
+          var ADispatcherName := ADispatcher.Name;
+          for var J : Integer := GDesignDispatchers.Count - 1 downto 0 do
+            begin
+            var ADispatcherItem := GDesignDispatchers[ J ];
+            if( ADispatcherItem.Name = ADispatcherName ) then
+              begin
+              ConnectToState( ADispatcherItem );
+              AFound := True;
+              Break;
+              end;
+            end;
+
+          if( not AFound ) then
+            begin
+            GRunDispatchers.RemoveOne( ADispatcher );
+            GDesignDispatchers.Add( ADispatcher )
+            end;
+          end;
+        end;
+}
+//  GetRootName();
+  OWNotifyAddPinList( Self );
 end;
 //---------------------------------------------------------------------------
 function TOWPinList.GetRoot() : TComponent;
@@ -17363,6 +17537,26 @@ begin
 end;
 //---------------------------------------------------------------------------
 function TOWInternalPinList.InternalGetByIdentName( ARoot : TComponent; const APinName : String; out AResult : TOWBasicPin ) : Boolean;
+
+  function MatchesRootName( const ARootIdent : String ) : Boolean;
+  begin
+    var ARootName := ARoot.Name;
+    if( ARootName = ARootIdent ) then
+      Exit( True );
+
+    if( GRootAliasDictionary <> NIL ) then
+      begin
+      var AList : ILinkedList<String>;
+      if( GRootAliasDictionary.GetValue( ARootName, AList )) then
+        for var AItem in AList do
+          if( AItem = ARootIdent ) then
+            Exit( True );
+
+      end;
+
+    Result := False;
+  end;
+
 begin
 //EXIT( False );
   var AIdents := APinName.Split( [ '.' ] );
@@ -17371,7 +17565,7 @@ begin
     var APinRootItem : IOWRootListItem := NIL;
 //    var APinRoot := ARoot;
     var ARootIdent := AIdents[ 0 ];
-    if( ARoot.Name = ARootIdent ) then
+    if( MatchesRootName( ARootIdent )) then
       begin
       System.Delete( AIdents, 0, 1 );
       for var ARootItem in GOWRootList do
@@ -17468,7 +17662,7 @@ begin
       begin
         Result := TObjectLinkedList<TOWBasicPin>.Create();
       end
-    ).Add( AItem );
+    ).AddFirst( AItem );
 
   Result := inherited;
 end;
@@ -17835,8 +18029,6 @@ begin
   GOWUnloadedPins[ False ] := TOWUnloadedPinList.Create();
   GOWUnloadedPins[ True ] := TOWUnloadedPinList.Create();
 
-  GIOWStream := TRttiInfo.GetInterfaceTypes( IOWStream )[ 0 ];
-
 //  GPinsMap := TDictionary<TOWBasicPin, ITuple<String, String>>.Create();
 
   TClassManagement.RegisterSupressedAssign(
@@ -17939,8 +18131,9 @@ begin
   GSerializationLoadingEnd := RegisterSerializationLoadingAllEnd(
       procedure()
       begin
-        OWClearPendingPasteLinks();
         OWClearLoadingMaps();
+        OWInvalidateCaches();
+        OWClearPendingPasteLinks();
       end
     );
 
@@ -17972,6 +18165,7 @@ end;
 //---------------------------------------------------------------------------
 procedure GModuleUnloadProc( AHInstance : NativeInt );
 begin
+  GPendingExtensions.Clear();
   GOWStreamTypes.RemoveAll(
       function( const AKey : TGUID; const AEntry : TOWStreamTypeEntry ) : Boolean
       begin
