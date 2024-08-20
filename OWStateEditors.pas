@@ -3,13 +3,15 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2024 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 unit OWStateEditors;
 
 interface
+
+{$I Mitov.Definitions.inc}
 
 uses
   WinApi.Windows,
@@ -947,7 +949,6 @@ begin
       AStateChanged := True;
 
     if( AStateChanged ) then
-      begin
       if( AStatePin <> NIL ) then
         begin
         var AStateRoot : TComponent := OWGetMainDesignOwner( AStatePin.Owner );
@@ -956,7 +957,6 @@ begin
             TCustomForm( AStateRoot ).Designer.Modified();
 
         end;
-      end;
 
     if( not AStateChanged ) then
       Exit;
@@ -993,7 +993,11 @@ initialization
 
 finalization
   if( GOWStatePinEditorForm <> NIL ) then
+{$IFDEF RX12_0_Up}
     GOWStatePinEditorForm.Free();
+{$ELSE}
+    GOWStatePinEditorForm.DisposeOf();
+{$ENDIF}
 
   GOWStatePinEditorForm := NIL;
 end.
