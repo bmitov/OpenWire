@@ -123,10 +123,10 @@
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DCC_BpiOutput>.\$(Platform)\$(Config)</DCC_BpiOutput>
-        <DCC_HppOutput>.\$(Platform)</DCC_HppOutput>
+        <DCC_HppOutput>.\$(Platform)\$(Config)</DCC_HppOutput>
         <DCC_ObjOutput>.\$(Platform)\$(Config)</DCC_ObjOutput>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.108;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.108;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.126;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.126;Comments=</VerInfo_Keys>
         <DCC_BplOutput>.\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_DcpOutput>.\$(Platform)\$(Config)</DCC_DcpOutput>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -231,7 +231,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <VerInfo_MajorVer>7</VerInfo_MajorVer>
         <VerInfo_Build>182</VerInfo_Build>
         <Debugger_DebugSourcePath>C:\OpenWireIDE\Arduino\;C:\Program Files (x86)\Embarcadero\Studio\20.0\OpenWire\Editor\;C:\Program Files (x86)\Embarcadero\Studio\20.0\LabPacks\Mitov\Arduino\;$(Debugger_DebugSourcePath)</Debugger_DebugSourcePath>
-        <Debugger_RunParams>-NBD D:\ik1_Write1_NoBoard.visuino</Debugger_RunParams>
+        <Debugger_RunParams>-IGNORE_BUILD_DATE D:\Slotting_Test1.visuino</Debugger_RunParams>
         <Debugger_CWD>C:\OpenWireIDE\Visuino Pro\10.3\Win32\Debug\</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
@@ -292,7 +292,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
                     <VersionInfo Name="MajorVer">8</VersionInfo>
                     <VersionInfo Name="MinorVer">0</VersionInfo>
                     <VersionInfo Name="Release">0</VersionInfo>
-                    <VersionInfo Name="Build">108</VersionInfo>
+                    <VersionInfo Name="Build">126</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
                     <VersionInfo Name="PreRelease">False</VersionInfo>
                     <VersionInfo Name="Special">False</VersionInfo>
@@ -304,13 +304,13 @@ $(PostBuildEvent)]]></PostBuildEvent>
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">8.0.0.108</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">8.0.0.126</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">8.0.0.108</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">8.0.0.126</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
                 <Excluded_Packages>
