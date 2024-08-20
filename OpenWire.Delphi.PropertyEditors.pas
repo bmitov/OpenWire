@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2024 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,7 @@ type
     procedure GetProperties( AProc : TGetPropProc ); override;
     function  GetPropCount() : Integer;
     function  GetDesigner() : DesignIntf.IDesigner;
+    function  GetNestedPropertyEditor( out APropertyEditor : IPropertyEditor ) : Boolean;
 
   end;
 //---------------------------------------------------------------------------
@@ -135,6 +136,12 @@ end;
 function TOWPinListOwnerPropertyEditorProxy.GetDesigner() : DesignIntf.IDesigner;
 begin
   Result := Designer;
+end;
+//---------------------------------------------------------------------------
+function TOWPinListOwnerPropertyEditorProxy.GetNestedPropertyEditor( out APropertyEditor : IPropertyEditor ) : Boolean;
+begin
+  APropertyEditor := FNestedEditor;
+  Result := True;
 end;
 //---------------------------------------------------------------------------
 function TOWPinListOwnerPropertyEditorProxy.QueryInterface( const IID: TGUID; out Obj): HResult; stdcall;
