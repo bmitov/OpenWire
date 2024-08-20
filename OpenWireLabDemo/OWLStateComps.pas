@@ -24,9 +24,9 @@ type
 
   protected
 {$IFDEF FPC}
-    procedure EditingDone; override;
+    procedure EditingDone(); override;
 {$ELSE}
-    procedure Changed; override;
+    procedure Changed(); override;
 {$ENDIF}
 
   protected
@@ -76,9 +76,9 @@ begin
 end;
 
 {$IFDEF FPC}
-procedure TOWLTrackBar.EditingDone;
+procedure TOWLTrackBar.EditingDone();
 {$ELSE}
-procedure TOWLTrackBar.Changed;
+procedure TOWLTrackBar.Changed();
 {$ENDIF}
 begin
   inherited;
