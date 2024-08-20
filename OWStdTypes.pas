@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2023 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2024 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -18,13 +18,17 @@ interface
 uses
   System.Classes, System.SysUtils, System.UITypes, OWPins, System.Generics.Defaults,
   System.TypInfo, Mitov.Types, Mitov.Containers.List, Mitov.Threading, Mitov.Attributes,
-  Mitov.Math.Complex, System.Math.Vectors, Mitov.Containers.Common;
+  Mitov.Math.Complex, System.Math.Vectors, Mitov.TypeInfo, Mitov.Containers.Common;
 
 type
   OWAddPinsAttribute = class( OWAddPinAttribute )
   public
-    StartIndex  : Cardinal;
-    Count       : Cardinal;
+    FStartIndex : Cardinal;
+    FCount      : Cardinal;
+
+  public
+    property StartIndex : Cardinal  read FStartIndex;
+    property Count : Cardinal       read FCount;
 
   public
     constructor Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass ); overload;
@@ -34,7 +38,10 @@ type
 //---------------------------------------------------------------------------
   OWPinListCategoryAttribute = class( TCustomAttribute )
   public
-    Value : TOWPinCategory;
+    FValue  : TOWPinCategory;
+
+  public
+    property Value : TOWPinCategory read FValue;
 
   public
     constructor Create( AValue : TOWPinCategory );
@@ -228,8 +235,9 @@ type TOWRealComplex = TComplex deprecated 'Use Mitov.Math.Complex.TComplex inste
 {$EXTERNALSYM POWRealComplex}
 type POWRealComplex = PComplex deprecated 'Use Mitov.Math.Complex.PComplex instead';
 //---------------------------------------------------------------------------
-type TOWClockEvent = reference to procedure( ASender : TOWPin );
 {$WARN SYMBOL_DEPRECATED ON}
+
+type TOWClockEvent = reference to procedure( ASender : TOWPin );
 
 type TOWPinNotificationEvent = reference to function( AOtherPin : TOWBasicPin; const AHandler : IOWDataStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState; var AHandled : Boolean ) : TOWNotifyResult;
 
@@ -253,11 +261,15 @@ type
   TOWPumpType = ( ptNone, ptSlave, ptMaster, ptHardware );
 //---------------------------------------------------------------------------
   TOWClockOperation = class( TOWNotifyOperation )
-  public
-    Samples : Integer;
+  protected
+    FSamples : Integer;
 
   public
-    class function Create( ASamples : Integer ) : IOWNotifyOperation;
+    property Samples : Integer  read FSamples;
+
+
+  public
+    class function Make( ASamples : Integer ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( ASamples : Integer );
@@ -267,11 +279,14 @@ type
   TOWClockQueryOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
   TOWClockNeededOperation = class( TOWNotifyOperation )
-  public
-    Enabled : Boolean;
+  protected
+    FEnabled : Boolean;
 
   public
-    class function Create( AEnabled : Boolean ) : IOWNotifyOperation;
+    property Enabled : Boolean  read FEnabled;
+
+  public
+    class function Make( AEnabled : Boolean ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( AEnabled : Boolean );
@@ -283,11 +298,14 @@ type
   TOWSuppliedOperation = class( TOWClockOperation );
 //---------------------------------------------------------------------------
   TOWMasterPumpOperation = class( TOWNotifyOperation )
-  public
-    Pump  : TObject;
+  protected
+    FPump : TObject;
 
   public
-    class function Create( APump : TObject ) : IOWNotifyOperation;
+    property Pump : TObject read FPump;
+
+  public
+    class function Make( APump : TObject ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( APump : TObject );
@@ -295,16 +313,22 @@ type
   end;
 //---------------------------------------------------------------------------
   TOWPumpRequestOperation = class( TOWNotifyOperation )
-  public
-    Pump         : TObject;
-    PumpType     : TOWPumpType;
-    PumpPriority : Cardinal;     // Priority level for this group.
+  protected
+    FPump         : TObject;
+    FPumpType     : TOWPumpType;
+    FPumpPriority : Cardinal;     // Priority level for this group.
 
-    DesiredRate  : Real;      // If different than 0 there has been a rate request.
+    FDesiredRate  : Real;      // If different than 0 there has been a rate request.
 
   public
-    class function Create() : IOWNotifyOperation;
-    class function CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; const ADesiredRate : Real ) : IOWNotifyOperation;
+    property Pump : TObject           read FPump          write FPump;
+    property PumpType : TOWPumpType   read FPumpType      write FPumpType;
+    property PumpPriority : Cardinal  read FPumpPriority  write FPumpPriority;
+    property DesiredRate : Real       read FDesiredRate   write FDesiredRate;
+
+  public
+    class function Make() : IOWNotifyOperation;
+    class function MakeEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; const ADesiredRate : Real ) : IOWNotifyOperation;
 
   public
     constructor CreateObject();
@@ -313,11 +337,14 @@ type
   end;
 //---------------------------------------------------------------------------
   TOWStartPumpOperation = class( TOWNotifyOperation )
-  public
-    Pump  : TObject;
+  protected
+    FPump : TObject;
 
   public
-    class function Create( APump : TObject ) : IOWNotifyOperation;
+    property Pump : TObject read FPump;
+
+  public
+    class function Make( APump : TObject ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( APump : TObject );
@@ -327,11 +354,14 @@ type
   TOWStartOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
   TOWStartRateOperation = class( TOWStartOperation )
-  public
-    Rate : Real;
+  protected
+    FRate : Real;
 
   public
-    class function Create( const ARate : Real ) : IOWNotifyOperation;
+    property Rate : Real  read FRate;
+
+  public
+    class function Make( const ARate : Real ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( const ARate : Real );
@@ -355,12 +385,15 @@ type
   TOWFlushStreamOperation = class( TOWNotifyOperation );
 //---------------------------------------------------------------------------
   TOWTypedSuppliedOperation<T> = class( TOWSuppliedOperation )
-  public
-    Value : T;
+  protected
+    FValue  : T;
 
   public
-    class function Create( const AValue : T ) : IOWNotifyOperation;
-    class function CreateEx( const AValue : T; ASampleCount : Integer ) : IOWNotifyOperation;
+    property Value : T  read FValue;
+
+  public
+    class function Make( const AValue : T ) : IOWNotifyOperation;
+    class function MakeEx( const AValue : T; ASampleCount : Integer ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( const AValue : T );
@@ -370,11 +403,15 @@ type
 //---------------------------------------------------------------------------
   TOWTypedSuppliedRangeOperation<T> = class( TOWSuppliedOperation )
   public
-    Min : T;
-    Max : T;
+    FMin  : T;
+    FMax  : T;
 
   public
-    class function Create( AMin : T; AMax : T ) : IOWNotifyOperation;
+    property Min : T  read FMin;
+    property Max : T  read FMax;
+
+  public
+    class function Make( AMin : T; AMax : T ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( AMin : T; AMax : T );
@@ -383,23 +420,34 @@ type
 //---------------------------------------------------------------------------
   TOWTypedSuppliedValueRangeOperation<T> = class( TOWTypedSuppliedOperation<T> )
   public
-    Min : T;
-    Max : T;
+    FMin  : T;
+    FMax  : T;
 
   public
-    class function Create( AValue : T; AMin : T; AMax : T ) : IOWNotifyOperation;
+    property Min : T  read FMin;
+    property Max : T  read FMax;
+
+  public
+    class function Make( AValue : T; AMin : T; AMax : T ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( AValue : T; AMin : T; AMax : T );
 
   end;
 //---------------------------------------------------------------------------
+  TOWPersistentOperation = class( TOWTypedSuppliedOperation<TPersistent> );
+//---------------------------------------------------------------------------
+  TOWPersistentChangeOperation = class( TOWPersistentOperation );
+//---------------------------------------------------------------------------
   TOWSuppliedStringListOperation = class( TOWSuppliedOperation )
   public
-    Value : IStringArrayList;
+    FValue  : IStringArrayList;
 
   public
-    class function Create( const AValue : IStringArrayList ) : IOWNotifyOperation;
+    property Value : IStringArrayList read FValue;
+
+  public
+    class function Make( const AValue : IStringArrayList ) : IOWNotifyOperation;
 
   public
     constructor CreateObject( const AValue : IStringArrayList );
@@ -408,10 +456,13 @@ type
 //---------------------------------------------------------------------------
   TOWSuppliedStreamPersistOperation = class( TOWSuppliedOperation )
   public
-    Value : TStream;
+    FValue  : TStream;
 
   public
-    class function Create( AValue : TStream = NIL ) : IOWNotifyOperation; overload;
+    property Value : TStream  read FValue;
+
+  public
+    class function Make( AValue : TStream = NIL ) : IOWNotifyOperation; overload;
 
   public
     constructor CreateObject( AValue : TStream = NIL ); overload;
@@ -431,15 +482,25 @@ type
 //---------------------------------------------------------------------------
   TOWTypedListSuppliedOperation<T> = class( TOWTypeBaseListSuppliedOperation )
   public
-    Value : IArrayList<T>;
+    FValue  : IArrayList<T>;
+
+  public
+    property Value : IArrayList<T>  read FValue;
 
   public
     class function GetHostedTypeInfo() : PTypeInfo; override; stdcall;
 
   public
-    constructor Create( const AValue : IArrayList<T> );
+    class function Make( const AValue : IArrayList<T> ) : IOWNotifyOperation; overload;
+    class function Make() : IOWNotifyOperation; overload;
+
+  public
+    constructor CreateObject( const AValue : IArrayList<T> ); overload;
+    constructor CreateObject(); overload;
 
   end;
+//---------------------------------------------------------------------------
+  TOWPersistentListOperation = class( TOWTypedListSuppliedOperation<TPersistent> );
 //---------------------------------------------------------------------------
   TOWCustomDispatchDataAttribute = class( TCustomAttribute )
   public
@@ -1566,14 +1627,22 @@ type
 
   end;
 //---------------------------------------------------------------------------
+var
+  GStdSinkPinTypeInfo               : IClassTypeInfo;
+  GStdMultiSinkPinTypeInfo          : IClassTypeInfo;
+  GStdStatePinTypeInfo              : IClassTypeInfo;
+  GClockSinkPinTypeInfo             : IClassTypeInfo;
+  GManagedDispatchSourcePinTypeInfo : IClassTypeInfo;
+  GClockMultiSinkPinTypeInfo        : IClassTypeInfo;
+
 implementation
 
 uses
 {$IFDEF MSWINDOWS}
   WinApi.Windows,
 {$ENDIF}
-  System.UIConsts, Mitov.Utils, Mitov.TypeInfo, System.Rtti, Mitov.Elements,
-  OpenWire.TypeConverters, Mitov.ClassManagement;
+  System.UIConsts, Mitov.Utils, System.Rtti, Mitov.Elements, OpenWire.TypeConverters,
+  Mitov.ClassManagement;
 
 var
   GManagedDispatchSourcePinInit : TClassManagement.TInitClassDefaults;
@@ -1597,15 +1666,15 @@ end;
 constructor OWAddPinsAttribute.Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; AValue : TClass );
 begin
   inherited Create( AName, AValue );
-  StartIndex := AStartIndex;
-  Count := ACount;
+  FStartIndex := AStartIndex;
+  FCount := ACount;
 end;
 //---------------------------------------------------------------------------
 constructor OWAddPinsAttribute.Create( const AName : String; AStartIndex : Cardinal; ACount : Cardinal; const AValue : IAtttributeParameterInfo );
 begin
   inherited Create( AName, AValue );
-  StartIndex := AStartIndex;
-  Count := ACount;
+  FStartIndex := AStartIndex;
+  FCount := ACount;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -1614,7 +1683,7 @@ end;
 constructor OWPinListCategoryAttribute.Create( AValue : TOWPinCategory );
 begin
   inherited Create();
-  Value := AValue;
+  FValue := AValue;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2078,7 +2147,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWClockSourcePin.Clock( ASamples : Integer );
 begin
-  Notify( TOWClockOperation.Create( ASamples ) );
+  Notify( TOWClockOperation.Make( ASamples ) );
 end;
 //---------------------------------------------------------------------------
 function TOWClockSourcePin.ClockNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -2320,7 +2389,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<T_Data>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<T_Data>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2352,12 +2421,9 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Create( FValue ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Make( FValue ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
   Result := inherited;
@@ -2375,7 +2441,7 @@ begin
   for var I := 1 to Length( AText ) do
     begin
     FValue := AText[ I ];
-    Notify( TOWTypedSuppliedOperation<Char>.Create( FValue ));
+    Notify( TOWTypedSuppliedOperation<Char>.Make( FValue ));
     end;
 
 end;
@@ -2419,7 +2485,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<T_Data>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<T_Data>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2446,9 +2512,9 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        Exit( IOWBasicStream( AInterf ).DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Create( Value ), AState ));
+        Exit( IOWBasicStream( AInterf ).DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Make( Value ), AState ));
 
-    Result := AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
   Result := inherited;
@@ -2479,12 +2545,9 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterfReal.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterfReal.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Make( Value ), AState ));
 
-    AInterfReal.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterfReal.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end
 
   else if( TInterface.IfSupports<IOWFloatStream>( AHandler, AInterfFloat )) then
@@ -2501,16 +2564,13 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterfFloat.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterfFloat.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
     var ALocalOperation := AOperation;
     if( ALocalOperation.IsType( TOWTypedSuppliedOperation<Real> )) then
-      ALocalOperation := TOWTypedSuppliedOperation<Single>.Create( TOWTypedSuppliedOperation<Real>( ALocalOperation.GetInstance() ).Value );
+      ALocalOperation := TOWTypedSuppliedOperation<Single>.Make( TOWTypedSuppliedOperation<Real>( ALocalOperation.GetInstance() ).Value );
 
-    AInterfFloat.DispatchData( AOtherPin, ADataTypeID, ALocalOperation, AState );
+    Exit( AInterfFloat.DispatchData( AOtherPin, ADataTypeID, ALocalOperation, AState ));
     end;
 
   Result := inherited;
@@ -2674,14 +2734,11 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterfReal.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterfReal.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Make( Value ), AState ));
 
-    AInterfReal.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterfReal.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end
-    
+
   else if( TInterface.IfSupports<IOWFloatStream>( AHandler, AInterfFloat)) then
     begin
     if( Assigned( FPinNotificationEvent )) then
@@ -2696,16 +2753,13 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterfFloat.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterfFloat.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
     var ALocalOperation := AOperation;
     if( ALocalOperation.IsType( TOWTypedSuppliedOperation<Real> )) then
-      ALocalOperation := TOWTypedSuppliedOperation<Single>.Create( TOWTypedSuppliedOperation<Real>( ALocalOperation.GetInstance() ).Value );
+      ALocalOperation := TOWTypedSuppliedOperation<Single>.Make( TOWTypedSuppliedOperation<Real>( ALocalOperation.GetInstance() ).Value );
 
-    AInterfFloat.DispatchData( AOtherPin, ADataTypeID, ALocalOperation, AState );
+    Exit( AInterfFloat.DispatchData( AOtherPin, ADataTypeID, ALocalOperation, AState ));
     end;
 
   Result := inherited;
@@ -2747,17 +2801,12 @@ begin
 
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterfDateTime.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Create( ADateTime ), AState );
-        Exit;
-        end;
+        Exit( AInterfDateTime.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Make( ADateTime ), AState ));
 
-    AInterfDateTime.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Create( ADateTime ), AState );
-    end
+    Exit( AInterfDateTime.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Make( ADateTime ), AState ) );
+    end;
 
-  else
-    Result := inherited;
-
+  Result := inherited;
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -2799,7 +2848,7 @@ begin
   FMinTime := AMinTime;
   FMaxTime := AMaxTime;
   FValue := AValue;
-  Notify( TOWTypedSuppliedValueRangeOperation<Int64>.Create( FValue, FMin, FMax ));
+  Notify( TOWTypedSuppliedValueRangeOperation<Int64>.Make( FValue, FMin, FMax ));
   if( FMax = FMin ) then
     AMiliSecondsPeriod := 0
 
@@ -2807,7 +2856,7 @@ begin
     AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
   var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-  Notify( TOWTypedSuppliedValueRangeOperation<TDateTime>.Create( ATimeValue, FMinTime, FMaxTime ));
+  Notify( TOWTypedSuppliedValueRangeOperation<TDateTime>.Make( ATimeValue, FMinTime, FMaxTime ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SubmitValue( const AValue : Int64 );
@@ -2818,7 +2867,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Int64>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<Int64>.Make( FValue ));
   if( FMax = FMin ) then
     AMiliSecondsPeriod := 0
 
@@ -2826,7 +2875,7 @@ begin
     AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
   var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-  Notify( TOWTypedSuppliedOperation<TDateTime>.Create( ATimeValue ));
+  Notify( TOWTypedSuppliedOperation<TDateTime>.Make( ATimeValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SubmitRange( const AMin : Int64; const AMax : Int64; const AMinTime : TDateTime; const AMaxTime : TDateTime );
@@ -2839,8 +2888,8 @@ begin
   FMax := AMax;
   FMinTime := AMinTime;
   FMaxTime := AMaxTime;
-  Notify( TOWTypedSuppliedRangeOperation<Int64>.Create( AMin, AMax ));
-  Notify( TOWTypedSuppliedRangeOperation<TDateTime>.Create( FMinTime, FMaxTime ));
+  Notify( TOWTypedSuppliedRangeOperation<Int64>.Make( AMin, AMax ));
+  Notify( TOWTypedSuppliedRangeOperation<TDateTime>.Make( FMinTime, FMaxTime ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedSourcePin.SetValue( const AValue : Int64 );
@@ -2910,11 +2959,10 @@ begin
           AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
         var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Create( ATimeValue ), AState );
-        Exit;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Make( ATimeValue ), AState ));
         end;
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
     
 end;
@@ -2938,11 +2986,10 @@ begin
           AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
         var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<TDateTime>.Create( ATimeValue, FMinTime, FMaxTime ), AState );
-        Exit;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<TDateTime>.Make( ATimeValue, FMinTime, FMaxTime ), AState ));
         end;
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
     
 end;
@@ -3045,7 +3092,7 @@ begin
   FMinTime := AMinTime;
   FMaxTime := AMaxTime;
   FValue := AValue;
-  Notify( TOWTypedSuppliedValueRangeOperation<Int64>.Create( FValue, FMin, FMax ));
+  Notify( TOWTypedSuppliedValueRangeOperation<Int64>.Make( FValue, FMin, FMax ));
   if( FMax = FMin ) then
     AMiliSecondsPeriod := 0
 
@@ -3053,7 +3100,7 @@ begin
     AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
   var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-  Notify( TOWTypedSuppliedValueRangeOperation<TDateTime>.Create( ATimeValue, FMinTime, FMaxTime ));
+  Notify( TOWTypedSuppliedValueRangeOperation<TDateTime>.Make( ATimeValue, FMinTime, FMaxTime ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SubmitValue( const AValue : Int64 );
@@ -3064,7 +3111,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Int64>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<Int64>.Make( FValue ));
   if( FMax = FMin ) then
     AMiliSecondsPeriod := 0
 
@@ -3072,7 +3119,7 @@ begin
     AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
   var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-  Notify( TOWTypedSuppliedOperation<TDateTime>.Create( ATimeValue ));
+  Notify( TOWTypedSuppliedOperation<TDateTime>.Make( ATimeValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SubmitRange( const AMin : Int64; const AMax : Int64; const AMinTime : TDateTime; const AMaxTime : TDateTime );
@@ -3085,8 +3132,8 @@ begin
   FMax := AMax;
   FMinTime := AMinTime;
   FMaxTime := AMaxTime;
-  Notify( TOWTypedSuppliedRangeOperation<Int64>.Create( AMin, AMax ));
-  Notify( TOWTypedSuppliedRangeOperation<TDateTime>.Create( FMinTime, FMaxTime ));
+  Notify( TOWTypedSuppliedRangeOperation<Int64>.Make( AMin, AMax ));
+  Notify( TOWTypedSuppliedRangeOperation<TDateTime>.Make( FMinTime, FMaxTime ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWInt64TimeRangedStatePin.SetValue( const AValue : Int64 );
@@ -3156,11 +3203,10 @@ begin
           AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
         var ATimeValue : TDateTime := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Create( ATimeValue ), AState );
-        Exit;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<TDateTime>.Make( ATimeValue ), AState ));
         end;
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
     
 end;
@@ -3187,11 +3233,10 @@ begin
         AMiliSecondsPeriod := Round( MSecsPerDay * ( FMaxTime - FMinTime ) * ( FValue - FMin ) / ( FMax - FMin ) );
 
       var ATimeValue := IncMilliSecond( FMinTime, AMiliSecondsPeriod );
-      AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<TDateTime>.Create( ATimeValue, FMinTime, FMaxTime ), AState );
-      Exit;
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<TDateTime>.Make( ATimeValue, FMinTime, FMaxTime ), AState ));
       end;
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -3272,11 +3317,11 @@ begin
 {
     if( nsNewLink in AState ) then
       begin
-      AInterf.DispatchDataImpl( ADataTypeID, TOWSuppliedStringListOperation.Create( Value ), AState );
+      AInterf.DispatchDataImpl( ADataTypeID, TOWSuppliedStringListOperation.Make( Value ), AState );
       Exit;
       end;
 }
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
   Result := inherited;
@@ -3292,7 +3337,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStringListSourcePin.Send( const AValue : IStringArrayList );
 begin
-  Notify( TOWSuppliedStringListOperation.Create( AValue ));
+  Notify( TOWSuppliedStringListOperation.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3443,13 +3488,13 @@ begin
           begin
           var AStrings : IStringArrayList := TStringArrayList.Create();
           FOnGetDataEvent( Self, AStrings );
-          AInterf.DispatchData( AOtherPin, ADataTypeID, TOWSuppliedStringListOperation.Create( AStrings ), AState );
+          Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWSuppliedStringListOperation.Make( AStrings ), AState ));
           end;
 
         Exit;
         end;
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
   Result := inherited;
@@ -3471,7 +3516,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWSuppliedStringListOperation.Create( AValue ));
+  Notify( TOWSuppliedStringListOperation.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWStringListStatePin.SetValue( AValue : IStringArrayList );
@@ -3495,7 +3540,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Cardinal>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<Cardinal>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3524,7 +3569,7 @@ begin
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
-  Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( AValue, AMin, AMax ));
+  Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( AValue, AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.SubmitRange( const AMin : T_Data; const AMax : T_Data );
@@ -3535,7 +3580,7 @@ begin
   AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
-  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Create( AMin, AMax ));
+  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Make( AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.SubmitValue( const AValue : T_Data );
@@ -3545,7 +3590,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<T_Data>.Create( AValue ));
+  Notify( TOWTypedSuppliedOperation<T_Data>.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.SublitMinMaxChanges();
@@ -3558,11 +3603,11 @@ begin
 
   else
     begin
-    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ));
+    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ));
     Exit;
     end;
 
-  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Create( FMin, FMax ));
+  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Make( FMin, FMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.SetMin( const AValue : T_Data );
@@ -3608,27 +3653,24 @@ begin
   if( FComparer.Compare( FValue, AValue ) <> 0 ) then
     begin
     FValue := AValue;
-    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ));
+    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ));
     end;
 
 end;
 //---------------------------------------------------------------------------
 function TOWTypedRangedSourcePin<T_Interface, T_Interface_Ranged, T_Data>.IntNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
 var
-  Interf : IOWBasicStream;
+  AInterf : IOWBasicStream;
 
 begin
   Result := [];
-  if( Supports( AHandler, GetTypeData(System.TypeInfo(T_Interface))^.Guid, Interf )) then
+  if( Supports( AHandler, GetTypeData(System.TypeInfo(T_Interface))^.Guid, AInterf )) then
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        Interf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Create( FValue ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Make( FValue ), AState ));
 
-    Interf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -3643,12 +3685,9 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -3681,7 +3720,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Single>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<Single>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 function TOWFloatIntSourcePin.FloatNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -3694,12 +3733,9 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -3714,13 +3750,10 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( Value )), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( Value )), AState ));
 
     if( AOperation.IsType( TOWSuppliedOperation )) then
-      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( FValue ) ), AState ));
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( FValue ) ), AState ));
 
     Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
@@ -3808,8 +3841,8 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWSuppliedMulticastOperation.Create( 1 ) );
-//  Notify( TOWTypedSuppliedOperation<Integer>.Create( FValue ));
+  Notify( TOWSuppliedMulticastOperation.Make( 1 ) );
+//  Notify( TOWTypedSuppliedOperation<Integer>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 function TOWFloatIntStatePin.Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -3823,13 +3856,10 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AFloatInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AFloatInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
     if( AOperation.IsType( TOWSuppliedMulticastOperation )) then
-      Exit( AFloatInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( FValue ), AState ));
+      Exit( AFloatInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( FValue ), AState ));
 
     Exit( AFloatInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end
@@ -3838,13 +3868,10 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AIntInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( Value )), AState );
-        Exit;
-        end;
+        Exit( AIntInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( Value )), AState ));
 
     if( AOperation.IsType( TOWSuppliedMulticastOperation )) then
-      Exit( AIntInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( FValue ) ), AState ));
+      Exit( AIntInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( FValue ) ), AState ));
 
     Exit( AIntInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
@@ -4999,7 +5026,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<Real>.Create( FValue ));
+  Notify( TOWTypedSuppliedOperation<Real>.Make( FValue ));
 end;
 //---------------------------------------------------------------------------
 function TOWStdComboSourcePin.RealNotification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -5012,12 +5039,9 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Real>.Make( Value ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState )
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5032,17 +5056,12 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
     if( AOperation.IsType( TOWSuppliedOperation )) then
-      AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( Value ), AState )
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( Value ), AState ));
 
-    else
-      AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
-
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5057,17 +5076,12 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( Value )), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( Value )), AState ));
 
     if( AOperation.IsType( TOWSuppliedOperation )) then
-      AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Create( Round( Value )), AState )
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Integer>.Make( Round( Value )), AState ));
 
-    else
-      AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
-
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5082,17 +5096,12 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<String>.Create( FloatToStr( Value )), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<String>.Make( FloatToStr( Value )), AState ));
 
     if( AOperation.IsType( TOWSuppliedOperation )) then
-      AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<String>.Create( FloatToStr( Value )), AState )
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<String>.Make( FloatToStr( Value )), AState ));
 
-    else
-      AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
-      
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5107,17 +5116,12 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Boolean>.Create( Value <> 0 ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Boolean>.Make( Value <> 0 ), AState ));
 
     if( AOperation.IsType( TOWSuppliedOperation )) then
-      AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Boolean>.Create( Value <> 0 ), AState )
+      Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Boolean>.Make( Value <> 0 ), AState ));
 
-    else
-      AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
-
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5150,9 +5154,10 @@ begin
 //    if( FValue <> TOWTypedSuppliedOperation<T_Data>( AOperation.GetInstance() ).Value ) then
       begin
       FRangePopulated := True;
-      FMin := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Min;
-      FMax := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Max;
-      FValue := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Value;
+      var AOperationInstance := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() );
+      FMin := AOperationInstance.Min;
+      FMax := AOperationInstance.Max;
+      FValue := AOperationInstance.Value;
       if( Assigned( FOnDataChange )) then
         FOnDataChange( Self, FValue, FMin, FMax, True, nsNewLink in AState );
 
@@ -5164,8 +5169,9 @@ begin
 //    if( FValue <> TOWTypedSuppliedOperation<T_Data>( AOperation.GetInstance() ).Value ) then
       begin
       FRangePopulated := True;
-      FMin := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() ).Min;
-      FMax := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() ).Max;
+      var AOperationInstance := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() );
+      FMin := AOperationInstance.Min;
+      FMax := AOperationInstance.Max;
       if( Assigned( FOnRangeChange )) then
         FOnRangeChange( Self, FMin, FMax, nsNewLink in AState );
 
@@ -5253,9 +5259,10 @@ begin
     begin
 //    if( FValue <> TOWTypedSuppliedOperation<T_Data>( AOperation.GetInstance() ).Value ) then
       begin
-      FMin := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Min;
-      FMax := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Max;
-      FValue := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() ).Value;
+      var AOperationInstance := TOWTypedSuppliedValueRangeOperation<T_Data>( AOperation.GetInstance() );
+      FMin := AOperationInstance.Min;
+      FMax := AOperationInstance.Max;
+      FValue := AOperationInstance.Value;
       if( Assigned( FOnDataChange )) then
         FOnDataChange( Self, FValue, FMin, FMax, True, nsNewLink in AState );
 
@@ -5266,8 +5273,9 @@ begin
     begin
 //    if( FValue <> TOWTypedSuppliedOperation<T_Data>( AOperation.GetInstance() ).Value ) then
       begin
-      FMin := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() ).Min;
-      FMax := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() ).Max;
+      var AOperationInstance := TOWTypedSuppliedRangeOperation<T_Data>( AOperation.GetInstance() );
+      FMin := AOperationInstance.Min;
+      FMax := AOperationInstance.Max;
       if( Assigned( FOnRangeChange )) then
         FOnRangeChange( Self, FMin, FMax, nsNewLink in AState );
 
@@ -5309,12 +5317,9 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Create( FValue ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<T_Data>.Make( FValue ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5330,12 +5335,9 @@ begin
     begin
     if( nsNewLink in AState ) then
       if( UpdateOnConnect()) then
-        begin
-        AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ), AState );
-        Exit;
-        end;
+        Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ), AState ));
 
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5350,11 +5352,11 @@ begin
 
   else
     begin
-    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ));
+    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ));
     Exit;
     end;
 
-  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Create( FMin, FMax ));
+  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Make( FMin, FMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedStatePin<T_Interface, T_Interface_Ranged, T_Data>.SetMin( const AValue : T_Data );
@@ -5400,7 +5402,7 @@ begin
   if( FComparer.Compare( FValue, AValue ) <> 0 ) then
     begin
     FValue := AValue;
-    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( FValue, FMin, FMax ));
+    Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( FValue, FMin, FMax ));
     end;
 
 end;
@@ -5414,7 +5416,7 @@ begin
   FMin := AMin;
   FMax := AMax;
   FValue := AValue;
-  Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Create( AValue, AMin, AMax ));
+  Notify( TOWTypedSuppliedValueRangeOperation<T_Data>.Make( AValue, AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedStatePin<T_Interface, T_Interface_Ranged, T_Data>.SubmitValue( const AValue : T_Data );
@@ -5424,7 +5426,7 @@ var
 begin
   AWriteLock := WriteLock();
   FValue := AValue;
-  Notify( TOWTypedSuppliedOperation<T_Data>.Create( AValue ));
+  Notify( TOWTypedSuppliedOperation<T_Data>.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedRangedStatePin<T_Interface, T_Interface_Ranged, T_Data>.SubmitRange( const AMin : T_Data; const AMax : T_Data );
@@ -5435,7 +5437,7 @@ begin
   AWriteLock := WriteLock();
   FMin := AMin;
   FMax := AMax;
-  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Create( AMin, AMax ));
+  Notify( TOWTypedSuppliedRangeOperation<T_Data>.Make( AMin, AMax ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -5503,7 +5505,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWStreamPersistSourcePin.SubmitData( Value : TStream );
 begin
-  Notify( TOWSuppliedStreamPersistOperation.Create( Value ));
+  Notify( TOWSuppliedStreamPersistOperation.Make( Value ));
 end;
 //---------------------------------------------------------------------------
 function TOWStreamPersistSourcePin.Notification( AOtherPin : TOWBasicPin; const AHandler : IOWStream; const ADataTypeID : TGUID; const AOperation : IOWNotifyOperation; AState : TOWNotifyState ) : TOWNotifyResult;
@@ -5527,12 +5529,9 @@ begin
 
 {
     if( nsNewLink in AState ) then
-      begin
-      AInterfPersist.DispatchDataImpl( ADataTypeID, TOWSuppliedStreamPersistOperation.Create( Value ), AState );
-      Exit;
-      end;
+      Exit( AInterfPersist.DispatchDataImpl( ADataTypeID, TOWSuppliedStreamPersistOperation.Make( Value ), AState ));
 }
-    AInterfPersist.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterfPersist.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
 end;
@@ -5554,7 +5553,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWTypedListSourcePin<T; T_Interface>.Send( const AValue : IArrayList<T> );
 begin
-  Notify( TOWTypedListSuppliedOperation<T>.Create( AValue ));
+  Notify( TOWTypedListSuppliedOperation<T>.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 procedure TOWTypedListSourcePin<T; T_Interface>.NewConnection( const ASinkPin : TOWBasicPin );
@@ -5585,11 +5584,11 @@ begin
 {
     if( nsNewLink in AState ) then
       begin
-      AInterf.DispatchDataImpl( ADataTypeID, TOWSuppliedStringListOperation.Create( Value ), AState );
+      AInterf.DispatchDataImpl( ADataTypeID, TOWSuppliedStringListOperation.Make( Value ), AState );
       Exit;
       end;
 }
-    AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState );
+    Exit( AInterf.DispatchData( AOtherPin, ADataTypeID, AOperation, AState ));
     end;
 
   Result := inherited;
@@ -5659,7 +5658,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TOWTypedListStatePin<T_Interface, T_Data>.Send( const AValue : IArrayList<T_Data> );
 begin
-  Notify( TOWTypedListSuppliedOperation<T_Data>.Create( AValue ));
+  Notify( TOWTypedListSuppliedOperation<T_Data>.Make( AValue ));
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -5668,10 +5667,10 @@ end;
 constructor TOWStartRateOperation.CreateObject( const ARate : Real );
 begin
   inherited CreateObject();
-  Rate := ARate;
+  FRate := ARate;
 end;
 //---------------------------------------------------------------------------
-class function TOWStartRateOperation.Create( const ARate : Real ) : IOWNotifyOperation;
+class function TOWStartRateOperation.Make( const ARate : Real ) : IOWNotifyOperation;
 begin
   Result := CreateObject( ARate );
 end;
@@ -5682,21 +5681,21 @@ end;
 constructor TOWTypedSuppliedOperation<T>.CreateObject( const AValue : T );
 begin
   inherited CreateObject( 1 );
-  Value := AValue;
+  FValue := AValue;
 end;
 //---------------------------------------------------------------------------
 constructor TOWTypedSuppliedOperation<T>.CreateExObject( const AValue : T; ASampleCount : Integer );
 begin
   inherited CreateObject( ASampleCount );
-  Value := AValue;
+  FValue := AValue;
 end;
 //---------------------------------------------------------------------------
-class function TOWTypedSuppliedOperation<T>.Create( const AValue : T ) : IOWNotifyOperation;
+class function TOWTypedSuppliedOperation<T>.Make( const AValue : T ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AValue );
 end;
 //---------------------------------------------------------------------------
-class function TOWTypedSuppliedOperation<T>.CreateEx( const AValue : T; ASampleCount : Integer ) : IOWNotifyOperation;
+class function TOWTypedSuppliedOperation<T>.MakeEx( const AValue : T; ASampleCount : Integer ) : IOWNotifyOperation;
 begin
   Result := CreateExObject( AValue, ASampleCount );
 end;
@@ -5707,11 +5706,11 @@ end;
 constructor TOWTypedSuppliedRangeOperation<T>.CreateObject( AMin : T; AMax : T );
 begin
   inherited CreateObject( 1 );
-  Min := AMin;
-  Max := AMax;
+  FMin := AMin;
+  FMax := AMax;
 end;
 //---------------------------------------------------------------------------
-class function TOWTypedSuppliedRangeOperation<T>.Create( AMin : T; AMax : T ) : IOWNotifyOperation;
+class function TOWTypedSuppliedRangeOperation<T>.Make( AMin : T; AMax : T ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AMin, AMax );
 end;
@@ -5722,11 +5721,11 @@ end;
 constructor TOWTypedSuppliedValueRangeOperation<T>.CreateObject( AValue : T; AMin : T; AMax : T );
 begin
   inherited CreateObject( AValue );
-  Min := AMin;
-  Max := AMax;
+  FMin := AMin;
+  FMax := AMax;
 end;
 //---------------------------------------------------------------------------
-class function TOWTypedSuppliedValueRangeOperation<T>.Create( AValue : T; AMin : T; AMax : T ) : IOWNotifyOperation;
+class function TOWTypedSuppliedValueRangeOperation<T>.Make( AValue : T; AMin : T; AMax : T ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AValue, AMin, AMax );
 end;
@@ -5737,10 +5736,10 @@ end;
 constructor TOWSuppliedStringListOperation.CreateObject( const AValue : IStringArrayList );
 begin
   inherited CreateObject( AValue.Count );
-  Value := AValue;
+  FValue := AValue;
 end;
 //---------------------------------------------------------------------------
-class function TOWSuppliedStringListOperation.Create( const AValue : IStringArrayList ) : IOWNotifyOperation;
+class function TOWSuppliedStringListOperation.Make( const AValue : IStringArrayList ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AValue );
 end;
@@ -5751,9 +5750,9 @@ end;
 constructor TOWSuppliedStreamPersistOperation.CreateObject( AValue : TStream = NIL );
 begin
   inherited CreateObject( 1 );
-  Value := TMemoryStream.Create();
+  FValue := TMemoryStream.Create();
   if( AValue <> NIL ) then
-    TMemoryStream( Value ).LoadFromStream( AValue );
+    TMemoryStream( FValue ).LoadFromStream( AValue );
 
 end;
 //---------------------------------------------------------------------------
@@ -5767,7 +5766,7 @@ begin
   inherited;
 end;
 //---------------------------------------------------------------------------
-class function TOWSuppliedStreamPersistOperation.Create( AValue : TStream = NIL ) : IOWNotifyOperation;
+class function TOWSuppliedStreamPersistOperation.Make( AValue : TStream = NIL ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AValue );
 end;
@@ -5783,18 +5782,18 @@ end;
 constructor TOWPumpRequestOperation.CreateExObject( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; const ADesiredRate : Real );
 begin
   inherited CreateObject();
-  Pump := APump;
-  PumpType := APumpType;
-  PumpPriority := APumpPriority;
-  DesiredRate := ADesiredRate;
+  FPump := APump;
+  FPumpType := APumpType;
+  FPumpPriority := APumpPriority;
+  FDesiredRate := ADesiredRate;
 end;
 //---------------------------------------------------------------------------
-class function TOWPumpRequestOperation.Create() : IOWNotifyOperation;
+class function TOWPumpRequestOperation.Make() : IOWNotifyOperation;
 begin
   Result := CreateObject();
 end;
 //---------------------------------------------------------------------------
-class function TOWPumpRequestOperation.CreateEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; const ADesiredRate : Real ) : IOWNotifyOperation;
+class function TOWPumpRequestOperation.MakeEx( APump : TObject; APumpType : TOWPumpType; APumpPriority : Cardinal; const ADesiredRate : Real ) : IOWNotifyOperation;
 begin
   Result := CreateExObject( APump, APumpType, APumpPriority, ADesiredRate );
 end;
@@ -5805,10 +5804,10 @@ end;
 constructor TOWStartPumpOperation.CreateObject( APump : TObject );
 begin
   inherited CreateObject();
-  Pump := APump;
+  FPump := APump;
 end;
 //---------------------------------------------------------------------------
-class function TOWStartPumpOperation.Create( APump : TObject ) : IOWNotifyOperation;
+class function TOWStartPumpOperation.Make( APump : TObject ) : IOWNotifyOperation;
 begin
   Result := CreateObject( APump );
 end;
@@ -5819,10 +5818,10 @@ end;
 constructor TOWMasterPumpOperation.CreateObject( APump : TObject );
 begin
   inherited CreateObject();
-  Pump := APump;
+  FPump := APump;
 end;
 //---------------------------------------------------------------------------
-class function TOWMasterPumpOperation.Create( APump : TObject ) : IOWNotifyOperation;
+class function TOWMasterPumpOperation.Make( APump : TObject ) : IOWNotifyOperation;
 begin
   Result := CreateObject( APump );
 end;
@@ -5833,10 +5832,10 @@ end;
 constructor TOWClockNeededOperation.CreateObject( AEnabled : Boolean );
 begin
   inherited CreateObject();
-  Enabled := AEnabled;
+  FEnabled := AEnabled;
 end;
 //---------------------------------------------------------------------------
-class function TOWClockNeededOperation.Create( AEnabled : Boolean ) : IOWNotifyOperation;
+class function TOWClockNeededOperation.Make( AEnabled : Boolean ) : IOWNotifyOperation;
 begin
   Result := CreateObject( AEnabled );
 end;
@@ -5847,10 +5846,10 @@ end;
 constructor TOWClockOperation.CreateObject( ASamples : Integer );
 begin
   inherited CreateObject();
-  Samples := ASamples;
+  FSamples := ASamples;
 end;
 //---------------------------------------------------------------------------
-class function TOWClockOperation.Create( ASamples : Integer ) : IOWNotifyOperation;
+class function TOWClockOperation.Make( ASamples : Integer ) : IOWNotifyOperation;
 begin
   Result := CreateObject( ASamples );
 end;
@@ -5875,15 +5874,31 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWTypedListSuppliedOperation<T>.Create( const AValue : IArrayList<T> );
+constructor TOWTypedListSuppliedOperation<T>.CreateObject( const AValue : IArrayList<T> );
 begin
-  inherited Create( AValue.Count );
-  Value := AValue;
+  inherited CreateObject( AValue.Count );
+  FValue := AValue;
+end;
+//---------------------------------------------------------------------------
+constructor TOWTypedListSuppliedOperation<T>.CreateObject();
+begin
+  inherited CreateObject( 1 );
+  FValue := TArrayList<T>.Create();
 end;
 //---------------------------------------------------------------------------
 class function TOWTypedListSuppliedOperation<T>.GetHostedTypeInfo() : PTypeInfo;
 begin
   Result := System.TypeInfo( T );
+end;
+//---------------------------------------------------------------------------
+class function TOWTypedListSuppliedOperation<T>.Make( const AValue : IArrayList<T> ) : IOWNotifyOperation;
+begin
+  Result := CreateObject( AValue );
+end;
+//---------------------------------------------------------------------------
+class function TOWTypedListSuppliedOperation<T>.Make() : IOWNotifyOperation;
+begin
+  Result := CreateObject();
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -5923,35 +5938,16 @@ begin
       APinClass );
 
   Result := AResult;
-{
-  if( APinType.InheritsFrom( TOWClockSourcePin.ClassTypeInfo() )) then
-    Exit( TOWClockSourcePinClass( APinClass.MetaclassType ).Create( AOnCreated, ALockItem.GetLock(), NIL ));
-
-  if( APinType.InheritsFrom( TOWStdSinkPin.ClassTypeInfo() )) then
-    Exit( TOWStdSinkPinClass( APinClass.MetaclassType ).Create( AOnCreated, ALockItem.GetLock(), NIL ));
-
-  if( APinType.InheritsFrom( TOWStdMultiSinkPin.ClassTypeInfo() )) then
-    Exit( TOWStdMultiSinkPinClass( APinClass.MetaclassType ).Create( AOnCreated, ALockItem.GetLock(), NIL ));
-
-  if( APinType.InheritsFrom( TOWClockSinkPin.ClassTypeInfo() )) then
-    Exit( TOWClockSinkPinClass( APinClass.MetaclassType ).Create( AOnCreated, ALockItem.GetLock(), NIL ));
-
-  if( APinType.InheritsFrom( TOWClockMultiSinkPin.ClassTypeInfo() )) then
-    Exit( TOWClockMultiSinkPinClass( APinClass.MetaclassType ).Create( AOnCreated, ALockItem.GetLock(), NIL ));
-
-  Result := NIL;
-}end;
+end;
 //---------------------------------------------------------------------------
 procedure InitializationSection();
-var
-  ASinkPinTypeInfo    : ITypeInfo; // Careful! Used in anonymous methods!
-  ASourcePinTypeInfo  : ITypeInfo; // Careful! Used in anonymous methods!
-//  AStatePinTypeInfo   : ITypeInfo;
-
 begin
-  ASinkPinTypeInfo := TOWBasicSinkPin.ClassTypeInfo();
-  ASourcePinTypeInfo := TOWSourcePin.ClassTypeInfo();
-//  AStatePinTypeInfo := TOWStatePin.ClassTypeInfo();
+  GStdSinkPinTypeInfo := TOWStdSinkPin.ClassTypeInfo();
+  GStdMultiSinkPinTypeInfo := TOWStdMultiSinkPin.ClassTypeInfo();
+  GStdStatePinTypeInfo := TOWStdStatePin.ClassTypeInfo();
+  GClockMultiSinkPinTypeInfo := TOWClockMultiSinkPin.ClassTypeInfo();
+  GClockSinkPinTypeInfo := TOWClockSinkPin.ClassTypeInfo();
+  GManagedDispatchSourcePinTypeInfo := TOWManagedDispatchSourcePin.ClassTypeInfo();
 
   OWRegisterDefaultHandler( IOWDataStream, OWDefaultDataNotificationHandler );
 
@@ -6021,7 +6017,7 @@ begin
    );
 
   GManagedDispatchSourcePinInit := TClassManagement.RegisterInitClassDefaults(
-      TOWManagedDispatchSourcePin.ClassTypeInfo()
+      GManagedDispatchSourcePinTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6070,7 +6066,7 @@ begin
     );
 
   GManagedStdStatePinInit := TClassManagement.RegisterInitClassDefaults(
-      TOWStdStatePin.ClassTypeInfo()
+      GStdStatePinTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6118,7 +6114,7 @@ begin
       end
     );
 
-  GManagedStdSinkPinInit := TClassManagement.RegisterInitClassDefaults( TOWStdSinkPin.ClassTypeInfo(),
+  GManagedStdSinkPinInit := TClassManagement.RegisterInitClassDefaults( GStdSinkPinTypeInfo,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWStdSinkPinClass = class of TOWStdSinkPin;
@@ -6165,7 +6161,7 @@ begin
       end
     );
 
-  GManagedStdMultiSinkPinInit := TClassManagement.RegisterInitClassDefaults( TOWStdMultiSinkPin.ClassTypeInfo(),
+  GManagedStdMultiSinkPinInit := TClassManagement.RegisterInitClassDefaults( GStdMultiSinkPinTypeInfo,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
@@ -6213,7 +6209,7 @@ begin
     );
 
   GManagedClockSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
-      TOWClockSinkPin.ClassTypeInfo()
+      GClockSinkPinTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6262,7 +6258,7 @@ begin
     );
 
   GManagedClockMultiSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
-      TOWClockMultiSinkPin.ClassTypeInfo()
+      GClockMultiSinkPinTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6311,7 +6307,7 @@ begin
     );
 
   GManagedPinListOwnerDefault := TClassManagement.RegisterInitClassDefaults(
-      TOWPinListOwner.ClassTypeInfo()
+      GPinListOwnerTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6347,16 +6343,16 @@ begin
             begin
             var AAttribute := OWAutoManagePinListOwnerAttribute( AAttributeItem );
             APinType := AAttribute.PinClass as IClassTypeInfo;
-            if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
+            if( APinType.InheritsFrom( GBasicSinkPinTypeInfo )) then
               APinCategories := [ pcSink ]
 
-            else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
+            else if( APinType.InheritsFrom( GSourcePinTypeInfo )) then
               APinCategories := [ pcSource ]
 
             else
               APinCategories := [ pcState ];
 
-            TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+            TClassManagement.CreateMenagedObject( TOWPinListOwner, AOwner, AInstance, AMember,
                 procedure( AComponent : TComponent )
                 begin
                   TOWPinListOwnerClass( AClass.MetaclassType ).CreateEx(
@@ -6411,7 +6407,7 @@ begin
     );
 
   GManagedPinListDefault := TClassManagement.RegisterInitClassDefaults(
-      TOWPinList.ClassTypeInfo()
+      GPinListTypeInfo
     ,
       procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
@@ -6427,16 +6423,16 @@ begin
         if( AMember.AccessAttributes.Get<OWAutoManagePinListAttribute>( True, AAttribute )) then
           begin
           APinType := AAttribute.PinClass as IClassTypeInfo;
-          if( APinType.InheritsFrom( ASinkPinTypeInfo )) then
+          if( APinType.InheritsFrom( GBasicSinkPinTypeInfo )) then
             APinCategories := [ pcSink ]
 
-          else if( APinType.InheritsFrom( ASourcePinTypeInfo )) then
+          else if( APinType.InheritsFrom( GSourcePinTypeInfo )) then
             APinCategories := [ pcSource ]
 
           else
             APinCategories := [ pcState ];
 
-          TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+          TClassManagement.CreateMenagedObject( TOWPinList, AOwner, AInstance, AMember,
               procedure( AComponent : TComponent )
               begin
                 ALocalPinList := TOWPinListClass( AClass.MetaclassType ).Create(
@@ -6572,10 +6568,10 @@ begin
                   if( AAttributeItem is OWAddPinAttribute ) then
                     begin
                     var AValueTypeInfo := OWAddPinAttribute( AAttributeItem ).Value as IClassTypeInfo;
-                    if( AValueTypeInfo.InheritsFrom( ASinkPinTypeInfo )) then
+                    if( AValueTypeInfo.InheritsFrom( GBasicSinkPinTypeInfo )) then
                       APinCategories := APinCategories + [ pcSink ]
 
-                    else if( AValueTypeInfo.InheritsFrom( ASourcePinTypeInfo )) then
+                    else if( AValueTypeInfo.InheritsFrom( GSourcePinTypeInfo )) then
                       APinCategories := APinCategories + [ pcSource ]
 
                     else
@@ -6585,7 +6581,7 @@ begin
                   end;
 
                 var APinList : TOWPinList := NIL;
-                TClassManagement.CreateMenagedObject( TOWClockMultiSinkPin, AOwner, AInstance, AMember,
+                TClassManagement.CreateMenagedObject( TOWPinList, AOwner, AInstance, AMember,
                     procedure( AComponent : TComponent )
                     begin
                       APinList := TOWPinListClass( AClass.MetaclassType ).Create(
