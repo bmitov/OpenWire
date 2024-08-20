@@ -201,7 +201,7 @@ V8.0.0.100   12/01/2023 Added Delphi 12 support
                         Fixed bug in State pins when loading the form
 
 
-Legal issues: Copyright (C) 2001-2023 by Mitov Software
+Legal issues: Copyright (C) 2001-2024 by Mitov Software
               mitov@mitov.com
               www.mitov.com
               www.openwire.org
@@ -317,6 +317,9 @@ type
     property PinClass : IAtttributeParameterInfo  read FPinClass;
     property IsOwner  : Boolean read FIsOwner;
 
+  protected
+    function  Cleanup( AHInstance : NativeInt ) : Boolean; override;
+
   public
     constructor Create( APinClass : TClass ); reintroduce; overload;
     constructor Create( APinClass : TClass; AIsOwner : Boolean ); reintroduce; overload;
@@ -420,17 +423,17 @@ type
     property OperationID : Cardinal read FOperationID;
 
   public
-    class function Create() : IOWNotifyOperation;
+    class function Make() : IOWNotifyOperation;
 
   public
     constructor CreateObject();
 
   public
     [Result : Weak]
-    function GetInstance() : TOWNotifyOperation; stdcall;
+    function  GetInstance() : TOWNotifyOperation; stdcall;
 
-    function IsType( AClass : TOWNotifyOperationClass ) : Boolean; overload; virtual; stdcall;
-    function IsType( const AClasses : TArray<TOWNotifyOperationClass> ) : Boolean; overload; stdcall;
+    function  IsType( AClass : TOWNotifyOperationClass ) : Boolean; overload; virtual; stdcall;
+    function  IsType( const AClasses : TArray<TOWNotifyOperationClass> ) : Boolean; overload; stdcall;
 
   end;
 //---------------------------------------------------------------------------
@@ -439,7 +442,10 @@ type
     Value : T;
 
   public
-    constructor Create( AValue : T );
+    class function Make( AValue : T ) : IOWNotifyOperation;
+
+  public
+    constructor CreateObject( AValue : T );
 
   end;
 //---------------------------------------------------------------------------
@@ -766,7 +772,7 @@ type
 
   protected
     [Unsafe] FOwnerPinList : TOWPinList;   // If owned by pin list.
-    FPinLists : IArrayList<TOWPinList>;
+    FPinLists       : IArrayList<TOWPinList>;
 
     FLoadFormName   : String;
     FDestroyLock    : IOWDestroyLock;
@@ -828,7 +834,7 @@ type
 
   protected
     procedure AddPinList( APinList : TOWPinList );
-    procedure RemovePinList( APinList : TOWPinList );
+    procedure RemovePinList( APinList : TOWPinList ); virtual;
 
   protected
     function  GetPinType() : TOWPinType; virtual; abstract;
@@ -1047,6 +1053,9 @@ type
 
   protected // State support
     function  FindConnectionID( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : TGUID; override;
+
+  protected
+    procedure RemovePinList( APinList : TOWPinList ); override;
 
   protected
     procedure AddType( const AID : TGUID; AOverrride : Boolean; AReorder : Boolean = False );  overload;
@@ -2315,9 +2324,22 @@ procedure OWRemovePinFromDictionaries( APin : TOWBasicPin );
 
 procedure OWAddRootAlias( const ARootName : String; const AAliasName : String );
 procedure OWRemoveRootAlias( const ARootName : String; const AAliasName : String );
+procedure OWClearRootAliases();
 //---------------------------------------------------------------------------
 const
   GOWDISCONNECTED = '(Disconnected)';
+
+var
+  GBasicPinTypeInfo         : IClassTypeInfo;
+  GPinObjectTypeInfo        : IClassTypeInfo;
+  GPinTypeInfo              : IClassTypeInfo;
+  GSourcePinTypeInfo        : IClassTypeInfo;
+  GPinListTypeInfo          : IClassTypeInfo;
+  GPinListOwnerTypeInfo     : IClassTypeInfo;
+  GBasicSinkPinTypeInfo     : IClassTypeInfo;
+  GSinkPinTypeInfo          : IClassTypeInfo;
+  GMultiSinkPinTypeInfo     : IClassTypeInfo;
+  GPinTypeObjectTypeInfo    : IClassTypeInfo;
 
 implementation
 
@@ -2502,6 +2524,7 @@ type
 
     function  GetByIdentName( ARoot : TComponent; const APinName : String; out AResult : TOWUnloadedPin ) : Boolean;
     function  Contains( APin : TOWUnloadedPin ) : Boolean;
+    function  Add( ARoot : TComponent; const AItem : TOWUnloadedPin ) : IArrayList<TOWUnloadedPin>;
 
   end;
 //---------------------------------------------------------------------------
@@ -2510,7 +2533,7 @@ type
     FDictionary : IDictionary<String,TOWUnloadedPin>;
 
   public
-    function  Add( const AItem : TOWUnloadedPin; ACount : Cardinal = 1 ) : IArrayList<TOWUnloadedPin>; override;
+    function  Add( ARoot : TComponent; const AItem : TOWUnloadedPin ) : IArrayList<TOWUnloadedPin>; reintroduce;
 //    function  RemoveNoList( APin : TOWUnloadedPin ) : Boolean; override;
     function  RemoveOne( const AItem : TOWUnloadedPin ) : Integer; overload; override;
     function  Delete( AIndex : Integer ) : IArrayList<TOWUnloadedPin>; overload; override;
@@ -2670,7 +2693,6 @@ var // State pins support
   GRunDispatchers             : IOWStateDispatcherList;
   GIgnoreDesignMode           : Boolean;
   GIgnoreChangeNotifications  : Boolean;
-//  GPinsMap                    : IDictionary<TOWBasicPin, ITuple<String, String>>;
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -3355,12 +3377,13 @@ begin
             if( ACount <= 0 ) then
               Break;
 
+            var AUnloadedPins := GOWUnloadedPins[ AIndex ];
             Dec( ACount );
-            var APinList := GOWUnloadedPins[ AIndex ][ ACount ].FOwnerPinList;
+            var APinList := AUnloadedPins[ ACount ].FOwnerPinList;
             if( APinList <> NIL ) then
               APinList.FUnloadedCount := 0;
 
-            GOWUnloadedPins[ AIndex ].Delete( ACount );
+            AUnloadedPins.Delete( ACount );
           except
             end;
       end;
@@ -3518,27 +3541,59 @@ end;
 //---------------------------------------------------------------------------
 procedure OWAddRootAlias( const ARootName : String; const AAliasName : String );
 begin
-  if( GRootAliasDictionary = NIL ) then
-    GRootAliasDictionary := TDictionary<String, ILinkedList<String>>.Create();
+  GlobalStorageSection.Enter();
+  try
+    if( GRootAliasDictionary = NIL ) then
+      GRootAliasDictionary := TDictionary<String, ILinkedList<String>>.Create();
 
-  GRootAliasDictionary.GetOrAddValue( ARootName,
-      function() : ILinkedList<String>
-      begin
-        Result := TLinkedList<String>.Create();
-      end
-    ).Add( AAliasName );
+    GRootAliasDictionary.GetOrAddValue( ARootName,
+        function() : ILinkedList<String>
+        begin
+          Result := TLinkedList<String>.Create();
+        end
+      ).Add( AAliasName );
+
+  finally
+    GlobalStorageSection.Leave();
+    end;
 
 end;
 //---------------------------------------------------------------------------
 procedure OWRemoveRootAlias( const ARootName : String; const AAliasName : String );
 begin
-  var AList : ILinkedList<String>;
-  if( GRootAliasDictionary.GetValue( ARootName, AList )) then
-    begin
-    AList.RemoveOne( AAliasName );
-    if( AList.Count = 0 ) then
-      GRootAliasDictionary.Remove( ARootName );
+  GlobalStorageSection.Enter();
+  try
+    if( GRootAliasDictionary <> NIL ) then
+      begin
+      var AList : ILinkedList<String>;
+      if( GRootAliasDictionary.GetValue( ARootName, AList )) then
+        begin
+        AList.RemoveOne( AAliasName );
+        if( AList.Count = 0 ) then
+          GRootAliasDictionary.Remove( ARootName );
 
+        end;
+
+      if( GRootAliasDictionary.Count = 0 ) then
+        GRootAliasDictionary := NIL;
+
+      end;
+
+  finally
+    GlobalStorageSection.Leave();
+    end;
+
+end;
+//---------------------------------------------------------------------------
+procedure OWClearRootAliases();
+begin
+  GlobalStorageSection.Enter();
+  try
+    if( GRootAliasDictionary <> NIL ) then
+      GRootAliasDictionary.Clear();
+
+  finally
+    GlobalStorageSection.Leave();
     end;
 
 end;
@@ -3837,7 +3892,6 @@ begin
     FOnCreated( TOWPin( Self ) );
 
   OWNotifyAddPin( Self );
-//  GPinsMap[ Self ] := TTuple<String, String>.Create(  );
 end;
 //---------------------------------------------------------------------------
 procedure TOWBasicPin.BeforeDestruction();
@@ -4388,8 +4442,8 @@ begin
     Exit( True );
     end;
 
-  var AImageAttribute : ParentImageAttribute;
-  if( TypeInfo().AccessAttributes.Get<ParentImageAttribute>( AImageAttribute )) then
+  var AImageAttribute : ImageAttribute;
+  if( TypeInfo().AccessAttributes.Get<ImageAttribute>( AImageAttribute )) then
     if( GetTypeImage( AImageAttribute.ImageTypeInfo as ITypeInfo, FImage )) then
       begin
       AImage := FImage;
@@ -5517,6 +5571,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5531,6 +5586,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5558,6 +5614,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5587,6 +5644,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5601,12 +5659,12 @@ begin
       AInstance.FName := AInstance.GetNameInt();
 
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AInstance.FOwner := TClassManagement.GetRealComponent( TComponent( APath[ 0 ].Persistent ));
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AInstance.FOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -5634,12 +5692,12 @@ begin
       AInstance.FName := AInstance.GetNameInt();
 
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AInstance.FOwner := TClassManagement.GetRealComponent( TComponent( APath[ 0 ].Persistent ));
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AInstance.FOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -5674,6 +5732,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5713,6 +5772,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5750,6 +5810,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5787,6 +5848,7 @@ var
   APtr : ^T;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPin )
@@ -5848,12 +5910,12 @@ begin
       AInstance.FName := AInstance.GetNameInt();
 
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AInstance.FOwner := TClassManagement.GetRealComponent( TComponent( APath[ 0 ].Persistent ));
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AInstance.FOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -6841,6 +6903,14 @@ begin
 
 end;
 //---------------------------------------------------------------------------
+procedure TOWPin.RemovePinList( APinList : TOWPinList );
+begin
+  inherited;
+  if( FOwnerProperty = APinList ) then
+    FOwnerProperty := NIL;
+
+end;
+//---------------------------------------------------------------------------
 function TOWPin.FindConnectionID( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : TGUID;
 var
   AReadLock : ILockSection;
@@ -7086,8 +7156,8 @@ begin
     if( ASink.IsDebugPin()) then
       Continue;
 
-    var AIdent := ASink.GetFullIdentName( True, False ); // GetLinkStr( I, True );
-    var AIdentName := ASink.GetFullName( True ); // GetLinkStr( I, False );
+    var AIdent := ASink.GetFullIdentName( True, False ).Replace( '*._', '_Item' ); // GetLinkStr( I, True );
+    var AIdentName := ASink.GetFullName( True ).Replace( '*._', '_Item' ); // GetLinkStr( I, False );
     var ANotifyAfterPin := FSinkPins[ I ].NotifyAfterPin;
     if( AIdent = AIdentName ) then
       begin
@@ -8357,7 +8427,7 @@ begin
       FOwnerLock.ExecuteUnlockAllLockInOrder( FInputOwnerLock,
           procedure()
           begin
-            ASubmitFunction( Self, ASinkPin, ADataTypeID, TOWNotifyOperation.Create(), [ nsNewLink, nsLastIteration ] );
+            ASubmitFunction( Self, ASinkPin, ADataTypeID, TOWNotifyOperation.Make(), [ nsNewLink, nsLastIteration ] );
           end
         );
 
@@ -8481,7 +8551,7 @@ var
 
 begin
   AReadLock := ReadLock();
-  
+
   if( FInDependOn ) then
     Exit( False );
 
@@ -8496,13 +8566,20 @@ begin
         Exit( True );
         end;
 
-    for var I : Integer := 0 to AFunctionSources.Count - 1 do
-      if( AFunctionSources[ I ].DependsOn( AOtherPin ) ) then
-        begin
-        FInDependOn := False;
-        Exit( True );
-        end;
+    AReadLock := NIL;
+    try
+      for var I : Integer := 0 to AFunctionSources.Count - 1 do
+        if( AFunctionSources[ I ].DependsOn( AOtherPin ) ) then
+          begin
+          AReadLock := ReadLock();
+          FInDependOn := False;
+          Exit( True );
+          end;
 
+    except
+      end;
+
+    AReadLock := ReadLock();
     end;
 
   FInDependOn := False;
@@ -8516,7 +8593,7 @@ var
 begin
   AReadLock := ReadLock();
   if( FDispatcher <> NIL ) then
-    NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], NIL );
+    NotifyDispatcher( TOWNotifyOperation.Make(), [nsNewLink], NIL );
     
 end;
 //---------------------------------------------------------------------------
@@ -9748,8 +9825,14 @@ begin
     if( AOtherPin = AEntry.RealPin ) then
       Exit( True );
 
-    if( AEntry.RealPin.DependsOn( AOtherPin ) ) then
-      Exit( True );
+    AReadLock := NIL;
+    try
+      if( AEntry.RealPin.DependsOn( AOtherPin ) ) then
+        Exit( True );
+
+    finally
+      AReadLock := ReadLock();
+      end;
 
     end;
 
@@ -10465,8 +10548,8 @@ begin
       if( ASource.IsDebugPin()) then
         Continue;
 
-      var AIdent := ASource.GetFullIdentName( True, False ); // GetLinkStr( I, True );
-      var AIdentName := ASource.GetFullName( True ); // GetLinkStr( I, False );
+      var AIdent := ASource.GetFullIdentName( True, False ).Replace( '*._', '_Item' ); // GetLinkStr( I, True );
+      var AIdentName := ASource.GetFullName( True ).Replace( '*._', '_Item' ); // GetLinkStr( I, False );
       var ASourcePinNotifyAfterPin := FSourcePins[ I ].NotifyAfterPin;
       if( AIdent = AIdentName ) then
         begin
@@ -11257,7 +11340,10 @@ begin
   if( FIntRealSourcePin = NIL ) then
     Exit( False );
 
-  Result := FIntRealSourcePin.DependsOn( AOtherPin );
+  var AIntRealSourcePin := FIntRealSourcePin;
+  AReadLock := NIL;
+
+  Result := AIntRealSourcePin.DependsOn( AOtherPin );
 end;
 //---------------------------------------------------------------------------
 procedure TOWSinkPin.Assign( ASource : TPersistent );
@@ -11889,8 +11975,8 @@ var
 begin
   AReadLock := ReadLock();
 
-  var AIdent := FRealSourcePin.GetFullIdentName( True, False ); // GetLinkStr( True );
-  var AIdentName := FRealSourcePin.GetFullName( True ); // GetLinkStr( False );
+  var AIdent := FRealSourcePin.GetFullIdentName( True, False ).Replace( '*._', '_Item' ); // GetLinkStr( True );
+  var AIdentName := FRealSourcePin.GetFullName( True ).Replace( '*._', '_Item' ); // GetLinkStr( False );
   var AAfterPin := FRealSourcePin.GetConnectedAfterForPin( Self );
   if( AAfterPin <> NIL ) then
     begin
@@ -13490,80 +13576,6 @@ begin
   FPinsOwner := AIsPinsOwner;
 end;
 //---------------------------------------------------------------------------
-{
-constructor TOWPinList.CreatePath( const AOnCreated : TProc<TOWBasicPinList>; const APath : IPropertyElements; const APinName : String; APinCategories : TOWPinCategories; AIsPinsOwner : Boolean );
-var
-  AWriteLock : ILockSection;
-
-begin
-  var AOwner : TComponent := NIL;
-  var AOwnerProperty : TPersistent := NIL;
-  var APathCount := APath.Count;
-  if( APath.Count > 0 ) then
-    begin
-    if( APath[ 0 ].Persistent is TComponent ) then
-      AOwner := TComponent( APath[ 0 ].Persistent );
-
-    if( APath.Count > 1 ) then
-      AOwnerProperty := APath[ APathCount - 2 ].Persistent
-
-    else
-      AOwnerProperty := FOwner;
-
-    end;
-
-  inherited Create( AOnCreated, AOwnerProperty );
-
-  AWriteLock := WriteLock();
-  FOwnerLock := TOWFakeLock.Create();
-
-  FPinCategories := APinCategories;
-  FValidPropertyElements := True;
-
-  FOwner := AOwner;
-  FPinsList := TInterfaceArrayList<ITuple<String,TOWBasicPin>>.Create();
-  FPinsOwner := AIsPinsOwner;
-end;
-//---------------------------------------------------------------------------
-constructor TOWPinList.CreatePathLock( const AOnCreated : TProc<TOWBasicPinList>; const APath : IPropertyElements; const APinName : String; const AOwnerLock : IBasicLock; APinCategories : TOWPinCategories; AIsPinsOwner : Boolean );
-var
-  AWriteLock : ILockSection;
-
-begin
-  var AOwner : TComponent := NIL;
-  var AOwnerProperty : TPersistent := NIL;
-  var APathCount := APath.Count;
-  if( APath.Count > 0 ) then
-    begin
-    if( APath[ 0 ].Persistent is TComponent ) then
-      AOwner := TComponent( APath[ 0 ].Persistent );
-
-    if( APath.Count > 1 ) then
-      AOwnerProperty := APath[ APathCount - 2 ].Persistent
-
-    else
-      AOwnerProperty := FOwner;
-
-    end;
-
-  inherited Create( AOnCreated, AOwnerProperty );
-
-  AWriteLock := WriteLock();
-
-  FPinCategories := APinCategories;
-
-  if( AOwnerLock = NIL ) then
-    FOwnerLock := TOWFakeLock.Create()
-
-  else
-    FOwnerLock := AOwnerLock;
-
-  FOwner := AOwner;
-  FPinsList := TInterfaceArrayList<ITuple<String,TOWBasicPin>>.Create();
-  FPinsOwner := AIsPinsOwner;
-end;
-//---------------------------------------------------------------------------
-}
 destructor TOWPinList.Destroy();
 var
   AWriteLock : ILockSection;
@@ -13586,6 +13598,7 @@ var
 begin
 //  AOwner := TClassManagement.GetRealComponent( AOwner );
 
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPinList )
@@ -13599,16 +13612,19 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListOwnerSetter( var APin : TOWBasicPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListOwnerSetter<TOWBasicPinList>( APin, AOwner, AOwnerProperty );
 end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListOwnerSetter( var APin : TOWPinList; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListOwnerSetter<TOWPinList>( APin, AOwner, AOwnerProperty );
 end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListOwnerSetter( var APin : TOWPinListOwner; AOwner : TComponent; AOwnerProperty : TPersistent ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListOwnerSetter<TOWPinListOwner>( APin, AOwner, AOwnerProperty );
 end;
 //---------------------------------------------------------------------------
@@ -13630,6 +13646,7 @@ var
   APtr : ^TOWBasicPinList;
 
 begin
+  Assert( APin = NIL );
   APtr := @APin;
   Result :=
     procedure( AInstance : TOWPinList )
@@ -13637,12 +13654,12 @@ begin
       var AOwner : TComponent := NIL;
       var AOwnerProperty : TPersistent := NIL;
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AOwner := TComponent( APath[ 0 ].Persistent );
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -13659,16 +13676,19 @@ end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListPathSetter( var APin : TOWBasicPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListPathSetter<TOWBasicPinList>( APin, APath, APinName );
 end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListPathSetter( var APin : TOWPinList; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListPathSetter<TOWPinList>( APin, APath, APinName );
 end;
 //---------------------------------------------------------------------------
 class function TOWPinList.PinListPathSetter( var APin : TOWPinListOwner; const APath : IPropertyElements; const APinName : String ) : TProc<TOWPinList>;
 begin
+  Assert( APin = NIL );
   Result := PinListPathSetter<TOWPinListOwner>( APin, APath, APinName );
 end;
 //---------------------------------------------------------------------------
@@ -13680,12 +13700,12 @@ begin
       var AOwner : TComponent := NIL;
       var AOwnerProperty : TPersistent := NIL;
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AOwner := TComponent( APath[ 0 ].Persistent );
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -13723,12 +13743,12 @@ begin
       var AOwner : TComponent := NIL;
       var AOwnerProperty : TPersistent := NIL;
       var APathCount := APath.Count;
-      if( APath.Count > 0 ) then
+      if( APathCount > 0 ) then
         begin
         if( APath[ 0 ].Persistent is TComponent ) then
           AOwner := TComponent( APath[ 0 ].Persistent );
 
-        if( APath.Count > 1 ) then
+        if( APathCount > 1 ) then
           AOwnerProperty := APath[ APathCount - 2 ].Persistent
 
         else
@@ -14226,9 +14246,10 @@ begin
   else if( FUnloadedCount > 0 ) then
     for var I : Integer := 0 to FPinsList.Count - 1 do
       begin
-      if( Pins[ I ] is TOWUnloadedPin ) then
+      var APin := Pins[ I ];
+      if( APin is TOWUnloadedPin ) then
         begin
-        var AUnloadedPin := TOWUnloadedPin( Pins[ I ] );
+        var AUnloadedPin := TOWUnloadedPin( APin );
         FPinsList[ I ] := TTuple<String, TOWBasicPin>.Create( AName, AItem );
 //        FPinsList.Strings[ I ] := AName;
 //        FPinsList.Objects[ I ] := AItem;
@@ -14321,6 +14342,7 @@ begin
   GOWUnloadedPins[ False ].RemoveNoList( TOWUnloadedPin( APinItemPin ));
   GOWUnloadedPins[ True ].RemoveNoList( TOWUnloadedPin( APinItemPin ));
 
+  APinItemPin.RemovePinList( Self );
   if( FPinsOwner ) then
 {$IFDEF RX12_0_Up}
     APinItemPin.Free();
@@ -14328,7 +14350,6 @@ begin
     APinItemPin.DisposeOf();
 {$ENDIF}
 
-  APinItemPin.RemovePinList( Self );
   FPinsList.Delete( AIndex );
   InvalidatePinCaches( NIL );
   OWNotifyChangePinList( Self );
@@ -15941,10 +15962,10 @@ begin
     if( AItemPin is TOWSourcePin ) then
       begin
       if( AItemPin = APin ) then
-        AItemPin.NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], NIL )
+        AItemPin.NotifyDispatcher( TOWNotifyOperation.Make(), [nsNewLink], NIL )
 
       else
-        AItemPin.NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], APin );
+        AItemPin.NotifyDispatcher( TOWNotifyOperation.Make(), [nsNewLink], APin );
 
       Exit;
       end;
@@ -15956,10 +15977,10 @@ begin
     if( not( AItemPin is TOWBasicSinkPin )) then
       begin
       if( AItemPin = APin ) then
-        AItemPin.NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], NIL )
+        AItemPin.NotifyDispatcher( TOWNotifyOperation.Make(), [nsNewLink], NIL )
 
       else
-        AItemPin.NotifyDispatcher( TOWNotifyOperation.Create(), [nsNewLink], APin );
+        AItemPin.NotifyDispatcher( TOWNotifyOperation.Make(), [nsNewLink], APin );
 
       end;
     end;
@@ -16645,11 +16666,11 @@ end;
 //---------------------------------------------------------------------------
 constructor TOWNotifyOperation.CreateObject();
 begin
-  inherited;
+  inherited Create();
   FOperationID := TInterlocked.Increment( GOWOperationID );
 end;
 //---------------------------------------------------------------------------
-class function TOWNotifyOperation.Create() : IOWNotifyOperation;
+class function TOWNotifyOperation.Make() : IOWNotifyOperation;
 begin
   Result := CreateObject();
 end;
@@ -16691,7 +16712,12 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-constructor TOWValueNotifyOperation<T>.Create( AValue : T );
+class function TOWValueNotifyOperation<T>.Make( AValue : T ) : IOWNotifyOperation;
+begin
+  Result := CreateObject( AValue );
+end;
+//---------------------------------------------------------------------------
+constructor TOWValueNotifyOperation<T>.CreateObject( AValue : T );
 begin
   inherited Create();
   Value := AValue;
@@ -16718,8 +16744,17 @@ end;
 constructor OWAutoManagePinListAttribute.Create( const APinClass : IAtttributeParameterInfo; AIsOwner : Boolean );
 begin
   inherited Create();
+  RegisterCleanupClassAttributesList( Cleanup );
   FIsOwner := AIsOwner;
   FPinClass := APinClass;
+end;
+//---------------------------------------------------------------------------
+function OWAutoManagePinListAttribute.Cleanup( AHInstance : NativeInt ) : Boolean;
+begin
+  Result := inherited;
+  if( Result ) then
+    FPinClass := NIL;
+
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -16787,6 +16822,8 @@ begin
   FDisplayName := APinDisplayName;
   FType := AType;
 
+  var AInRoot := ARoot;
+
   if( ARoot <> NIL ) then
     begin
     FDesignTime := ( csDesigning in ARoot.ComponentState );
@@ -16797,7 +16834,7 @@ begin
 
   FRoot := ARoot;
 
-  GOWUnloadedPins[ ALoadIndexed ].Add( Self );
+  GOWUnloadedPins[ ALoadIndexed ].Add( AInRoot, Self );
 //  FConnectedPins := TOWPinEntryList.Create();
 //  FConnectedPins := TOWPinListBasic.Create( False );
 end;
@@ -17245,7 +17282,7 @@ begin
   Result := CreateObject();
 end;
 //---------------------------------------------------------------------------
-function TOWUnloadedPinList.Add( const AItem : TOWUnloadedPin; ACount : Cardinal = 1 ) : IArrayList<TOWUnloadedPin>;
+function TOWUnloadedPinList.Add( ARoot : TComponent; const AItem : TOWUnloadedPin ) : IArrayList<TOWUnloadedPin>;
 begin
   Result := Self; // Keep alive!
   for var I := 0 to FSize - 1 do
@@ -17253,8 +17290,31 @@ begin
       Exit;
 
   inherited Add( AItem );
-  FDictionary[ AItem.GetFullIdentNameInt( False, False ) ] := AItem;
-  FDictionary[ AItem.GetFullIdentNameInt( True, False ) ] := AItem;
+  var ANoRootName := AItem.GetFullIdentNameInt( False, False );
+  FDictionary[ ANoRootName ] := AItem;
+  var AFullName := AItem.GetFullIdentNameInt( True, False );
+  FDictionary[ AFullName ] := AItem;
+  GlobalStorageSection.Enter();
+  try
+    if( GRootAliasDictionary <> NIL ) then
+      if( ARoot <> NIL ) then
+        begin
+        var ARootName := ARoot.Name;
+        ANoRootName := '.' + ANoRootName;
+        var AList : ILinkedList<String>;
+        if( GRootAliasDictionary.GetValue( ARootName, AList )) then
+          begin
+          FDictionary[ ARootName + ANoRootName ] := AItem;
+          for var ARootItem in AList do
+            FDictionary[ ARootItem + ANoRootName ] := AItem;
+
+          end;
+        end;
+
+  finally
+    GlobalStorageSection.Leave();
+    end;
+
 end;
 //---------------------------------------------------------------------------
 {
@@ -17544,14 +17604,20 @@ function TOWInternalPinList.InternalGetByIdentName( ARoot : TComponent; const AP
     if( ARootName = ARootIdent ) then
       Exit( True );
 
-    if( GRootAliasDictionary <> NIL ) then
-      begin
-      var AList : ILinkedList<String>;
-      if( GRootAliasDictionary.GetValue( ARootName, AList )) then
-        for var AItem in AList do
-          if( AItem = ARootIdent ) then
-            Exit( True );
+    GlobalStorageSection.Enter();
+    try
+      if( GRootAliasDictionary <> NIL ) then
+        begin
+        var AList : ILinkedList<String>;
+        if( GRootAliasDictionary.GetValue( ARootName, AList )) then
+          for var AItem in AList do
+            if( AItem = ARootIdent ) then
+              Exit( True );
 
+        end;
+
+    finally
+      GlobalStorageSection.Leave();
       end;
 
     Result := False;
@@ -18029,8 +18095,6 @@ begin
   GOWUnloadedPins[ False ] := TOWUnloadedPinList.Create();
   GOWUnloadedPins[ True ] := TOWUnloadedPinList.Create();
 
-//  GPinsMap := TDictionary<TOWBasicPin, ITuple<String, String>>.Create();
-
   TClassManagement.RegisterSupressedAssign(
       function( AFromObject : TObject; AToObject : TObject ) : Boolean
       begin
@@ -18038,10 +18102,20 @@ begin
       end
     );
 
-  var APinListType := TOWPinList.ClassTypeInfo();
+  GPinObjectTypeInfo := TOWObject.ClassTypeInfo();
+  GBasicPinTypeInfo := TOWBasicPin.ClassTypeInfo();
+  GPinTypeInfo := TOWPin.ClassTypeInfo();
+  GPinListTypeInfo  := TOWPinList.ClassTypeInfo();
+  GPinListOwnerTypeInfo := TOWPinListOwner.ClassTypeInfo();
+
+  GBasicSinkPinTypeInfo := TOWBasicSinkPin.ClassTypeInfo();
+  GSinkPinTypeInfo := TOWSinkPin.ClassTypeInfo();
+  GMultiSinkPinTypeInfo := TOWMultiSinkPin.ClassTypeInfo();
+  GSourcePinTypeInfo := TOWSourcePin.ClassTypeInfo();
+  GPinTypeObjectTypeInfo := TOWPinTypeObject.ClassTypeInfo();
 
   TClassManagement.RegisterBeforeDestructionFirst(
-      TOWBasicSinkPin.ClassTypeInfo()
+      GBasicSinkPinTypeInfo
     ,
       procedure( const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo )
       begin
@@ -18053,7 +18127,7 @@ begin
     );
 
   TClassManagement.RegisterBeforeDestructionFirst(
-      APinListType
+      GPinListTypeInfo
     ,
       procedure( const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo )
       begin
@@ -18067,7 +18141,7 @@ begin
     );
 
   TClassManagement.RegisterBeforeDestructionSecond(
-      TOWBasicPin.ClassTypeInfo()
+      GBasicPinTypeInfo
     ,
       procedure( const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo )
       begin
@@ -18079,7 +18153,7 @@ begin
     );
 
   TClassManagement.RegisterBeforeDestructionSecond(
-      APinListType
+      GPinListTypeInfo
     ,
       procedure( const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo )
       begin
@@ -18091,7 +18165,7 @@ begin
     );
 
   TClassManagement.RegisterDestruction(
-      TOWPinTypeObject.ClassTypeInfo()
+      GPinTypeObjectTypeInfo
     ,
       procedure( const AInstance : TObject; const AClass : TClass; const AMember : IValueMemberInfo; const ADelayMembersList : ILinkedList<IValueMemberInfo> )
       begin
