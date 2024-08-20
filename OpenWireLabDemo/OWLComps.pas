@@ -197,7 +197,7 @@ begin
       procedure( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean )
       begin
         FPositiveDataArray[ APinListOwner.IndexOf( ASender ) ] := AValue;
-        FOutputPin.Notify( TOWNotifyOperation.Create() );
+        FOutputPin.Notify( TOWNotifyOperation.Make() );
       end
     );
 
@@ -214,7 +214,7 @@ begin
       procedure( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean )
       begin
         FNegativeDataArray[ APinListOwner.IndexOf( ASender ) ] := AValue;
-        FOutputPin.Notify( TOWNotifyOperation.Create() );
+        FOutputPin.Notify( TOWNotifyOperation.Make() );
       end
     );
 
@@ -242,7 +242,7 @@ begin
   for var I : Integer := 0 to FNegativeInputPins.Count - 1 do
     AValue := AValue - FNegativeDataArray[ I ];
 
-  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( AValue ), AState );
+  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( AValue ), AState );
 //  Handler.SendFloatData( AValue );
   Result := [];
 end;
@@ -273,7 +273,7 @@ begin
       procedure ( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean )
       begin
         FInputDataArray[ APinListOwner.IndexOf( ASender ) ] := AValue;
-        FOutputPin.Notify( TOWNotifyOperation.Create() );
+        FOutputPin.Notify( TOWNotifyOperation.Make() );
       end
     );
 
@@ -294,7 +294,7 @@ begin
   for var I : Integer := 0 to FInputPins.Count - 1 do
     AValue := AValue * FInputDataArray[ I ];
 
-  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( AValue ), AState );
+  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( AValue ), AState );
   Result := [];
 end;
 //---------------------------------------------------------------------------
@@ -333,20 +333,20 @@ begin
   else
     AValue := 0;
 
-  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Create( AValue ), AState );
+  AHandler.DispatchData( AOtherPin, ADataTypeID, TOWTypedSuppliedOperation<Single>.Make( AValue ), AState );
   Result := [];
 end;
 //---------------------------------------------------------------------------
 procedure TOWLDivide.SendDivisibleData( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean );
 begin
   FDivisible := AValue;
-  FOutputPin.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Make() );
 end;
 //---------------------------------------------------------------------------
 procedure TOWLDivide.SendDividerData( ASender : TOWPin; const AValue : Single; AOnConnect : Boolean );
 begin
   FDivider := AValue;
-  FOutputPin.Notify( TOWNotifyOperation.Create() );
+  FOutputPin.Notify( TOWNotifyOperation.Make() );
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -383,7 +383,7 @@ begin
 
   if( not FStartReported ) then
     begin
-    FOutputPin.Notify( TOWStartRateOperation.Create( 1000 / Interval ) );
+    FOutputPin.Notify( TOWStartRateOperation.Make( 1000 / Interval ) );
     FStartReported := True;
     end;
 
