@@ -1,4 +1,4 @@
-{*> Ver: V8.0.0.100 *********      History      ***************************\
+{*> Ver: V8.0.0.140 *********      History      ***************************\
 
 Beta V1.0b0  04/20/2001 Released
 Beta V1.0b1  04/30/2001 Upstream notification added.
@@ -200,8 +200,36 @@ V8.0.0.100   12/01/2023 Added Delphi 12 support
                         Added support of indexed enumebarbles
                         Fixed bug in State pins when loading the form
 
+V8.0.0.140   02/19/2025 Added OWAddRootAlias and OWRemoveRootAlias
+                        Added TOWPinList.SetOwnerComponent
+                        Improved startup performance
+                        Added OWClearRootAliases
+                        Improved Aliases support
+                        Fixed a deadlock bug in TOWSourcePin.DependsOn
+                        Added fix for rare deadlocks
+                        Fixed Delphi form Streaming bug
+                        ParentImageAttribute replaced by ImageAttribute
+                        Added OWAutoManagePinListAttribute.Cleanup
+                        Create renamed to Make
+                        Added Make class method
+                        Added TOWPin.RemovePinList
+                        Added dpredefined typeinfos
+                        Improved performance
+                        Moved OWResizePropertyAttribute from Mitov.Attributes
+                        Added OWRemoveComponentFromDictionaries
+                        NativeInt replaced by THandle in IntGetPNGResImageByName, and IntGetPNGResImageByNameClass
+                        Optimized TOWBasicPin.PopulateNameCache implementation
+                        Added TSerializeOption.LocalScope, and TSerializeOption.NoLinks support
+                        Added maps cleanup when components are destroyed
+                        GetOwnerComponent moved to TOWPinTypeObject
+                        TOWUnloadedPin moved to the interface section
+                        IOWPinNotifier changed to TOWPinTypeObject as parameters
+                        Added OWInvalidateCaches procedure
+                        Modified to use AImageAttribute.GetImage
+                        IsConnectedByIDs with set as parameter
+                        Improved Disconnect notification when changing pin connections
 
-Legal issues: Copyright (C) 2001-2024 by Mitov Software
+Legal issues: Copyright (C) 2001-2025 by Mitov Software
               mitov@mitov.com
               www.mitov.com
               www.openwire.org
@@ -259,7 +287,7 @@ uses
   System.Generics.Defaults, Mitov.Attributes, Mitov.Types, Mitov.Threading,
   Mitov.Containers.Common, Mitov.Containers.List, Mitov.Containers.Dictionary,
   IGDIPlus, Mitov.Containers.Utils, Mitov.Serialization, Mitov.Elements,
-  Mitov.TypeInfo;
+  Mitov.Containers.Sets, Mitov.TypeInfo;
 
 var
   GPinsNeedRefresh : Boolean;
@@ -315,7 +343,7 @@ type
 
   public
     property PinClass : IAtttributeParameterInfo  read FPinClass;
-    property IsOwner  : Boolean read FIsOwner;
+    property IsOwner : Boolean                    read FIsOwner;
 
   protected
     function  Cleanup( AHInstance : NativeInt ) : Boolean; override;
@@ -335,13 +363,26 @@ type
     FMax    : Integer;
 
   public
-    property Count  : Integer read FCount;
-    property Min    : Integer read FMin;
-    property Max    : Integer read FMax;
+    property Count : Integer  read FCount;
+    property Min : Integer    read FMin;
+    property Max : Integer    read FMax;
 
   public
     constructor Create( APinClass : TClass; ACount : Integer; AMin : Integer; AMax : Integer ); reintroduce; overload;
     constructor Create( const APinClass : IAtttributeParameterInfo; ACount : Integer; AMin : Integer; AMax : Integer ); reintroduce; overload;
+
+  end;
+//---------------------------------------------------------------------------
+  OWResizePropertyAttribute = class( TBasicStringAttribute )
+  protected
+    FPopulateOnCreate : Boolean;
+
+  public
+    property PopulateOnCreate : Boolean read FPopulateOnCreate;
+
+  public
+    constructor Create( const AValue : String ); overload;
+    constructor Create( const AValue : String; APopulateOnCreate : Boolean ); overload;
 
   end;
 //---------------------------------------------------------------------------
@@ -388,7 +429,7 @@ type
 
   public
     property FromDataType : TGUID read FFromDataType;
-    property ToDataType   : TGUID read FToDataType;
+    property ToDataType : TGUID   read FToDataType;
 
   public
     constructor Create( const AFromDataType : TGUID; const AToDataType : TGUID );
@@ -625,6 +666,7 @@ type
     function  _Release() : Integer; {$IFDEF INTERFACE_USE_STDCALL} stdcall {$ELSE} cdecl {$ENDIF};
 
   protected
+    function  GetOwnerComponent() : TComponent; virtual; abstract;
     procedure InvalidateCaches( AObject : TObject ); virtual;
 
   public
@@ -632,6 +674,9 @@ type
 
   public
     function  IsConnected() : Boolean; virtual;
+
+  public
+    property Owner : TComponent read GetOwnerComponent;
 
   end;
 //---------------------------------------------------------------------------
@@ -808,7 +853,7 @@ type
 
   protected
     function  GetOwnerPinList() : TOWPinList; virtual;
-    function  GetOwnerComponent() : TComponent; virtual;
+    function  GetOwnerComponent() : TComponent; override;
     function  GetOwnerProperty() : TPersistent; virtual;
     function  RootInDestroying() : Boolean; virtual;
     function  OwnerInLoading() : Boolean; virtual;
@@ -844,8 +889,8 @@ type
     function  GetInputOutputImage( out AImage : IGPBitmap; AForInput : Boolean; AForOutput : Boolean ) : Boolean; virtual;
 
   protected
-    function IntGetPNGResImageByName( AHInstance : NativeInt; const AName : String; out ABitmap : IGPBitmap ) : Boolean; virtual;
-    class function IntGetPNGResImageByNameClass( AHInstance : NativeInt; const AName : String; out ABitmap : IGPBitmap ) : Boolean; virtual;
+    function IntGetPNGResImageByName( AHInstance : THandle; const AName : String; out ABitmap : IGPBitmap ) : Boolean; virtual;
+    class function IntGetPNGResImageByNameClass( AHInstance : THandle; const AName : String; out ABitmap : IGPBitmap ) : Boolean; virtual;
 
   public
     function  GetEmbeddedOwner() : TComponent; virtual;
@@ -879,7 +924,8 @@ type
     function  IsCompatible( const AOtherPin : TOWBasicPin; AUseConverters : Boolean = True ) : Boolean; virtual; abstract;
     function  IsConnected() : Boolean; override;
     function  IsStateConnected() : Boolean; virtual;
-    function  IsConnectedByIDs( const AIDs : TArray<TGUID> ) : Boolean; virtual;//const;
+    function  IsConnectedByIDs( const AIDs : TArray<TGUID> ) : Boolean; overload; virtual;//const;
+    function  IsConnectedByIDs( const AIDs : ISet<TGUID> ) : Boolean; overload; virtual;//const;
     function  IsConnectedTo( const AOtherPin : TOWBasicPin ) : Boolean; virtual;//const;
     function  IsConnectedAfter( const AOtherPin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin ) : Boolean; virtual;//const;
     function  IsConnectedToState( const ADispatcher : TOWBasicStateDispatcher ) : Boolean; virtual;
@@ -970,7 +1016,7 @@ type
     property OwnerPinList                             : TOWPinList              read GetOwnerPinList;   // If owned by pin list.
 
     [ExternalLink]
-    property Owner                                    : TComponent              read GetOwnerComponent;
+    property Owner;
 
     [ExternalLink]
     property OwnerProperty                            : TPersistent             read GetOwnerProperty;
@@ -984,6 +1030,61 @@ type
     property ConnectedDispatcher[ AIndex : Integer ]  : TOWBasicStateDispatcher read GetDispatcher;
     property DataTypesCount                           : Integer                 read GetDataTypesCount;
     property DataType[ AIndex : Integer ]             : TGUID                   read GetDataType;
+
+  end;
+//---------------------------------------------------------------------------
+  TOWUnloadedPin = class( TOWBasicPin )
+  protected
+    FDisplayName    : String;
+    FIdentName      : String;
+    [Weak] FRoot    : TComponent;
+    FType           : TOWPinType;
+    FDesignTime     : Boolean;
+
+    [AutoManage]
+    FConnectedPins  : IOWPinEntryList;
+
+    FCreatedFrom    : String;
+    FOwnedByList    : Boolean;
+    FInRemoveCount  : Integer;
+    FInEditor       : Boolean;
+
+  public
+    function  IsCompatible( const AOtherPin : TOWBasicPin; AUseConverters : Boolean = True ) : Boolean; override;
+    function  ConnectAfter( const AOtherPin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin ) : Boolean; override;
+    procedure Disconnect(); override;
+    function  DependsOn( const AOtherPin : TOWBasicPin ) : Boolean; override;
+    function  IsConnected() : Boolean; override;
+    function  IsConnectedTo( const AOtherPin : TOWBasicPin ) : Boolean; override; //const;
+
+  protected
+    function  OwnerInDesigning( ACheckForDispatchers : Boolean ) : Boolean; override;
+    function  FindConnectionID( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : TGUID; override;
+    function  NotifyDispatcher( const AOperation : IOWNotifyOperation; AState : TOWNotifyState; const APinToNotify : TOWBasicPin ) : TOWNotifyResult; override;
+    procedure PinDeletedNotify( const ADeletedPin : TOWBasicPin ); override;
+    procedure IntDisconnect( const AOtherPin : TOWBasicPin; ADesignFormClosing : Boolean ); override;
+    procedure IntConnect( const AOtherPin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin; const ADataType : TGUID; AFromOther : Boolean ); override;
+    function  GetPinType() : TOWPinType; override;
+    procedure CheckRemove(); override;
+    procedure PinReplacedNotify( const AOldPin : TOWBasicPin; const ANewPin : TOWBasicPin ); override;
+    procedure SetInEditor( AValue : Boolean ); override;
+    function  CanConnectToInt( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : Boolean; override;
+    function  GetNameInt() : String; override;
+    function  GetFullIdentNameInt( AIncludeRootForm : Boolean; ALoadIndexed : Boolean ) : String; override;
+    function  GetFullIdentsInt() : IPropertyElements; override;
+    function  GetConnectedPinCount() : Integer; override;
+    function  GetConnectedPin( AIndex : Integer ) : TOWBasicPin; override;
+    procedure InvalidateCaches( AObject : TObject ); override;
+
+  public
+    function  GetRoot() : TComponent; override;
+    function  GetFullName( AIncludeRootForm : Boolean ) : String; override;
+
+  public
+    procedure PopulatePinAndDestroy( APin : TOWBasicPin );
+
+  public
+    constructor Create( ARoot : TComponent; ALoadIndexed : Boolean; AType : TOWPinType; const APinIdentName : String; const APinDisplayName : String; const ACreatedFrom : String );
 
   end;
 //---------------------------------------------------------------------------
@@ -1418,7 +1519,7 @@ type
   //  procedure DisconnectFromPinName( OtherPinName : String );
     function  IntConnectAfter( AOtherPin : TOWBasicPin; ANotifyAfterPin : TOWBasicPin; const ADataType : TGUID ) : Boolean; virtual;
     function  CanConnectToInt( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : Boolean; override;
-    procedure IntDisconnectFrom( AOtherPin : TOWBasicPin );
+    procedure IntDisconnectFrom( AOtherPin : TOWBasicPin; AFromConnecting : Boolean );
 
   protected
     procedure UpdateStateValue(); override;
@@ -1561,7 +1662,7 @@ type
     procedure IntConnect( const ASourcePin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin; const ADataType : TGUID; AFromOther : Boolean ); override;
     function  IntConnectAfter( AOtherPin : TOWBasicPin; ANotifyAfterPin : TOWBasicPin; const ADataType : TGUID ) : Boolean; virtual;
     procedure IntDisconnect( const AOtherPin : TOWBasicPin; ADesignFormClosing : Boolean ); override;
-    procedure IntDisconnectFrom( AOtherPin : TOWBasicPin );
+    procedure IntDisconnectFrom( AOtherPin : TOWBasicPin; AFromConnecting : Boolean );
     procedure ReorderChangedData();
     procedure PinReplacedNotify( const AOldPin : TOWBasicPin; const ANewPin : TOWBasicPin ); override;
     procedure UnlodedPinRemoved( const APin : TOWBasicPin ); override;
@@ -1826,7 +1927,7 @@ type
     FInConnecting     : Integer;
 
   protected
-    function  GetOwnerComponent() : TComponent; virtual;
+    function  GetOwnerComponent() : TComponent; override;
     function  GetName() : String; virtual; abstract;
     procedure SetName( const AValue : String ); virtual; abstract;
     function  GetPinCount() : Integer; virtual; abstract; // const;
@@ -1944,7 +2045,6 @@ type
     procedure SetPin( AItem : Integer; APin : TOWBasicPin ); virtual; abstract;
     function  GetName( AItem : Integer ) : String; virtual; abstract;
     procedure SetName( AItem : Integer; const AName : String ); virtual; abstract;
-    function  GetOwnerComponent() : TComponent; virtual; abstract;
     function  GetOwnerProperty() : TPersistent; virtual;
     function  GetListName() : String; // virtual; abstract;
     function  GetListSaveName() : String; // virtual; abstract;
@@ -2002,7 +2102,6 @@ type
     property ShortName : String               read GetShortName;
     property Name : String                    read GetListName;
     property SaveName : String                read GetListSaveName;
-    property Owner : TComponent               read GetOwnerComponent;
     property OwnerProperty : TPersistent      read GetOwnerProperty;
     property PinCategories : TOWPinCategories read GetPinCategories;
 
@@ -2215,11 +2314,11 @@ type
     procedure DynamicPinsSwapped( APin1 : TOWBasicPin; APin2 : TOWBasicPin );
     procedure DynamicPinsMoved( APin1 : TOWBasicPin; APin2 : TOWBasicPin );
 
-    procedure Connected( AObject1 : TOWObject; AObject2 : TOWObject );
-    procedure DisconnectingPin( AObject1 : TOWObject; AFromConnect : Boolean );
-    procedure DisconnectedPin( AObject1 : TOWObject; AFromConnect : Boolean );
-    procedure Disconnecting( AObject1 : TOWObject; AObject2 : TOWObject; AFromConnect : Boolean );
-    procedure Disconnected( AObject1 : TOWObject; AFromConnect : Boolean );
+    procedure Connected( AObject1 : TOWPinTypeObject; AObject2 : TOWPinTypeObject );
+    procedure DisconnectingPin( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
+    procedure DisconnectedPin( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
+    procedure Disconnecting( AObject1 : TOWPinTypeObject; AObject2 : TOWPinTypeObject; AFromConnect : Boolean );
+    procedure Disconnected( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
 
     procedure AddPinList( APinList : TOWBasicPinList );
     procedure RemovePinList( APinList : TOWBasicPinList );
@@ -2257,7 +2356,7 @@ type
     function IsInModule( AHInstance : NativeInt ) : Boolean; virtual;
 
   public
-    class function Create( const AExtentionId : TGUID ) : IOWStreamInfoExtention;
+    class function Make( const AExtentionId : TGUID ) : IOWStreamInfoExtention;
 
   public
     constructor CreateObject( const AExtentionId : TGUID );
@@ -2321,25 +2420,27 @@ procedure OWNotifyChangePin( APin : TOWBasicPin; ADebugPinChange : Boolean );
 function  OWHasConnectedPins( AObject : TObject ) : Boolean;
 
 procedure OWRemovePinFromDictionaries( APin : TOWBasicPin );
+procedure OWRemoveComponentFromDictionaries( AComponent : TComponent );
 
 procedure OWAddRootAlias( const ARootName : String; const AAliasName : String );
 procedure OWRemoveRootAlias( const ARootName : String; const AAliasName : String );
 procedure OWClearRootAliases();
+procedure OWInvalidateCaches( AObject : TObject );
 //---------------------------------------------------------------------------
 const
   GOWDISCONNECTED = '(Disconnected)';
 
 var
-  GBasicPinTypeInfo         : IClassTypeInfo;
-  GPinObjectTypeInfo        : IClassTypeInfo;
-  GPinTypeInfo              : IClassTypeInfo;
-  GSourcePinTypeInfo        : IClassTypeInfo;
-  GPinListTypeInfo          : IClassTypeInfo;
-  GPinListOwnerTypeInfo     : IClassTypeInfo;
-  GBasicSinkPinTypeInfo     : IClassTypeInfo;
-  GSinkPinTypeInfo          : IClassTypeInfo;
-  GMultiSinkPinTypeInfo     : IClassTypeInfo;
-  GPinTypeObjectTypeInfo    : IClassTypeInfo;
+  GBasicPinTypeInfo       : IClassTypeInfo;
+  GPinObjectTypeInfo      : IClassTypeInfo;
+  GPinTypeInfo            : IClassTypeInfo;
+  GSourcePinTypeInfo      : IClassTypeInfo;
+  GPinListTypeInfo        : IClassTypeInfo;
+  GPinListOwnerTypeInfo   : IClassTypeInfo;
+  GBasicSinkPinTypeInfo   : IClassTypeInfo;
+  GSinkPinTypeInfo        : IClassTypeInfo;
+  GMultiSinkPinTypeInfo   : IClassTypeInfo;
+  GPinTypeObjectTypeInfo  : IClassTypeInfo;
 
 implementation
 
@@ -2347,8 +2448,7 @@ implementation
 
 uses
   System.SyncObjs, System.Math, System.StrUtils, Mitov.ClassManagement,
-  Mitov.Utils, Mitov.Design.Components, System.Character, OpenWire.TypeConverters,
-  Mitov.Containers.Sets;
+  Mitov.Utils, Mitov.Design.Components, System.Character, OpenWire.TypeConverters;
 
 var
   GIOWStream                : IInterfaceTypeInfo;
@@ -2357,6 +2457,7 @@ var
   GPendingExtensions        : TMultiProc;
   GCheckPartialPinNames     : Boolean = True;
   GRootAliasDictionary      : IDictionary<String, ILinkedList<String>>;
+  GComponentDestroyNotify   : TProc<TComponent>;
 
 type
   PGUID = ^TGUID;
@@ -2443,61 +2544,6 @@ begin
 end;
 //---------------------------------------------------------------------------
 type
-  TOWUnloadedPin = class( TOWBasicPin )
-  protected
-    FDisplayName    : String;
-    FIdentName      : String;
-    [Weak] FRoot    : TComponent;
-    FType           : TOWPinType;
-    FDesignTime     : Boolean;
-
-    [AutoManage]
-    FConnectedPins  : IOWPinEntryList;
-
-    FCreatedFrom    : String;
-    FOwnedByList    : Boolean;
-    FInRemoveCount  : Integer;
-    FInEditor       : Boolean;
-
-  public
-    function  IsCompatible( const AOtherPin : TOWBasicPin; AUseConverters : Boolean = True ) : Boolean; override;
-    function  ConnectAfter( const AOtherPin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin ) : Boolean; override;
-    procedure Disconnect(); override;
-    function  DependsOn( const AOtherPin : TOWBasicPin ) : Boolean; override;
-    function  IsConnected() : Boolean; override;
-    function  IsConnectedTo( const AOtherPin : TOWBasicPin ) : Boolean; override; //const;
-
-  protected
-    function  OwnerInDesigning( ACheckForDispatchers : Boolean ) : Boolean; override;
-    function  FindConnectionID( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : TGUID; override;
-    function  NotifyDispatcher( const AOperation : IOWNotifyOperation; AState : TOWNotifyState; const APinToNotify : TOWBasicPin ) : TOWNotifyResult; override;
-    procedure PinDeletedNotify( const ADeletedPin : TOWBasicPin ); override;
-    procedure IntDisconnect( const AOtherPin : TOWBasicPin; ADesignFormClosing : Boolean ); override;
-    procedure IntConnect( const AOtherPin : TOWBasicPin; const ANotifyAfterPin : TOWBasicPin; const ADataType : TGUID; AFromOther : Boolean ); override;
-    function  GetPinType() : TOWPinType; override;
-    procedure CheckRemove(); override;
-    procedure PinReplacedNotify( const AOldPin : TOWBasicPin; const ANewPin : TOWBasicPin ); override;
-    procedure SetInEditor( AValue : Boolean ); override;
-    function  CanConnectToInt( const AOtherPin : TOWBasicPin; var AConverter : IOWFormatConverter; var AConverterClass : TOWFormatConverterClass; AUseConverters : Boolean; const ADataType : TGUID ) : Boolean; override;
-    function  GetNameInt() : String; override;
-    function  GetFullIdentNameInt( AIncludeRootForm : Boolean; ALoadIndexed : Boolean ) : String; override;
-    function  GetFullIdentsInt() : IPropertyElements; override;
-    function  GetConnectedPinCount() : Integer; override;
-    function  GetConnectedPin( AIndex : Integer ) : TOWBasicPin; override;
-    procedure InvalidateCaches( AObject : TObject ); override;
-
-  public
-    function  GetRoot() : TComponent; override;
-    function  GetFullName( AIncludeRootForm : Boolean ) : String; override;
-
-  public
-    procedure PopulatePinAndDestroy( APin : TOWBasicPin );
-
-  public
-    constructor Create( ARoot : TComponent; ALoadIndexed : Boolean; AType : TOWPinType; const APinIdentName : String; const APinDisplayName : String; const ACreatedFrom : String );
-
-  end;
-//---------------------------------------------------------------------------
   TOWUnloadedPastePin = class( TOWUnloadedPin );
 //---------------------------------------------------------------------------
   IOWPinListBasic<T : TOWBasicPin> = interface( IObjectOwnerArrayList<T> )
@@ -2543,7 +2589,7 @@ type
     function  Contains( APin : TOWUnloadedPin ) : Boolean;
 
   public
-    class function Create() : IOWUnloadedPinList;
+    class function Make() : IOWUnloadedPinList;
 
   public
     constructor CreateObject();
@@ -2578,7 +2624,7 @@ type
     function GetByNameCreate( ARoot : TComponent; ACheckLoadIndex : Boolean; AType : TOWPinType; const APinIdentName : String; const APinDisplayName : String; const ACreatedFrom : String ) : TOWBasicPin;
 
   public
-    class function Create() : IOWInternalPinList;
+    class function Make() : IOWInternalPinList;
 
   public
     constructor CreateObject(); overload;
@@ -2848,7 +2894,7 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWNotifyConnected( AObject1 : TOWObject; AObject2 : TOWObject );
+procedure OWNotifyConnected( AObject1 : TOWPinObject; AObject2 : TOWPinObject );
 begin
   GOWNotifySection.Enter();
   try
@@ -2866,7 +2912,7 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWNotifyDisconnectingPin( AObject1 : TOWObject; AFromConnect : Boolean );
+procedure OWNotifyDisconnectingPin( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
 begin
   GOWNotifySection.Enter();
   try
@@ -2884,7 +2930,7 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWNotifyDisconnectedPin( AObject1 : TOWObject; AFromConnect : Boolean );
+procedure OWNotifyDisconnectedPin( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
 begin
   GOWNotifySection.Enter();
   try
@@ -2902,7 +2948,7 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWNotifyDisconnecting( AObject1 : TOWObject; AObject2 : TOWObject; AFromConnect : Boolean );
+procedure OWNotifyDisconnecting( AObject1 : TOWPinTypeObject; AObject2 : TOWPinTypeObject; AFromConnect : Boolean );
 begin
   GOWNotifySection.Enter();
   try
@@ -2920,7 +2966,7 @@ begin
   GOWNotifySection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWNotifyDisconnected( AObject1 : TOWObject; AFromConnect : Boolean );
+procedure OWNotifyDisconnected( AObject1 : TOWPinTypeObject; AFromConnect : Boolean );
 begin
   GOWNotifySection.Enter();
   try
@@ -3335,12 +3381,12 @@ begin
   GlobalStorageSection.Leave();
 end;
 //---------------------------------------------------------------------------
-procedure OWInvalidateCaches();
+procedure OWInvalidateCaches( AObject : TObject );
 begin
   GlobalStorageSection.Enter();
   try
     for var APin in GOWPins do
-      APin.InvalidateCaches( NIL );
+      APin.InvalidateCaches( AObject );
 
   except
     end;
@@ -3486,6 +3532,38 @@ begin
   Result := False;
 end;
 //---------------------------------------------------------------------------
+procedure OWRemoveComponentFromDictionaries( AComponent : TComponent );
+begin
+  GlobalStorageSection.Enter();
+  try
+    var AFound := False;
+    for var I : Integer := 0 to GOWRootList.Count - 1 do
+      begin
+      var ARootItem := GOWRootList[ I ];
+      var AComponentList := ARootItem.GetComponentsList();
+      for var J : Integer := 0 to AComponentList.Count - 1 do
+        if( AComponentList[ J ].GetComponent() = AComponent ) then
+          begin
+          Assert( False, 'Component with no pins still in OpenWire Dictionaries!' );
+          AComponentList.Delete( J );
+          if( AComponentList.Count = 0 ) then
+            GOWRootList.Delete( I );
+
+          AFound := True;
+          Break;
+          end;
+
+      if( AFound ) then
+        Break;
+
+      end;
+
+  except
+    end;
+
+  GlobalStorageSection.Leave();
+end;
+//---------------------------------------------------------------------------
 procedure OWRemovePinFromDictionaries( APin : TOWBasicPin );
 begin
   GlobalStorageSection.Enter();
@@ -3532,7 +3610,6 @@ begin
         end;
       end;
 
-//    ARootComponentItem.GetPinsDictionary()[ APinIdent ] := Self;
   except
     end;
 
@@ -4057,31 +4134,6 @@ begin
   FFullIdentName := GetFullIdentNameInt( False, False );
   FFullLoadIdentName := GetFullIdentNameInt( False, True );
 
-  var ARoot := GetRoot();
-  var ARootItem := GOWRootList.FindOrAdd(
-      function( const AItem : IOWRootListItem ) : Boolean
-      begin
-        Result := ( AItem.GetComponent() = ARoot );
-      end
-    ,
-      function() : IOWRootListItem
-      begin
-        Result := TOWRootListItem.Create( ARoot );
-      end
-    );
-
-  var ARootComponentItem := ARootItem.GetComponentsList().FindOrAdd(
-      function( const AItem : IOWComponentsListItem ) : Boolean
-      begin
-        Result := ( AItem.GetComponent() = AOwner );
-      end
-    ,
-      function() : IOWComponentsListItem
-      begin
-        Result := TOWComponentsListItem.Create( AOwner );
-      end
-    );
-
   var ALoadIdent : String;
   var APos := FFullLoadIdentName.IndexOf( '.' );
   if( APos = 0 ) then
@@ -4090,9 +4142,37 @@ begin
   else
     ALoadIdent := FFullLoadIdentName.SubString( APos + 1 );
 
-  var ADictionary := ARootComponentItem.GetLoadPinsDictionary();
   if( FFullLoadIdentName <> '' ) then
-    ADictionary[ ALoadIdent ] := Self;
+    if( not ( csDestroying in AOwner.ComponentState )) then
+      begin
+      var ARoot := GetRoot();
+      var ARootItem := GOWRootList.FindOrAdd(
+          function( const AItem : IOWRootListItem ) : Boolean
+          begin
+            Result := ( AItem.GetComponent() = ARoot );
+          end
+        ,
+          function() : IOWRootListItem
+          begin
+            Result := TOWRootListItem.Create( ARoot );
+          end
+        );
+
+      var ARootComponentItem := ARootItem.GetComponentsList().FindOrAdd(
+          function( const AItem : IOWComponentsListItem ) : Boolean
+          begin
+            Result := ( AItem.GetComponent() = AOwner );
+          end
+        ,
+          function() : IOWComponentsListItem
+          begin
+            Result := TOWComponentsListItem.Create( AOwner );
+          end
+        );
+
+      var ADictionary := ARootComponentItem.GetLoadPinsDictionary();
+      ADictionary[ ALoadIdent ] := Self;
+      end;
 
   FName := GetNameInt();
 
@@ -4364,12 +4444,12 @@ begin
   Result := FDispatcher.GetConnectedAfterForPin( AOtherPin )
 end;
 //---------------------------------------------------------------------------
-function TOWBasicPin.IntGetPNGResImageByName( AHInstance : NativeInt; const AName : String; out ABitmap : IGPBitmap ) : Boolean;
+function TOWBasicPin.IntGetPNGResImageByName( AHInstance : THandle; const AName : String; out ABitmap : IGPBitmap ) : Boolean;
 begin
   Result := IntGetPNGResImageByNameClass( AHInstance, AName, ABitmap );
 end;
 //---------------------------------------------------------------------------
-class function TOWBasicPin.IntGetPNGResImageByNameClass( AHInstance : NativeInt; const AName : String; out ABitmap : IGPBitmap ) : Boolean;
+class function TOWBasicPin.IntGetPNGResImageByNameClass( AHInstance : THandle; const AName : String; out ABitmap : IGPBitmap ) : Boolean;
 begin
   Result := GetPNGResImageByName( AHInstance, TypeString( AName ).ToUpperCase(), ABitmap );
 end;
@@ -4436,7 +4516,7 @@ begin
     end;
 
   FImageCached := True;
-  if( IntGetPNGResImageByName( NativeInt( FindClassHInstance( ClassType() )), ClassName(), FImage )) then
+  if( IntGetPNGResImageByName( FindClassHInstance( ClassType() ), ClassName(), FImage )) then
     begin
     AImage := FImage;
     Exit( True );
@@ -4444,7 +4524,7 @@ begin
 
   var AImageAttribute : ImageAttribute;
   if( TypeInfo().AccessAttributes.Get<ImageAttribute>( AImageAttribute )) then
-    if( GetTypeImage( AImageAttribute.ImageTypeInfo as ITypeInfo, FImage )) then
+    if( AImageAttribute.GetImage( FImage )) then
       begin
       AImage := FImage;
       Exit( True );
@@ -4835,6 +4915,15 @@ begin
         Exit( True );
 
     end;
+
+  Exit( False );
+end;
+//---------------------------------------------------------------------------
+function TOWBasicPin.IsConnectedByIDs( const AIDs : ISet<TGUID> ) : Boolean;
+begin
+  for var I : Integer := 0 to ConnectedPinCount - 1 do
+    if( AIDs.Contains( GetConnectionID( ConnectedPin[ I ] ) )) then
+      Exit( True );
 
   Exit( False );
 end;
@@ -7329,6 +7418,10 @@ begin
   if( not DoWrite() ) then
     Exit;
 
+  var AOptions := AWriter.GetOptions();
+  if( TSerializeOption.NoLinks in AOptions ) then
+    Exit;
+
   AWriter.WriteArray( 'SinkPins',
       procedure( const AArrayWriter : ISequentialWriter )
       var
@@ -7346,8 +7439,9 @@ begin
             if( not ASelectedObjects.Query().Contains( ASink.GetOwnerComponent() )) then
               Continue;
 
-          AIdent := ASink.GetFullIdentName( True, False ); // GetLinkStr( I, True );
-          AIdentName := ASink.GetFullName( True ); // GetLinkStr( I, False );
+          var AIncludeRoot := not ( TSerializeOption.LocalScope in AWriter.GetOptions() );
+          AIdent := ASink.GetFullIdentName( AIncludeRoot, False ); // GetLinkStr( I, True );
+          AIdentName := ASink.GetFullName( AIncludeRoot ); // GetLinkStr( I, False );
           AArrayWriter.WriteNested(
               procedure( const AWriter : IWriter )
               begin
@@ -7358,7 +7452,7 @@ begin
 
                 var ANotifyAfterPin := FSinkPins[ I ].NotifyAfterPin;
                 if( ANotifyAfterPin <> NIL ) then
-                  AWriter.WriteString( 'SaveAfter', ANotifyAfterPin.GetFullIdentName( True, False ) ); // GetLinkAfterStr( I );
+                  AWriter.WriteString( 'SaveAfter', ANotifyAfterPin.GetFullIdentName( AIncludeRoot, False ) ); // GetLinkAfterStr( I );
 
               end
             );
@@ -7366,7 +7460,7 @@ begin
           end;
 
       end
-    )
+    );
 
 end;
 //---------------------------------------------------------------------------
@@ -7404,7 +7498,7 @@ begin
   if( FMaxConnections > 0 ) then
     if( SinkCount >= FMaxConnections ) then
       if( not IsConnectedTo( ASinkPin )) then
-        DisconnectFrom( Sinks[ 0 ] );
+        IntDisconnectFrom( Sinks[ 0 ], True );
 
   var AEntry := FSinkPins.Add();
   AEntry.RealPin := ASinkPin;
@@ -8323,7 +8417,7 @@ begin
       if( FMaxConnections > 0 ) then
         if( SinkCount >= FMaxConnections ) then
           if( not IsConnectedTo( AOtherPin )) then
-            DisconnectFrom( Sinks[ 0 ] );
+            IntDisconnectFrom( Sinks[ 0 ], True );
 
 //      Result := True;
 
@@ -8802,7 +8896,7 @@ begin
       var ASink := GetSink( I );
       BeforeDisconnectFrom( ASink );
       ASink.BeforeDisconnect();
-      IntDisconnectFrom( ASink );
+      IntDisconnectFrom( ASink, False );
       end;
 
   finally
@@ -8814,7 +8908,7 @@ begin
   FSinkPins.Clear();
 end;
 //---------------------------------------------------------------------------
-procedure TOWSourcePin.IntDisconnectFrom( AOtherPin : TOWBasicPin );
+procedure TOWSourcePin.IntDisconnectFrom( AOtherPin : TOWBasicPin; AFromConnecting : Boolean );
 begin
   var ADesignFormClosing := False;
   FImageCached := False;
@@ -8822,7 +8916,7 @@ begin
     if( RootInDestroying() ) then
       ADesignFormClosing := True;
 
-  OWNotifyDisconnecting( Self, AOtherPin, False );
+  OWNotifyDisconnecting( Self, AOtherPin, AFromConnecting );
   IntDisconnect( AOtherPin, ADesignFormClosing );
   AOtherPin.IntDisconnect( Self, ADesignFormClosing );
   AOtherPin.CheckRemove();
@@ -8845,7 +8939,7 @@ begin
     begin
     AWriteLock := WriteLock();
     ADestroyLock := FDestroyLock.DestroyLock();
-    IntDisconnectFrom( AOtherPin );
+    IntDisconnectFrom( AOtherPin, False );
     end;
     
 end;
@@ -9629,7 +9723,7 @@ begin
       
     if( AOtherPin is TOWSourcePin ) then
       begin
-      DisconnectFrom( AOtherPin );
+      IntDisconnectFrom( AOtherPin, True );
       var AEntry := FSourcePins.Add();
       AEntry.ConnectionPin := AOtherPin;
       AEntry.RealPin := AOtherPin;
@@ -9717,7 +9811,7 @@ begin
 
 end;
 //---------------------------------------------------------------------------
-procedure TOWMultiSinkPin.IntDisconnectFrom( AOtherPin : TOWBasicPin );
+procedure TOWMultiSinkPin.IntDisconnectFrom( AOtherPin : TOWBasicPin; AFromConnecting : Boolean );
 begin
   FImageCached := False;
   var ADesignFormClosing := False;
@@ -9725,7 +9819,7 @@ begin
     if( RootInDestroying() ) then
       ADesignFormClosing := True;
 
-  OWNotifyDisconnecting( Self, AOtherPin, False );
+  OWNotifyDisconnecting( Self, AOtherPin, AFromConnecting );
 //  OldInDisconnect := FInDisconnect;
 //  FInDisconnect := True;
   IntDisconnect( AOtherPin, ADesignFormClosing );
@@ -9749,7 +9843,7 @@ begin
     begin
     AWriteLock := WriteLock();
     ADestroyLock := FDestroyLock.DestroyLock();
-    IntDisconnectFrom( AOtherPin );
+    IntDisconnectFrom( AOtherPin, False );
     end;
 
 end;
@@ -10414,6 +10508,10 @@ begin
   if( not DoWrite() ) then
     Exit;
 
+  var AOptions := AWriter.GetOptions();
+  if( TSerializeOption.NoLinks in AOptions ) then
+    Exit;
+
   AWriter.WriteArray( 'SourcePins',
       procedure( const AArrayWriter : ISequentialWriter )
       var
@@ -10427,8 +10525,9 @@ begin
           if( ASource.IsDebugPin()) then
             Continue;
 
-          AIdent := ASource.GetFullIdentName( True, False );
-          AIdentName := ASource.GetFullName( True );
+          var AIncludeRoot := not ( TSerializeOption.LocalScope in AWriter.GetOptions() );
+          AIdent := ASource.GetFullIdentName( AIncludeRoot, False );
+          AIdentName := ASource.GetFullName( AIncludeRoot );
 
           AArrayWriter.WriteNested(
               procedure( const AWriter : IWriter )
@@ -10439,7 +10538,7 @@ begin
 
                 var ANotifyAfterPin := FSourcePins[ I ].NotifyAfterPin;
                 if( ANotifyAfterPin <> NIL ) then
-                  AWriter.WriteString( 'SaveAfter', ANotifyAfterPin.GetFullIdentName( True, False ) );
+                  AWriter.WriteString( 'SaveAfter', ANotifyAfterPin.GetFullIdentName( AIncludeRoot, False ) );
 
               end
             );
@@ -12240,6 +12339,10 @@ begin
   if( csWriting in GetOwnerComponent().ComponentState ) then
     Exit;
 
+  var AOptions := AWriter.GetOptions();
+  if( TSerializeOption.NoLinks in AOptions ) then
+    Exit;
+
   if( DoStateConverterWrite() ) then
     begin
     if( TOWStateDispatcher( FDispatcher ).FCountSaved = 0 ) then
@@ -12261,6 +12364,7 @@ begin
           AWriter.WriteString( 'From', GUIDToString( AGuidFrom ) );
           AWriter.WriteString( 'To', GUIDToString( AGuidTo ) );
 
+          var AIncludeRoot := not ( TSerializeOption.LocalScope in AWriter.GetOptions() );
           if( ( AThePinOwner = NIL ) or ( not TOWStateDispatcher( FDispatcher ).IsFormSaved( AThePinOwner ))) then
             if( TOWStateDispatcher( FDispatcher ).IsCrosForm()) then
               begin
@@ -12285,10 +12389,10 @@ begin
                         AArrayWriter.WriteNested(
                             procedure( const AWriter : IWriter )
                             begin
-                              var AIdent := APin.GetFullIdentName( True, False );
+                              var AIdent := APin.GetFullIdentName( AIncludeRoot, False );
                               AWriter.WriteString( 'ID', AIdent );
 
-                              var AIdentName := APin.GetFullName( True );
+                              var AIdentName := APin.GetFullName( AIncludeRoot );
                               if( AIdent <> AIdentName ) then
                                 AWriter.WriteString( 'Name', AIdentName );
 
@@ -13072,7 +13176,7 @@ begin
   FExtentionId := AExtentionId;
 end;
 //---------------------------------------------------------------------------
-class function TOWStreamInfoExtention.Create( const AExtentionId : TGUID ) : IOWStreamInfoExtention;
+class function TOWStreamInfoExtention.Make( const AExtentionId : TGUID ) : IOWStreamInfoExtention;
 begin
   Result := CreateObject( AExtentionId );
 end;
@@ -13749,7 +13853,7 @@ begin
           AOwner := TComponent( APath[ 0 ].Persistent );
 
         if( APathCount > 1 ) then
-          AOwnerProperty := APath[ APathCount - 2 ].Persistent
+          AOwnerProperty := APath[ APathCount - 1 ].Persistent
 
         else
           AOwnerProperty := AOwner;
@@ -16776,6 +16880,20 @@ end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+constructor OWResizePropertyAttribute.Create( const AValue : String );
+begin
+  Create( AValue, True );
+end;
+//---------------------------------------------------------------------------
+constructor OWResizePropertyAttribute.Create( const AValue : String; APopulateOnCreate : Boolean );
+begin
+  inherited Create( AValue );
+  FPopulateOnCreate := APopulateOnCreate;
+end;
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 constructor TOWBasicDataTypeAttribute.Create( const AValue : TGUID; AReorder : Boolean );
 begin
   inherited Create( AValue );
@@ -17277,7 +17395,7 @@ begin
   FDictionary := TDictionary<String,TOWUnloadedPin>.Create();
 end;
 //---------------------------------------------------------------------------
-class function TOWUnloadedPinList.Create() : IOWUnloadedPinList;
+class function TOWUnloadedPinList.Make() : IOWUnloadedPinList;
 begin
   Result := CreateObject();
 end;
@@ -17559,7 +17677,7 @@ begin
   FDictionary := TDictionary<TComponent, ILinkedList<TOWBasicPin>>.Create();
 end;
 //---------------------------------------------------------------------------
-class function TOWInternalPinList.Create() : IOWInternalPinList;
+class function TOWInternalPinList.Make() : IOWInternalPinList;
 begin
   Result := CreateObject();
 end;
@@ -18074,6 +18192,8 @@ begin
   if( GLoaded ) then
     Exit;
 
+  GComponentDestroyNotify := RegisterComponentRemovedNotify( OWRemoveComponentFromDictionaries );
+
   Mitov.ClassManagement.InitializationSection();
   OpenWire.TypeConverters.TypeConvertersInitGlobals();
 
@@ -18089,11 +18209,11 @@ begin
   // State pins support
   GDesignDispatchers := TOWStateDispatcherList.Create();
   GRunDispatchers := TOWStateDispatcherList.Create();
-  GOWPins := TOWInternalPinList.Create();
+  GOWPins := TOWInternalPinList.Make();
   GOWRootList := TInterfaceArrayList<IOWRootListItem>.Create();
   GOWPinLists := TObjectArrayList<TOWBasicPinList>.Create();
-  GOWUnloadedPins[ False ] := TOWUnloadedPinList.Create();
-  GOWUnloadedPins[ True ] := TOWUnloadedPinList.Create();
+  GOWUnloadedPins[ False ] := TOWUnloadedPinList.CreateObject();
+  GOWUnloadedPins[ True ] := TOWUnloadedPinList.CreateObject();
 
   TClassManagement.RegisterSupressedAssign(
       function( AFromObject : TObject; AToObject : TObject ) : Boolean
@@ -18206,7 +18326,7 @@ begin
       procedure()
       begin
         OWClearLoadingMaps();
-        OWInvalidateCaches();
+        OWInvalidateCaches( NIL );
         OWClearPendingPasteLinks();
       end
     );
@@ -18218,6 +18338,7 @@ begin
   if( not GLoaded ) then
     Exit;
 
+  UnregisterComponentRemovedNotify( GComponentDestroyNotify );
   UnregisterSerializationLoadingAllEnd( GSerializationLoadingEnd );
   UnregisterObjectInUseGetter( GObjectInUseGetter );
 

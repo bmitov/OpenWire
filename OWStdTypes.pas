@@ -3,7 +3,7 @@
 //     This software is supplied under the terms of a license agreement or    //
 //     nondisclosure agreement with Mitov Software and may not be copied      //
 //     or disclosed except in accordance with the terms of that agreement.    //
-//         Copyright(c) 2002-2024 Mitov Software. All Rights Reserved.        //
+//         Copyright(c) 2002-2025 Mitov Software. All Rights Reserved.        //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -802,7 +802,7 @@ type
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
-    property Value  : T_Data read FValue;
+    property Value : T_Data read FValue;
 
   end;
 //---------------------------------------------------------------------------
@@ -821,7 +821,7 @@ type
     constructor Create( const AOnCreated : TProc<TOWPin>; const AOwnerLock : IBasicLock; const AOnDataChange : TOWDataChangeEvent<T_Data>; const AOnPinDispatchEvent : TOWPinDispatchEvent = NIL ); reintroduce;
 
   public
-    property Value  : T_Data read FValue;
+    property Value : T_Data read FValue;
 
   end;
 //---------------------------------------------------------------------------
@@ -5935,6 +5935,8 @@ begin
     ,
       NIL
     ,
+      NIL
+    ,
       APinClass );
 
   Result := AResult;
@@ -6019,7 +6021,7 @@ begin
   GManagedDispatchSourcePinInit := TClassManagement.RegisterInitClassDefaults(
       GManagedDispatchSourcePinTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWDispatchSourcePinClass = class of TOWManagedDispatchSourcePin;
 
@@ -6033,7 +6035,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6051,7 +6053,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6068,7 +6070,7 @@ begin
   GManagedStdStatePinInit := TClassManagement.RegisterInitClassDefaults(
       GStdStatePinTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWStdStatePinClass = class of TOWStdStatePin;
 
@@ -6082,7 +6084,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6100,7 +6102,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6115,7 +6117,7 @@ begin
     );
 
   GManagedStdSinkPinInit := TClassManagement.RegisterInitClassDefaults( GStdSinkPinTypeInfo,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWStdSinkPinClass = class of TOWStdSinkPin;
 
@@ -6129,7 +6131,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6147,7 +6149,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6162,7 +6164,7 @@ begin
     );
 
   GManagedStdMultiSinkPinInit := TClassManagement.RegisterInitClassDefaults( GStdMultiSinkPinTypeInfo,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWStdMultiSinkPinClass = class of TOWStdMultiSinkPin;
 
@@ -6176,7 +6178,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6194,7 +6196,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6211,7 +6213,7 @@ begin
   GManagedClockSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
       GClockSinkPinTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWClockSinkPinClass = class of TOWClockSinkPin;
 
@@ -6225,7 +6227,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6243,7 +6245,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6260,7 +6262,7 @@ begin
   GManagedClockMultiSinkPinDefault := TClassManagement.RegisterInitClassDefaults(
       GClockMultiSinkPinTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWClockMultiSinkPinClass = class of TOWClockMultiSinkPin;
 
@@ -6274,7 +6276,7 @@ begin
                   TOWPin.PinCustomOwnerSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       AComponent, TPersistent( AInstance )
@@ -6292,7 +6294,7 @@ begin
                   TOWPin.PinCustomPathSetter(
                       procedure( APin : TOWPin )
                       begin
-                        AOnCreated( APin );
+                        AOnCreating( APin );
                       end
                     ,
                       APath, AName
@@ -6309,7 +6311,7 @@ begin
   GManagedPinListOwnerDefault := TClassManagement.RegisterInitClassDefaults(
       GPinListOwnerTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWPinListOwnerClass = class of TOWPinListOwner;
 
@@ -6359,7 +6361,7 @@ begin
                       TOWPinList.PinListCustomOwnerSetter(
                           procedure( APinList : TOWPinList )
                           begin
-                            AOnCreated( APinList );
+                            AOnCreating( APinList );
                           end
                         ,
                           AComponent, TPersistent( AInstance )
@@ -6383,7 +6385,7 @@ begin
                       TOWPinList.PinListCustomPathSetter(
                           procedure( APinList : TOWPinList )
                           begin
-                            AOnCreated( APinList );
+                            AOnCreating( APinList );
                           end
                         ,
                           APath, AName )
@@ -6409,7 +6411,7 @@ begin
   GManagedPinListDefault := TClassManagement.RegisterInitClassDefaults(
       GPinListTypeInfo
     ,
-      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
+      procedure( const ANested : Boolean; const AOwner : TObject; const AInstance : TObject; const AClass : IClassTypeInfo; const AMember : IValueMemberInfo; const AOnCreating : TProc<TObject>; const AOnCreated : TProc<TObject>; const APostProcessList : IArrayList<TProc>; const ALockItem : ILockItem )
       type
         TOWPinListClass = class of TOWPinList;
 
@@ -6439,7 +6441,7 @@ begin
                     TOWPinList.PinListCustomOwnerSetter(
                         procedure( APinList : TOWPinList )
                         begin
-                          AOnCreated( APinList );
+                          AOnCreating( APinList );
                         end
                       ,
                         AComponent, TPersistent( AInstance )
@@ -6456,7 +6458,7 @@ begin
                     TOWPinList.PinListCustomPathSetter(
                         procedure( APinList : TOWPinList )
                         begin
-                          AOnCreated( APinList );
+                          AOnCreating( APinList );
                         end
                       ,
                         APath, AName )
@@ -6491,6 +6493,9 @@ begin
                   begin
                   if( APropAttribute is OWResizePropertyAttribute ) then
                     begin
+                    if( not OWResizePropertyAttribute( APropAttribute ).PopulateOnCreate ) then
+                      Continue;
+
                     var AProperty : ISinglePropertyInfo;
                     if( ATypeInfo.GetSingleProperty( OWResizePropertyAttribute( APropAttribute ).Value, AProperty )) then
                       begin
@@ -6588,7 +6593,7 @@ begin
                           TOWPinList.PinListCustomOwnerSetter(
                               procedure( APinList : TOWPinList )
                               begin
-                                AOnCreated( APinList );
+                                AOnCreating( APinList );
                               end
                             ,
                               AComponent, TPersistent( AInstance )
@@ -6605,7 +6610,7 @@ begin
                           TOWPinList.PinListCustomPathSetter(
                               procedure( APinList : TOWPinList )
                               begin
-                                AOnCreated( APinList );
+                                AOnCreating( APinList );
                               end
                             ,
                               APath, AName )
@@ -6616,7 +6621,7 @@ begin
                     end
                   );
 
-                AOnCreated( APinList );
+                AOnCreating( APinList );
 
                 for var AAttributeItem in AAttributes do
                   begin
