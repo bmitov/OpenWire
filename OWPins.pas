@@ -18349,11 +18349,7 @@ begin
   GOWPins := NIL;
   GOWRootList := NIL;
 
-{$IFDEF RX12_0_Up}
-  GOWNullEntry.Free();
-{$ELSE}
-  GOWNullEntry.DisposeOf();
-{$ENDIF}
+  FreeAndNil( GOWNullEntry );
 
   GLoaded := False;
 end;
