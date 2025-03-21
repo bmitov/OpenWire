@@ -5,7 +5,7 @@
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <DCC_DependencyCheckOutputName>$(SystemRoot)\System32\OpenWireLabPkgD11.bpl</DCC_DependencyCheckOutputName>
-        <ProjectVersion>20.2</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <Base>True</Base>
         <AppType>Package</AppType>
@@ -95,7 +95,7 @@
         <DCC_HppOutput>.\$(Platform)\$(Config)</DCC_HppOutput>
         <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.140;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.140;Comments=;CompileDate=Thursday, October 07, 2010 7:57 PM</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=8.0.0.141;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=8.0.0.141;Comments=;CompileDate=Thursday, October 07, 2010 7:57 PM</VerInfo_Keys>
         <VerInfo_MajorVer>8</VerInfo_MajorVer>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
@@ -114,6 +114,7 @@
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=preferExternal;</VerInfo_Keys>
         <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
+        <VerInfo_InstallLocation>preferExternal</VerInfo_InstallLocation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=preferExternal;</VerInfo_Keys>
@@ -124,6 +125,7 @@
         <Base>true</Base>
         <EnabledSysJars>android-support-v4.dex.jar;apk-expansion.dex.jar;cloud-messaging.dex.jar;fmx.dex.jar;google-analytics-v2.dex.jar;google-play-billing.dex.jar;google-play-licensing.dex.jar;google-play-services.dex.jar</EnabledSysJars>
         <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
+        <VerInfo_InstallLocation>preferExternal</VerInfo_InstallLocation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
         <VerInfo_UIDeviceFamily>iPhoneAndiPad</VerInfo_UIDeviceFamily>
@@ -141,13 +143,13 @@
         <DCC_UsePackage>vcl;OpenWirePkgD16;OpenWireLabPkgD16;vclx;OpenWirePkgD17;OpenWirePkgD18;OpenWirePkgD19;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.140;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.140;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.141;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.141;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
         <DCC_UsePackage>vcl;vclx;OpenWirePkgD17;OpenWirePkgD18;OpenWirePkgD19;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=8.0.0.140;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=8.0.0.140;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=8.0.0.141;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=8.0.0.141;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <Import Project="..\..\12.0\ReleaseOptionSet.optset" Condition="'$(Cfg_Release)'!='' And Exists('..\..\12.0\ReleaseOptionSet.optset')"/>
     <PropertyGroup Condition="'$(Cfg_Release)'!=''">
@@ -161,7 +163,7 @@
         <CfgDependentOn>..\..\12.0\ReleaseOptionSet.optset</CfgDependentOn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_Release_Win64)'!=''">
-        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.140;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.140;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.141;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.141;Comments=;ProgramID=com.embarcadero.$(ModuleName);FileDescription=$(ModuleName);ProductName=$(ModuleName)</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_Debug)'!=''">
         <DCC_DependencyCheckOutputName>$(SystemRoot)\System32\OpenWireLabPkgD15.bpl</DCC_DependencyCheckOutputName>
@@ -183,7 +185,7 @@
         <Cfg_Debug>true</Cfg_Debug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_Debug_Win64)'!=''">
-        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.140;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.140;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileVersion=8.0.0.141;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=8.0.0.141;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -229,7 +231,7 @@
                     <VersionInfo Name="MajorVer">8</VersionInfo>
                     <VersionInfo Name="MinorVer">0</VersionInfo>
                     <VersionInfo Name="Release">0</VersionInfo>
-                    <VersionInfo Name="Build">140</VersionInfo>
+                    <VersionInfo Name="Build">141</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
                     <VersionInfo Name="PreRelease">False</VersionInfo>
                     <VersionInfo Name="Special">False</VersionInfo>
@@ -241,13 +243,13 @@
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">8.0.0.140</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">8.0.0.141</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName"/>
-                    <VersionInfoKeys Name="ProductVersion">8.0.0.140</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">8.0.0.141</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                     <VersionInfoKeys Name="CompileDate">Thursday, October 07, 2010 7:57 PM</VersionInfoKeys>
                 </VersionInfoKeys>
@@ -379,6 +381,16 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
