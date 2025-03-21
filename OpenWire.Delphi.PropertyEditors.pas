@@ -207,13 +207,13 @@ begin
   if( not HInGetValues ) then
     begin
     HInGetValues := True;
-    if( CheckEditorDropDownList( FNestedEditor, AProc )) then
-      begin
-      HInGetValues := False;
-      Exit;
-      end;
+    try
+      if( CheckEditorDropDownList( FNestedEditor, AProc )) then
+        Exit;
 
-    HInGetValues := False;
+    finally
+      HInGetValues := False;
+      end;
     end;
 
   inherited;
